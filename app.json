@@ -1,12 +1,12 @@
 {
   "expo": {
-    "name": "mile-club",
+    "name": "Mile Club",
     "slug": "mile-club",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "mileclub",
-    "userInterfaceStyle": "automatic",
+    "userInterfaceStyle": "light",
     "ios": {
       "icon": "./assets/expo.icon"
     },
@@ -28,11 +28,12 @@
       [
         "expo-splash-screen",
         {
-          "backgroundColor": "#208AEF",
+          "backgroundColor": "#121212",
           "image": "./assets/images/splash-icon.png",
           "imageWidth": 76
         }
-      ]
+      ],
+      "expo-sqlite"
     ],
     "experiments": {
       "typedRoutes": true,
@@ -48,6 +49,12 @@
         "projectId": "b85234b4-b788-4cd1-90d2-2a9300b0b702"
       }
     },
-    "owner": "whomis22"
+    "owner": "whomis22",
+    "runtimeVersion": {
+      "policy": "sdkVersion"
+    },
+    "updates": {
+      "url": "https://u.expo.dev/b85234b4-b788-4cd1-90d2-2a9300b0b702"
+    }
   }
 }
