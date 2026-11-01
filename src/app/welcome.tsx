@@ -92,6 +92,6 @@ const styles = StyleSheet.create({
   pillText: { fontSize: 16, fontWeight: '700', color: colors.ink },
   terms: { color: DIM, fontSize: 13, lineHeight: 18, marginTop: space.xs },
   link: { color: colors.peach, fontWeight: '600' },
-  footer: { paddingTop: space.xl, paddingBottom: space.lg },
+  footer: { paddingTop: space.xl, paddingBottom: space.lg + 24 },
   footerText: { color: DIM, fontSize: 15 },
 });
