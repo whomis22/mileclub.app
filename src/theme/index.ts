@@ -1,4 +1,7 @@
+import { reloadAppAsync } from 'expo';
 import { Storage } from 'expo-sqlite/kv-store';
+import * as Updates from 'expo-updates';
+import { DevSettings } from 'react-native';
 
 // Mile Club look: Rich Olive (brand, buttons), Warm Cream (backgrounds),
 // Soft Peach (highlights, likes, social bits). Logo: olive m + peach c on cream.
@@ -105,3 +108,11 @@ export const fonts = {
 export const space = { xs: 4, sm: 8, md: 12, lg: 16, xl: 24, xxl: 32 } as const;
 
 export const radius = { sm: 10, md: 16, lg: 24, pill: 999 } as const;
+
+// Colours are set when the app starts, so switching light/dark restarts the app.
+// reloadAppAsync works both in Expo Go and in a real build; the others are fallbacks.
+export function restartApp() {
+  reloadAppAsync('Switch light/dark mode').catch(() =>
+    Updates.reloadAsync().catch(() => DevSettings.reload()),
+  );
+}

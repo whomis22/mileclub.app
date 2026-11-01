@@ -1,8 +1,7 @@
 import * as ImagePicker from 'expo-image-picker';
 import { router, useLocalSearchParams } from 'expo-router';
-import * as Updates from 'expo-updates';
 import { useState } from 'react';
-import { DevSettings, KeyboardAvoidingView, Platform, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
+import { KeyboardAvoidingView, Platform, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { Avatar, Body, Button, Chip, Chips, Label } from '@/components/ui';
@@ -18,7 +17,7 @@ import {
 import type { Profile } from '@/data/types';
 import { ROLES, type Role } from '@/data/roles';
 import { useStore } from '@/state/store';
-import { colors, fonts, isDark, palettes, radius, saveThemePref, space, type ThemePref } from '@/theme';
+import { colors, fonts, isDark, palettes, radius, restartApp, saveThemePref, space, type ThemePref } from '@/theme';
 
 type Draft = Partial<Profile> & { activities: Profile['activities']; goals: Profile['goals']; availability: Profile['availability'] };
 
@@ -110,7 +109,7 @@ export default function Onboarding() {
     saveThemePref(look);
     router.replace('/now');
     // Colours are set when the app starts, so restart it once the profile is saved.
-    if (changeLook) setTimeout(() => Updates.reloadAsync().catch(() => DevSettings.reload()), 400);
+    if (changeLook) setTimeout(() => restartApp(), 400);
   }
 
   return (

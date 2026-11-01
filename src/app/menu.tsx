@@ -1,11 +1,10 @@
 import { router, type Href } from 'expo-router';
-import * as Updates from 'expo-updates';
-import { Alert, DevSettings, Pressable, Switch, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Alert, Pressable, Switch, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Avatar } from '@/components/ui';
 import { useStore } from '@/state/store';
-import { colors, fonts, radius, saveThemePref, space, isDark } from '@/theme';
+import { colors, fonts, radius, restartApp, saveThemePref, space, isDark } from '@/theme';
 
 // Side menu: every page plus settings. Opens from the menu button at the top left.
 export default function Menu() {
@@ -36,7 +35,7 @@ export default function Menu() {
   function setDark(on: boolean) {
     saveThemePref(on ? 'dark' : 'light');
     // Colours are set when the app starts, so restart it to switch.
-    Updates.reloadAsync().catch(() => DevSettings.reload());
+    restartApp();
   }
 
   function soon(what: string) {
