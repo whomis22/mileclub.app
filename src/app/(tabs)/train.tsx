@@ -104,7 +104,7 @@ export default function Train() {
 }
 
 const styles = StyleSheet.create({
-  dash: { backgroundColor: colors.ink, borderRadius: radius.lg, padding: space.lg },
+  dash: { backgroundColor: colors.inkBg, borderRadius: radius.lg, padding: space.lg },
   dashKicker: { color: colors.peach, fontSize: 12, fontWeight: '900', letterSpacing: 1 },
   dashRow: { flexDirection: 'row', marginTop: space.md },
   dashValue: { color: '#fff', fontSize: 30, fontWeight: '900' },
@@ -115,7 +115,7 @@ const styles = StyleSheet.create({
   dashBtn: { flex: 1, borderRadius: radius.pill, paddingVertical: 12, alignItems: 'center' },
   dashBtnText: { color: '#fff', fontWeight: '900', fontSize: 14 },
   becomeCoach: { backgroundColor: colors.accentSoft, borderRadius: radius.md, padding: space.lg },
-  becomeText: { color: colors.accent, fontWeight: '800', fontSize: 15, lineHeight: 21 },
+  becomeText: { color: colors.link, fontWeight: '800', fontSize: 15, lineHeight: 21 },
   coach: {
     width: 150, backgroundColor: colors.card, borderRadius: radius.lg, padding: space.md, borderWidth: 1,
     borderColor: colors.line, alignItems: 'flex-start', gap: 4,

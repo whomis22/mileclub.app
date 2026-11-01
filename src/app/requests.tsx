@@ -76,6 +76,6 @@ const styles = StyleSheet.create({
   name: { fontSize: 17, fontWeight: '800', color: colors.ink },
   meta: { fontSize: 13, color: colors.muted, marginTop: 1 },
   note: { fontSize: 15, color: colors.ink, fontStyle: 'italic', marginTop: space.md },
-  pay: { fontSize: 13, fontWeight: '700', color: colors.accent, marginTop: space.md },
+  pay: { fontSize: 13, fontWeight: '700', color: colors.link, marginTop: space.md },
   btns: { flexDirection: 'row', gap: space.sm, marginTop: space.md },
 });

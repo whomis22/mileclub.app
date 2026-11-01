@@ -63,7 +63,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 6, gap: 2,
   },
   item: { flex: 1, height: 46, borderRadius: 23, alignItems: 'center', justifyContent: 'center' },
-  itemOn: { backgroundColor: colors.bg, flex: 1.35 },
+  itemOn: { backgroundColor: colors.onBrand, flex: 1.35 },
   label: { fontFamily: fonts.sansMedium, fontSize: 12, color: '#D9DDC4' },
-  labelOn: { fontFamily: fonts.sansSemi, fontSize: 13, color: colors.ink },
+  labelOn: { fontFamily: fonts.sansSemi, fontSize: 13, color: colors.onPeach },
 });

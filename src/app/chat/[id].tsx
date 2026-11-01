@@ -64,13 +64,13 @@ export default function Chat() {
               <View key={m.id} style={{ alignItems: mine ? 'flex-end' : 'flex-start' }}>
                 <View style={[styles.bubble, mine ? styles.mine : styles.theirs]}>
                   {m.from === 'admin' ? <Text style={styles.admin}>Mile Club · Admin</Text> : null}
-                  <Text style={[styles.text, mine && { color: colors.bg }]}>{m.text}</Text>
+                  <Text style={[styles.text, mine && { color: colors.onBrand }]}>{m.text}</Text>
                 </View>
                 {isGroup && settings.reactions ? (
                   <Pressable
                     onPress={() => setLiked((l) => (l.includes(m.id) ? l.filter((x) => x !== m.id) : [...l, m.id]))}
                     style={[styles.react, liked.includes(m.id) && styles.reactOn]}>
-                    <Text style={styles.reactText}>{liked.includes(m.id) ? '♥ Liked' : '♡ Like'}</Text>
+                    <Text style={[styles.reactText, liked.includes(m.id) && { color: colors.onPeach }]}>{liked.includes(m.id) ? '♥ Liked' : '♡ Like'}</Text>
                   </Pressable>
                 ) : null}
               </View>
@@ -110,7 +110,7 @@ const styles = StyleSheet.create({
   backText: { fontSize: 28, lineHeight: 30, color: colors.ink },
   groupIcon: { width: 42, height: 42, borderRadius: 14, backgroundColor: colors.olive, alignItems: 'center', justifyContent: 'center' },
   name: { fontFamily: fonts.serif, fontSize: 22, color: colors.ink },
-  sub: { fontFamily: fonts.sansMedium, fontSize: 12, color: colors.olive },
+  sub: { fontFamily: fonts.sansMedium, fontSize: 12, color: colors.link },
   info: { width: 36, height: 36, borderRadius: 18, borderWidth: 1.5, borderColor: colors.ink, alignItems: 'center', justifyContent: 'center' },
   infoText: { fontFamily: fonts.serifItalic, fontSize: 20, color: colors.ink },
   list: { padding: space.lg, gap: space.sm },
@@ -119,7 +119,7 @@ const styles = StyleSheet.create({
   bubble: { maxWidth: '80%', paddingVertical: 10, paddingHorizontal: 14, borderRadius: 20 },
   theirs: { backgroundColor: colors.sand, borderBottomLeftRadius: 6 },
   mine: { backgroundColor: colors.olive, borderBottomRightRadius: 6 },
-  admin: { fontFamily: fonts.sansSemi, fontSize: 12, color: colors.olive, marginBottom: 2 },
+  admin: { fontFamily: fonts.sansSemi, fontSize: 12, color: colors.link, marginBottom: 2 },
   text: { fontFamily: fonts.sans, fontSize: 15, lineHeight: 21, color: colors.ink },
   react: { marginTop: 4, borderRadius: radius.pill, borderWidth: 1, borderColor: colors.line, backgroundColor: colors.card, paddingVertical: 4, paddingHorizontal: 10 },
   reactOn: { backgroundColor: colors.peach, borderColor: colors.peach },
@@ -127,7 +127,7 @@ const styles = StyleSheet.create({
   composer: { flexDirection: 'row', gap: space.sm, padding: space.md, alignItems: 'center' },
   input: { flex: 1, height: 46, borderRadius: 23, borderWidth: 1, borderColor: colors.line, paddingHorizontal: space.lg, fontFamily: fonts.sans, fontSize: 15, color: colors.ink },
   send: { width: 46, height: 46, borderRadius: 23, backgroundColor: colors.olive, alignItems: 'center', justifyContent: 'center' },
-  sendText: { color: colors.bg, fontSize: 22, fontFamily: fonts.sansBold },
+  sendText: { color: colors.onBrand, fontSize: 22, fontFamily: fonts.sansBold },
   locked: { margin: space.md, minHeight: 50, borderRadius: 25, backgroundColor: colors.sand, alignItems: 'center', justifyContent: 'center', paddingHorizontal: space.lg },
   lockedText: { fontFamily: fonts.sans, fontSize: 13, color: colors.muted, textAlign: 'center' },
 });

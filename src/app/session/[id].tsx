@@ -182,7 +182,7 @@ export default function SessionDetail() {
 const styles = StyleSheet.create({
   kind: { fontSize: 12, fontWeight: '900', color: colors.purple, letterSpacing: 0.8, marginTop: space.sm },
   title: { fontSize: 28, fontWeight: '900', color: colors.ink, letterSpacing: -0.5, marginTop: 2 },
-  when: { fontSize: 16, fontWeight: '700', color: colors.accent, marginTop: 4 },
+  when: { fontSize: 16, fontWeight: '700', color: colors.link, marginTop: 4 },
   coachCard: { flexDirection: 'row', alignItems: 'center', gap: space.md },
   coachName: { fontSize: 16, fontWeight: '800', color: colors.ink },
   coachMeta: { fontSize: 13, color: colors.muted },

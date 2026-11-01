@@ -59,7 +59,7 @@ const styles = StyleSheet.create({
   name: { fontSize: 20, fontWeight: '800', color: colors.ink },
   meta: { fontSize: 14, color: colors.muted, marginTop: 2 },
   score: { alignItems: 'center' },
-  scoreNum: { fontSize: 24, fontWeight: '900', color: colors.accent },
+  scoreNum: { fontSize: 24, fontWeight: '900', color: colors.link },
   scoreLabel: { fontSize: 11, fontWeight: '700', color: colors.muted, textTransform: 'uppercase' },
   detail: { fontSize: 14, color: colors.ink, marginTop: space.md },
 });

@@ -2,7 +2,7 @@ import { Image } from 'expo-image';
 import * as ImagePicker from 'expo-image-picker';
 import { router, useLocalSearchParams } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
-import { useMemo, useState } from 'react';
+import { useMemo, useRef, useState, type ComponentRef, type Ref } from 'react';
 import {
   FlatList,
   KeyboardAvoidingView,
@@ -19,7 +19,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { COUNTRIES, defaultCountry, flagOf, type Country } from '@/data/countries';
-import { colors, fonts, radius, space } from '@/theme';
+import { colors, fonts, isDark, radius, space } from '@/theme';
 
 // Step-by-step sign-up, one task per screen:
 // account details -> verification code -> password -> photo -> username,
@@ -28,7 +28,7 @@ import { colors, fonts, radius, space } from '@/theme';
 // Coming from "Continue with Apple", Apple has already checked the email, so the
 // code and password steps are skipped.
 
-const EDGE = '#D8CFBE';
+const EDGE = colors.edge;
 const ERROR = '#B4432F';
 
 function ageFrom(day: number, month: number, year: number) {
@@ -40,17 +40,24 @@ function ageFrom(day: number, month: number, year: number) {
   return age >= 0 && age < 120 ? age : null;
 }
 
-function Field({ label, counter, error, ...props }: TextInputProps & { label: string; counter?: string; error?: string }) {
+function Field({
+  label,
+  counter,
+  error,
+  inputRef,
+  ...props
+}: TextInputProps & { label: string; counter?: string; error?: string; inputRef?: Ref<ComponentRef<typeof TextInput>> }) {
   const [focused, setFocused] = useState(false);
   return (
     <View style={{ marginBottom: space.lg }}>
       <View style={[styles.field, focused && { borderColor: colors.olive }, !!error && { borderColor: ERROR }]}>
         <View style={styles.fieldTop}>
-          <Text style={[styles.fieldLabel, focused && { color: colors.olive }]}>{label}</Text>
+          <Text style={[styles.fieldLabel, focused && { color: colors.link }]}>{label}</Text>
           {counter && focused ? <Text style={styles.fieldLabel}>{counter}</Text> : null}
         </View>
         <TextInput
           {...props}
+          ref={inputRef}
           onFocus={(e) => {
             setFocused(true);
             props.onFocus?.(e);
@@ -130,6 +137,9 @@ export default function SignUp() {
   const [dd, setDd] = useState('');
   const [mm, setMm] = useState('');
   const [yyyy, setYyyy] = useState('');
+  const monthRef = useRef<ComponentRef<typeof TextInput>>(null);
+  const yearRef = useRef<ComponentRef<typeof TextInput>>(null);
+  const dayRef = useRef<ComponentRef<typeof TextInput>>(null);
   const [code, setCode] = useState('');
   const [resent, setResent] = useState(false);
   const [password, setPassword] = useState('');
@@ -192,7 +202,7 @@ export default function SignUp() {
 
   return (
     <SafeAreaView style={styles.screen} edges={['top', 'bottom']}>
-      <StatusBar style="dark" />
+      <StatusBar style={isDark ? "light" : "dark"} />
       <View style={styles.header}>
         <Pressable onPress={back} hitSlop={8} style={styles.backBtn} accessibilityLabel={pos === 0 ? 'Close' : 'Back'}>
           <Text style={styles.backIcon}>{pos === 0 ? '✕' : '‹'}</Text>
@@ -268,13 +278,54 @@ export default function SignUp() {
               </Text>
               <View style={styles.dobRow}>
                 <View style={{ flex: 1 }}>
-                  <Field label="Day" value={dd} onChangeText={(t) => setDd(t.replace(/[^0-9]/g, ''))} keyboardType="number-pad" maxLength={2} placeholder="DD" />
+                  <Field
+                    label="Day"
+                    inputRef={dayRef}
+                    value={dd}
+                    onChangeText={(t) => {
+                      let v = t.replace(/[^0-9]/g, '');
+                      // A first digit of 4-9 can only be a one-digit day, so fill in the 0.
+                      if (v.length === 1 && Number(v) > 3) v = `0${v}`;
+                      setDd(v);
+                      if (v.length === 2) monthRef.current?.focus();
+                    }}
+                    keyboardType="number-pad"
+                    maxLength={2}
+                    placeholder="DD"
+                  />
                 </View>
                 <View style={{ flex: 1 }}>
-                  <Field label="Month" value={mm} onChangeText={(t) => setMm(t.replace(/[^0-9]/g, ''))} keyboardType="number-pad" maxLength={2} placeholder="MM" />
+                  <Field
+                    label="Month"
+                    inputRef={monthRef}
+                    value={mm}
+                    onChangeText={(t) => {
+                      let v = t.replace(/[^0-9]/g, '');
+                      if (v.length === 1 && Number(v) > 1) v = `0${v}`;
+                      setMm(v);
+                      if (v.length === 2) yearRef.current?.focus();
+                    }}
+                    onKeyPress={(e) => {
+                      if (e.nativeEvent.key === 'Backspace' && mm === '') dayRef.current?.focus();
+                    }}
+                    keyboardType="number-pad"
+                    maxLength={2}
+                    placeholder="MM"
+                  />
                 </View>
                 <View style={{ flex: 1.4 }}>
-                  <Field label="Year" value={yyyy} onChangeText={(t) => setYyyy(t.replace(/[^0-9]/g, ''))} keyboardType="number-pad" maxLength={4} placeholder="YYYY" />
+                  <Field
+                    label="Year"
+                    inputRef={yearRef}
+                    value={yyyy}
+                    onChangeText={(t) => setYyyy(t.replace(/[^0-9]/g, ''))}
+                    onKeyPress={(e) => {
+                      if (e.nativeEvent.key === 'Backspace' && yyyy === '') monthRef.current?.focus();
+                    }}
+                    keyboardType="number-pad"
+                    maxLength={4}
+                    placeholder="YYYY"
+                  />
                 </View>
               </View>
               {tooYoung ? <Text style={styles.error}>You need to be 18 or older to join Mile Club.</Text> : null}
@@ -378,7 +429,7 @@ const styles = StyleSheet.create({
   header: { flexDirection: 'row', alignItems: 'center', gap: space.lg, paddingHorizontal: space.xl, paddingTop: space.sm },
   backBtn: { width: 44, height: 44, borderRadius: 22, borderWidth: 1, borderColor: EDGE, alignItems: 'center', justifyContent: 'center' },
   backIcon: { color: colors.ink, fontSize: 22, lineHeight: 26, fontFamily: fonts.sansMedium },
-  bar: { flex: 1, height: 3, borderRadius: 2, backgroundColor: '#E6DDCC', overflow: 'hidden' },
+  bar: { flex: 1, height: 3, borderRadius: 2, backgroundColor: colors.track, overflow: 'hidden' },
   barFill: { height: 3, borderRadius: 2, backgroundColor: colors.olive },
   body: { paddingHorizontal: space.xl, paddingTop: space.xl, paddingBottom: space.xxl },
   stepLabel: { color: colors.muted, fontSize: 10, letterSpacing: 2.5, fontFamily: fonts.sansSemi, marginBottom: space.sm },
@@ -407,7 +458,7 @@ const styles = StyleSheet.create({
   countryBtnText: { color: colors.ink, fontSize: 18, paddingVertical: 4, fontFamily: fonts.sans },
   appleNote: { backgroundColor: colors.card, borderWidth: 1, borderColor: EDGE, borderRadius: radius.md, padding: space.md, marginBottom: space.lg },
   appleNoteText: { color: colors.ink, fontSize: 15, fontFamily: fonts.sans },
-  link: { color: colors.olive, fontSize: 15, fontFamily: fonts.sansSemi },
+  link: { color: colors.link, fontSize: 15, fontFamily: fonts.sansSemi },
   testNote: { color: colors.muted, fontSize: 13, marginTop: space.xl, fontFamily: fonts.sans },
   photo: {
     alignSelf: 'center',
@@ -416,7 +467,7 @@ const styles = StyleSheet.create({
     borderRadius: 80,
     borderWidth: 1.5,
     borderStyle: 'dashed',
-    borderColor: '#B9AE98',
+    borderColor: colors.dashed,
     backgroundColor: colors.card,
     alignItems: 'center',
     justifyContent: 'center',
@@ -424,12 +475,12 @@ const styles = StyleSheet.create({
     marginTop: space.xl,
   },
   photoImg: { width: 160, height: 160 },
-  photoPlus: { fontSize: 44, color: colors.olive, fontFamily: fonts.sans },
+  photoPlus: { fontSize: 44, color: colors.link, fontFamily: fonts.sans },
   footer: { paddingHorizontal: space.xl, paddingBottom: space.lg, paddingTop: space.sm, gap: space.md },
   next: { height: 54, borderRadius: radius.pill, backgroundColor: colors.olive, alignItems: 'center', justifyContent: 'center' },
-  nextOff: { backgroundColor: '#CFC8B6' },
-  nextText: { color: colors.bg, fontSize: 15, fontFamily: fonts.sansSemi },
-  nextTextOff: { color: '#F3EDE2' },
+  nextOff: { backgroundColor: colors.off },
+  nextText: { color: colors.onBrand, fontSize: 15, fontFamily: fonts.sansSemi },
+  nextTextOff: { color: colors.offText },
   skip: { height: 54, borderRadius: radius.pill, borderWidth: 1, borderColor: EDGE, alignItems: 'center', justifyContent: 'center' },
   skipText: { color: colors.ink, fontSize: 15, fontFamily: fonts.sansSemi },
   sheet: { flex: 1, backgroundColor: colors.bg },

@@ -7,7 +7,7 @@ import { StatusBar } from 'expo-status-bar';
 
 import { LaunchScreen } from '@/components/launch-screen';
 import { StoreProvider } from '@/state/store';
-import { colors } from '@/theme';
+import { colors, isDark } from '@/theme';
 
 export default function RootLayout() {
   const [fontsLoaded, fontError] = useFonts({
@@ -23,7 +23,7 @@ export default function RootLayout() {
 
   return (
     <StoreProvider>
-      <StatusBar style="dark" />
+      <StatusBar style={isDark ? "light" : "dark"} />
       <Stack
         screenOptions={{
           headerShown: false,

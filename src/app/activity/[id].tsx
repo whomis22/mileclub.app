@@ -128,7 +128,7 @@ export default function ActivityDetail() {
 
 const styles = StyleSheet.create({
   emoji: { fontSize: 48 },
-  when: { fontSize: 13, fontWeight: '800', color: colors.accent, letterSpacing: 0.8, marginTop: space.sm },
+  when: { fontSize: 13, fontWeight: '800', color: colors.link, letterSpacing: 0.8, marginTop: space.sm },
   title: { fontSize: 30, fontWeight: '900', color: colors.ink, letterSpacing: -0.5, marginTop: 4 },
   badges: { flexDirection: 'row', flexWrap: 'wrap', gap: space.sm, marginTop: space.md },
   hostCard: { flexDirection: 'row', alignItems: 'center', gap: space.md },
@@ -137,7 +137,7 @@ const styles = StyleSheet.create({
   people: { flexDirection: 'row', flexWrap: 'wrap', gap: space.lg },
   person: { alignItems: 'center', width: 56 },
   personName: { fontSize: 12, fontWeight: '600', color: colors.ink, marginTop: 4 },
-  fit: { fontSize: 18, fontWeight: '900', color: colors.accent },
+  fit: { fontSize: 18, fontWeight: '900', color: colors.link },
   safety: { fontSize: 13, color: colors.muted, textAlign: 'center', marginTop: space.lg, lineHeight: 18 },
   report: { fontSize: 14, fontWeight: '700', color: colors.danger, textAlign: 'center', marginTop: space.lg },
 });

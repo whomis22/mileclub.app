@@ -17,8 +17,8 @@ export function SplitBox({ gross, note }: { gross: number; note: string }) {
         <Text style={styles.lineValue}>{euro(p.gross)}</Text>
       </View>
       <View style={styles.line}>
-        <Text style={[styles.lineLabel, { color: colors.accent }]}>● Coach keeps 80%</Text>
-        <Text style={[styles.lineValue, { color: colors.accent }]}>{euro(p.coach)}</Text>
+        <Text style={[styles.lineLabel, { color: colors.link }]}>● Coach keeps 80%</Text>
+        <Text style={[styles.lineValue, { color: colors.link }]}>{euro(p.coach)}</Text>
       </View>
       <View style={styles.line}>
         <Text style={[styles.lineLabel, { color: colors.purple }]}>● Mile Club 20%</Text>

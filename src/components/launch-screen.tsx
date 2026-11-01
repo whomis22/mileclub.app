@@ -42,5 +42,5 @@ const styles = StyleSheet.create({
   screen: { backgroundColor: colors.bg, zIndex: 100 },
   center: { flex: 1, alignItems: 'center', justifyContent: 'center' },
   bottom: { alignItems: 'center' },
-  name: { color: colors.olive, fontSize: 20, fontFamily: fonts.sansSemi },
+  name: { color: colors.link, fontSize: 20, fontFamily: fonts.sansSemi },
 });

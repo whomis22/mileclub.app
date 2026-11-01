@@ -129,9 +129,9 @@ const styles = StyleSheet.create({
     backgroundColor: colors.card, borderWidth: 1.5, borderColor: colors.line, borderRadius: radius.md,
     paddingHorizontal: space.lg, paddingVertical: 14, fontSize: 16, color: colors.ink,
   },
-  preview: { backgroundColor: colors.ink, borderRadius: radius.lg, padding: space.lg, marginTop: space.lg },
+  preview: { backgroundColor: colors.inkBg, borderRadius: radius.lg, padding: space.lg, marginTop: space.lg },
   previewKicker: { color: colors.peach, fontSize: 12, fontWeight: '900', letterSpacing: 1 },
   previewBig: { color: '#fff', fontSize: 22, fontWeight: '900', marginTop: 4 },
   previewSmall: { color: '#fff', opacity: 0.7, fontSize: 14, marginTop: 2 },
-  previewFull: { color: colors.accent, fontSize: 15, fontWeight: '800', marginTop: space.sm },
+  previewFull: { color: colors.link, fontSize: 15, fontWeight: '800', marginTop: space.sm },
 });

@@ -7,7 +7,7 @@ import { Alert, Platform, Pressable, StyleSheet, Text, View } from 'react-native
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { Logo } from '@/components/ui';
-import { colors, fonts, radius, space } from '@/theme';
+import { colors, fonts, isDark, radius, space } from '@/theme';
 
 // Welcome: logo and Log in at the top, a fanned stack of run photo cards,
 // "Find your running crew." and the Join button at the bottom.
@@ -51,7 +51,7 @@ export default function Welcome() {
 
   return (
     <SafeAreaView style={styles.screen}>
-      <StatusBar style="dark" />
+      <StatusBar style={isDark ? "light" : "dark"} />
       <View style={styles.top}>
         <Logo size={34} />
         <Pressable onPress={logIn} hitSlop={12}>
@@ -118,17 +118,17 @@ const styles = StyleSheet.create({
   card: { position: 'absolute', borderRadius: 28, overflow: 'hidden', padding: 16, justifyContent: 'flex-end' },
   back: { width: '52%', height: '72%' },
   front: { width: '58%', height: '78%', left: '21%', top: 90, justifyContent: 'space-between', borderRadius: 30 },
-  cardTitle: { fontFamily: fonts.serifItalic, fontSize: 24, color: colors.bg },
-  cardMeta: { fontFamily: fonts.sansMedium, fontSize: 10, letterSpacing: 1.2, color: colors.bg, marginTop: 4 },
+  cardTitle: { fontFamily: fonts.serifItalic, fontSize: 24, color: colors.onBrand },
+  cardMeta: { fontFamily: fonts.sansMedium, fontSize: 10, letterSpacing: 1.2, color: colors.onBrand, marginTop: 4 },
   going: { alignSelf: 'flex-start', backgroundColor: colors.peach, borderRadius: radius.pill, paddingVertical: 5, paddingHorizontal: 10 },
-  goingText: { fontFamily: fonts.sansSemi, fontSize: 11, color: colors.ink },
+  goingText: { fontFamily: fonts.sansSemi, fontSize: 11, color: colors.onPeach },
   bottom: { paddingHorizontal: 28, paddingBottom: space.lg, gap: space.xl },
   hero: { fontFamily: fonts.serif, fontSize: 40, lineHeight: 42, color: colors.ink, textAlign: 'center' },
   heroItalic: { fontFamily: fonts.serifItalic },
   appleButton: { width: '100%', height: 54 },
   join: { height: 54, borderRadius: radius.pill, backgroundColor: colors.olive, alignItems: 'center', justifyContent: 'center' },
-  joinText: { fontFamily: fonts.sansSemi, fontSize: 15, color: colors.bg },
+  joinText: { fontFamily: fonts.sansSemi, fontSize: 15, color: colors.onBrand },
   coach: { fontFamily: fonts.sans, fontSize: 13, color: colors.muted, textAlign: 'center' },
-  coachLink: { fontFamily: fonts.sansSemi, color: colors.olive },
+  coachLink: { fontFamily: fonts.sansSemi, color: colors.link },
   terms: { fontFamily: fonts.sans, fontSize: 11, color: colors.muted, textAlign: 'center', lineHeight: 15 },
 });

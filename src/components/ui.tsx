@@ -3,7 +3,7 @@ import type { ReactNode } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View, type ViewStyle } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { colors, fonts, radius, space } from '@/theme';
+import { colors, fonts, isDark, radius, space } from '@/theme';
 
 export function Screen({ children, scroll = true, edges = ['top'] }: {
   children: ReactNode;
@@ -48,7 +48,7 @@ export function Button({ title, onPress, variant = 'primary', disabled, style }:
   style?: ViewStyle;
 }) {
   const bg = { primary: colors.olive, secondary: colors.peach, ghost: 'transparent', danger: 'transparent' }[variant];
-  const fg = { primary: colors.bg, secondary: colors.ink, ghost: colors.ink, danger: colors.danger }[variant];
+  const fg = { primary: colors.onBrand, secondary: colors.onPeach, ghost: colors.ink, danger: colors.danger }[variant];
   return (
     <Pressable
       onPress={onPress}
@@ -70,7 +70,7 @@ export function Chip({ label, selected, onPress }: { label: string; selected?: b
       onPress={onPress}
       disabled={!onPress}
       style={[styles.chip, selected && { backgroundColor: colors.olive, borderColor: colors.olive }]}>
-      <Text style={[styles.chipText, selected && { color: colors.bg }]}>{label}</Text>
+      <Text style={[styles.chipText, selected && { color: colors.onBrand }]}>{label}</Text>
     </Pressable>
   );
 }
@@ -93,14 +93,14 @@ export function Avatar({ name, color, uri, size = 48 }: { name: string; color?: 
   if (uri) return <Image source={{ uri }} style={box} />;
   return (
     <View style={[box, { backgroundColor: color ?? colors.peach, alignItems: 'center', justifyContent: 'center' }]}>
-      <Text style={{ color: color ? '#fff' : colors.ink, fontFamily: fonts.serif, fontSize: size * 0.44 }}>{name.slice(0, 1).toUpperCase()}</Text>
+      <Text style={{ color: color ? '#fff' : colors.onPeach, fontFamily: fonts.serif, fontSize: size * 0.44 }}>{name.slice(0, 1).toUpperCase()}</Text>
     </View>
   );
 }
 
 export function Badge({ label, tone = 'accent' }: { label: string; tone?: 'accent' | 'green' | 'plain' }) {
   const bg = { accent: colors.peach, green: colors.oliveSoft, plain: colors.sand }[tone];
-  const fg = { accent: colors.ink, green: colors.olive, plain: colors.muted }[tone];
+  const fg = { accent: colors.onPeach, green: colors.link, plain: colors.muted }[tone];
   return (
     <View style={[styles.badge, { backgroundColor: bg }]}>
       <Text style={[styles.badgeText, { color: fg }]}>{label}</Text>
@@ -134,7 +134,7 @@ const styles = StyleSheet.create({
 });
 
 // The Mile Club mark: an olive "m" with a peach "c" tucked over its last leg.
-export function Logo({ size = 40, m = colors.olive, c = colors.peachDeep }: { size?: number; m?: string; c?: string }) {
+export function Logo({ size = 40, m = isDark ? colors.onBrand : colors.olive, c = colors.peachDeep }: { size?: number; m?: string; c?: string }) {
   return (
     <View style={{ flexDirection: 'row' }} accessibilityLabel="Mile Club" accessible>
       <Text style={{ fontFamily: fonts.logo, fontSize: size, lineHeight: size * 1.15, color: m }}>m</Text>

@@ -99,7 +99,7 @@ export default function Onboarding() {
                 return (
                   <Pressable key={r} onPress={() => set({ role: r })} style={[styles.role, on && styles.roleOn]}>
                     <View style={{ flex: 1 }}>
-                      <Text style={[styles.roleName, on && { color: colors.bg }]}>
+                      <Text style={[styles.roleName, on && { color: colors.onBrand }]}>
                         {r === 'member' ? 'I want to run' : 'I’m a coach'}
                       </Text>
                       <Text style={[styles.rolePitch, on && { color: colors.oliveSoft }]}>{ROLES[r].pitch}</Text>
@@ -266,7 +266,7 @@ export default function Onboarding() {
               />
               <Pressable onPress={() => setAgreed(!agreed)} style={styles.agree}>
                 <View style={[styles.box, agreed && { backgroundColor: colors.olive, borderColor: colors.olive }]}>
-                  {agreed && <Text style={{ color: colors.bg, fontWeight: '900' }}>✓</Text>}
+                  {agreed && <Text style={{ color: colors.onBrand, fontWeight: '900' }}>✓</Text>}
                 </View>
                 <Text style={styles.agreeText}>
                   I agree to the community guidelines: be kind, show up, respect everyone’s pace.
@@ -287,37 +287,37 @@ export default function Onboarding() {
 const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: colors.bg },
   header: { flexDirection: 'row', alignItems: 'center', gap: space.lg, paddingHorizontal: space.xl, paddingTop: space.sm },
-  backBtn: { width: 44, height: 44, borderRadius: 22, borderWidth: 1, borderColor: '#D8CFBE', alignItems: 'center', justifyContent: 'center' },
+  backBtn: { width: 44, height: 44, borderRadius: 22, borderWidth: 1, borderColor: colors.edge, alignItems: 'center', justifyContent: 'center' },
   back: { fontSize: 24, lineHeight: 28, color: colors.ink, fontFamily: fonts.sansMedium },
-  bar: { flex: 1, height: 3, backgroundColor: '#E6DDCC', borderRadius: 2, overflow: 'hidden' },
+  bar: { flex: 1, height: 3, backgroundColor: colors.track, borderRadius: 2, overflow: 'hidden' },
   barFill: { height: 3, backgroundColor: colors.olive, borderRadius: 2 },
   body: { flex: 1, padding: space.xl },
   count: { fontSize: 10, letterSpacing: 2.5, color: colors.muted, fontFamily: fonts.sansSemi, marginBottom: space.sm },
   q: { fontSize: 38, lineHeight: 40, color: colors.ink, fontFamily: fonts.serif, marginBottom: space.sm },
   input: {
-    backgroundColor: colors.card, borderWidth: 1, borderColor: '#D8CFBE', borderRadius: radius.md,
+    backgroundColor: colors.card, borderWidth: 1, borderColor: colors.edge, borderRadius: radius.md,
     paddingHorizontal: space.lg, paddingVertical: 14, fontSize: 17, color: colors.ink, fontFamily: fonts.sans,
   },
   photoRow: { flexDirection: 'row', alignItems: 'center', gap: space.lg, marginTop: space.lg },
   photoEmpty: {
-    width: 72, height: 72, borderRadius: 36, borderWidth: 1.5, borderColor: '#B9AE98', borderStyle: 'dashed',
+    width: 72, height: 72, borderRadius: 36, borderWidth: 1.5, borderColor: colors.dashed, borderStyle: 'dashed',
     alignItems: 'center', justifyContent: 'center', backgroundColor: colors.card,
   },
-  photoText: { fontSize: 16, color: colors.olive, fontFamily: fonts.sansSemi },
+  photoText: { fontSize: 16, color: colors.link, fontFamily: fonts.sansSemi },
   agree: { flexDirection: 'row', gap: space.md, marginTop: space.xl, alignItems: 'flex-start' },
   box: {
-    width: 26, height: 26, borderRadius: 13, borderWidth: 1.5, borderColor: '#B9AE98',
+    width: 26, height: 26, borderRadius: 13, borderWidth: 1.5, borderColor: colors.dashed,
     alignItems: 'center', justifyContent: 'center',
   },
   agreeText: { flex: 1, fontSize: 15, color: colors.ink, lineHeight: 21, fontFamily: fonts.sans },
   role: {
     flexDirection: 'row', gap: space.lg, alignItems: 'center', padding: 22, borderRadius: 26,
-    borderWidth: 1, borderColor: '#D8CFBE', marginBottom: space.md,
+    borderWidth: 1, borderColor: colors.edge, marginBottom: space.md,
   },
   roleOn: { backgroundColor: colors.olive, borderColor: colors.olive },
   roleName: { fontSize: 26, lineHeight: 28, color: colors.ink, fontFamily: fonts.serif },
   rolePitch: { fontSize: 13, color: colors.muted, marginTop: 6, lineHeight: 18, fontFamily: fonts.sans },
-  tick: { width: 26, height: 26, borderRadius: 13, borderWidth: 1.5, borderColor: '#B9AE98', alignItems: 'center', justifyContent: 'center' },
+  tick: { width: 26, height: 26, borderRadius: 13, borderWidth: 1.5, borderColor: colors.dashed, alignItems: 'center', justifyContent: 'center' },
   tickOn: { backgroundColor: colors.peach, borderColor: colors.peach },
   tickMark: { color: colors.ink, fontSize: 13, fontWeight: '900' },
   footer: { padding: space.xl, paddingTop: space.sm },

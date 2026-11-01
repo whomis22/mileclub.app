@@ -69,6 +69,6 @@ const styles = StyleSheet.create({
   rowSub: { fontFamily: fonts.sans, fontSize: 12, color: colors.muted, marginTop: 3, lineHeight: 17 },
   section: { fontFamily: fonts.sansSemi, fontSize: 10, letterSpacing: 2, color: colors.muted, marginTop: space.xl, marginBottom: -space.md },
   owner: { backgroundColor: colors.olive, borderRadius: radius.pill, paddingVertical: 4, paddingHorizontal: 10 },
-  ownerText: { fontFamily: fonts.sansSemi, fontSize: 11, color: colors.bg },
+  ownerText: { fontFamily: fonts.sansSemi, fontSize: 11, color: colors.onBrand },
   note: { fontFamily: fonts.sans, fontSize: 12, color: colors.muted, textAlign: 'center', marginTop: space.lg },
 });

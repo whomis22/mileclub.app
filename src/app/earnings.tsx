@@ -101,19 +101,19 @@ export default function Earnings() {
 }
 
 const styles = StyleSheet.create({
-  hero: { backgroundColor: colors.ink, borderRadius: radius.lg, padding: space.xl, alignItems: 'center' },
+  hero: { backgroundColor: colors.inkBg, borderRadius: radius.lg, padding: space.xl, alignItems: 'center' },
   heroKicker: { color: colors.peach, fontSize: 12, fontWeight: '900', letterSpacing: 1 },
   heroValue: { color: '#fff', fontSize: 48, fontWeight: '900', marginTop: 4 },
   heroSub: { color: '#fff', opacity: 0.7, fontSize: 14, fontWeight: '600' },
   sTitle: { fontSize: 16, fontWeight: '800', color: colors.ink },
   sMeta: { fontSize: 13, color: colors.muted, marginTop: 2 },
   sRow: { flexDirection: 'row', justifyContent: 'space-between', marginTop: space.sm },
-  sYou: { fontSize: 15, fontWeight: '900', color: colors.accent },
+  sYou: { fontSize: 15, fontWeight: '900', color: colors.link },
   sFee: { fontSize: 14, fontWeight: '700', color: colors.purple },
   calcQ: { fontSize: 14, fontWeight: '800', color: colors.ink, marginTop: space.md, marginBottom: space.sm },
   calcResult: { marginTop: space.lg, backgroundColor: colors.accentSoft, borderRadius: radius.md, padding: space.lg },
   calcLine: { fontSize: 14, color: colors.ink, fontWeight: '600' },
-  calcBig: { fontSize: 26, fontWeight: '900', color: colors.accent, marginTop: 4 },
+  calcBig: { fontSize: 26, fontWeight: '900', color: colors.link, marginTop: 4 },
   calcSmall: { fontSize: 13, fontWeight: '700', color: colors.purple, marginTop: 2 },
   demo: { backgroundColor: colors.bg, borderRadius: radius.md, padding: space.md, marginTop: space.md, borderWidth: 1, borderColor: colors.line },
   demoText: { color: colors.muted, fontWeight: '700', fontSize: 13 },

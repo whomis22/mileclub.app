@@ -51,7 +51,7 @@ const styles = StyleSheet.create({
   kind: { fontSize: 11, fontWeight: '900', color: colors.purple, letterSpacing: 0.8 },
   title: { fontSize: 17, fontWeight: '800', color: colors.ink, marginTop: 2 },
   meta: { fontSize: 13, color: colors.muted, marginTop: 2 },
-  price: { backgroundColor: colors.ink, borderRadius: radius.pill, paddingVertical: 6, paddingHorizontal: 12 },
+  price: { backgroundColor: colors.inkBg, borderRadius: radius.pill, paddingVertical: 6, paddingHorizontal: 12 },
   priceText: { color: '#fff', fontWeight: '900', fontSize: 15 },
   coach: { fontSize: 13, fontWeight: '700', color: colors.ink },
 });
