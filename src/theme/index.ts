@@ -1,4 +1,3 @@
-import { Appearance } from 'react-native';
 import { Storage } from 'expo-sqlite/kv-store';
 
 // Mile Club look: Rich Olive (brand, buttons), Warm Cream (backgrounds),
@@ -68,20 +67,22 @@ const dark: typeof light = {
   danger: '#E8956F',
 };
 
-// Light, dark, or follow the phone. Saved on the phone; the app reloads to apply it.
-export type ThemePref = 'system' | 'light' | 'dark';
+// Light or dark, switched from the side menu. The app always starts in light
+// mode until someone turns dark mode on (Yana, 2026-11-01). Saved on the phone;
+// the app reloads to apply it.
+export type ThemePref = 'light' | 'dark';
 const PREF_KEY = 'mileclub-theme-v1';
 
 function readPref(): ThemePref {
   try {
     const v = Storage.getItemSync(PREF_KEY);
-    if (v === 'light' || v === 'dark' || v === 'system') return v;
+    if (v === 'light' || v === 'dark') return v;
   } catch {}
-  return 'system';
+  return 'light';
 }
 
 export const themePref: ThemePref = readPref();
-export const isDark = themePref === 'dark' || (themePref === 'system' && Appearance.getColorScheme() === 'dark');
+export const isDark = themePref === 'dark';
 export const colors = isDark ? dark : light;
 
 export function saveThemePref(pref: ThemePref) {

@@ -1,13 +1,11 @@
 import { router, type Href } from 'expo-router';
 import * as Updates from 'expo-updates';
-import { Alert, DevSettings, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Alert, DevSettings, Pressable, Switch, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Avatar } from '@/components/ui';
 import { useStore } from '@/state/store';
-import { colors, fonts, radius, saveThemePref, space, themePref, type ThemePref } from '@/theme';
-
-const PREF_LABEL: Record<ThemePref, string> = { system: 'Match phone', light: 'Light', dark: 'Dark' };
+import { colors, fonts, radius, saveThemePref, space, isDark } from '@/theme';
 
 // Side menu: every page plus settings. Opens from the menu button at the top left.
 export default function Menu() {
@@ -29,27 +27,16 @@ export default function Menu() {
   ];
   const settings: { label: string; onPress: () => void }[] = [
     { label: 'Account', onPress: () => go('/profile') },
-    { label: `Appearance: ${PREF_LABEL[themePref]}`, onPress: pickTheme },
     { label: 'Notifications', onPress: () => soon('Notifications') },
     { label: 'Privacy and safety', onPress: () => soon('Privacy and safety') },
     { label: 'Payments', onPress: () => soon('Payments') },
     { label: 'Help', onPress: () => soon('Help') },
   ];
 
-  function applyTheme(pref: ThemePref) {
-    if (pref === themePref) return;
-    saveThemePref(pref);
+  function setDark(on: boolean) {
+    saveThemePref(on ? 'dark' : 'light');
     // Colours are set when the app starts, so restart it to switch.
     Updates.reloadAsync().catch(() => DevSettings.reload());
-  }
-
-  function pickTheme() {
-    Alert.alert('Appearance', 'Light, dark, or match your phone.', [
-      { text: PREF_LABEL.system, onPress: () => applyTheme('system') },
-      { text: PREF_LABEL.light, onPress: () => applyTheme('light') },
-      { text: PREF_LABEL.dark, onPress: () => applyTheme('dark') },
-      { text: 'Cancel', style: 'cancel' },
-    ]);
   }
 
   function soon(what: string) {
@@ -76,6 +63,16 @@ export default function Menu() {
           ))}
           <View style={styles.divider} />
           <Text style={styles.section}>SETTINGS</Text>
+          <Pressable style={[styles.item, styles.toggleRow]} onPress={() => setDark(!isDark)} accessibilityRole="switch" accessibilityState={{ checked: isDark }}>
+            <Text style={styles.small}>Dark mode</Text>
+            <Switch
+              value={isDark}
+              onValueChange={setDark}
+              trackColor={{ false: colors.edge, true: colors.olive }}
+              thumbColor={colors.onBrand}
+              ios_backgroundColor={colors.edge}
+            />
+          </Pressable>
           {settings.map((s) => (
             <Pressable key={s.label} style={({ pressed }) => [styles.item, pressed && styles.itemOn]} onPress={s.onPress}>
               <Text style={styles.small}>{s.label}</Text>
@@ -115,6 +112,7 @@ const styles = StyleSheet.create({
   item: { height: 46, borderRadius: radius.pill, justifyContent: 'center', paddingHorizontal: space.md },
   itemOn: { backgroundColor: colors.oliveSoft },
   itemText: { fontFamily: fonts.sansMedium, fontSize: 16, color: colors.ink },
+  toggleRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
   small: { fontFamily: fonts.sans, fontSize: 14, color: colors.ink },
   divider: { height: 1, backgroundColor: colors.line, marginVertical: space.md, marginHorizontal: space.md },
   section: { fontFamily: fonts.sansSemi, fontSize: 10, letterSpacing: 2, color: colors.muted, paddingHorizontal: space.md, marginBottom: space.xs },
