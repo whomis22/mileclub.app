@@ -4,7 +4,9 @@ import { router, useLocalSearchParams } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { useMemo, useState } from 'react';
 import {
+  FlatList,
   KeyboardAvoidingView,
+  Modal,
   Platform,
   Pressable,
   ScrollView,
@@ -16,7 +18,8 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { colors, radius, space } from '@/theme';
+import { COUNTRIES, defaultCountry, flagOf, type Country } from '@/data/countries';
+import { colors, fonts, radius, space } from '@/theme';
 
 // Step-by-step sign-up, one task per screen:
 // account details -> verification code -> password -> photo -> username,
@@ -25,8 +28,8 @@ import { colors, radius, space } from '@/theme';
 // Coming from "Continue with Apple", Apple has already checked the email, so the
 // code and password steps are skipped.
 
-const DIM = '#B9B0CC';
-const EDGE = '#3A2D5C';
+const EDGE = '#D8CFBE';
+const ERROR = '#B4432F';
 
 function ageFrom(day: number, month: number, year: number) {
   const birth = new Date(year, month - 1, day);
@@ -41,9 +44,9 @@ function Field({ label, counter, error, ...props }: TextInputProps & { label: st
   const [focused, setFocused] = useState(false);
   return (
     <View style={{ marginBottom: space.lg }}>
-      <View style={[styles.field, focused && { borderColor: colors.accent }, !!error && { borderColor: '#FF6B6B' }]}>
+      <View style={[styles.field, focused && { borderColor: colors.olive }, !!error && { borderColor: ERROR }]}>
         <View style={styles.fieldTop}>
-          <Text style={[styles.fieldLabel, focused && { color: colors.accent }]}>{label}</Text>
+          <Text style={[styles.fieldLabel, focused && { color: colors.olive }]}>{label}</Text>
           {counter && focused ? <Text style={styles.fieldLabel}>{counter}</Text> : null}
         </View>
         <TextInput
@@ -56,13 +59,59 @@ function Field({ label, counter, error, ...props }: TextInputProps & { label: st
             setFocused(false);
             props.onBlur?.(e);
           }}
-          placeholderTextColor="#6E6585"
+          placeholderTextColor="#A39C8C"
           style={styles.fieldInput}
-          selectionColor={colors.accent}
+          selectionColor={colors.olive}
         />
       </View>
       {error ? <Text style={styles.error}>{error}</Text> : null}
     </View>
+  );
+}
+
+function CountryPicker({ visible, onPick, onClose }: { visible: boolean; onPick: (c: Country) => void; onClose: () => void }) {
+  const [q, setQ] = useState('');
+  const list = useMemo(() => {
+    const s = q.trim().toLowerCase().replace(/^\+/, '');
+    if (!s) return COUNTRIES;
+    return COUNTRIES.filter((c) => c.name.toLowerCase().includes(s) || c.dial.slice(1).startsWith(s) || c.code.toLowerCase() === s);
+  }, [q]);
+  return (
+    <Modal visible={visible} animationType="slide" presentationStyle="pageSheet" onRequestClose={onClose}>
+      <SafeAreaView style={styles.sheet} edges={['top', 'bottom']}>
+        <View style={styles.sheetHead}>
+          <Text style={styles.sheetTitle}>Country code</Text>
+          <Pressable onPress={onClose} hitSlop={12}>
+            <Text style={styles.link}>Close</Text>
+          </Pressable>
+        </View>
+        <TextInput
+          value={q}
+          onChangeText={setQ}
+          placeholder="Search country or code"
+          placeholderTextColor="#A39C8C"
+          style={styles.search}
+          autoCorrect={false}
+        />
+        <FlatList
+          data={list}
+          keyExtractor={(c) => c.code}
+          keyboardShouldPersistTaps="handled"
+          renderItem={({ item }) => (
+            <Pressable
+              onPress={() => {
+                onPick(item);
+                setQ('');
+              }}
+              style={({ pressed }) => [styles.countryRow, pressed && { backgroundColor: colors.sand }]}>
+              <Text style={styles.countryFlag}>{flagOf(item.code)}</Text>
+              <Text style={styles.countryName}>{item.name}</Text>
+              <Text style={styles.countryDial}>{item.dial}</Text>
+            </Pressable>
+          )}
+        />
+      </SafeAreaView>
+    </Modal>
   );
 }
 
@@ -75,6 +124,8 @@ export default function SignUp() {
   const isLast = pos === flow.length - 1;
   const [name, setName] = useState(params.name ?? '');
   const [usePhone, setUsePhone] = useState(false);
+  const [country, setCountry] = useState<Country>(() => defaultCountry());
+  const [picking, setPicking] = useState(false);
   const [contact, setContact] = useState(params.email ?? '');
   const [dd, setDd] = useState('');
   const [mm, setMm] = useState('');
@@ -93,11 +144,14 @@ export default function SignUp() {
   const [username, setUsername] = useState('');
 
   const age = dd && mm && yyyy.length === 4 ? ageFrom(Number(dd), Number(mm), Number(yyyy)) : null;
+  const digits = contact.replace(/[^0-9]/g, '');
   const contactOk = viaApple
     ? true
     : usePhone
-    ? contact.replace(/[^0-9]/g, '').length >= 8
+    ? digits.length >= 6 && digits.length <= 14
     : /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(contact.trim());
+  // Full number in international form, e.g. +44 7700900123 (a leading 0 is dropped).
+  const fullPhone = `${country.dial} ${digits.replace(/^0+/, '')}`;
   const tooYoung = age !== null && age < 18;
   const handle = (username || suggested).replace(/^@/, '');
 
@@ -138,20 +192,26 @@ export default function SignUp() {
 
   return (
     <SafeAreaView style={styles.screen} edges={['top', 'bottom']}>
-      <StatusBar style="light" />
+      <StatusBar style="dark" />
       <View style={styles.header}>
-        <Pressable onPress={back} hitSlop={12} style={styles.headerSide}>
-          <Text style={styles.headerIcon}>{pos === 0 ? '✕' : '←'}</Text>
+        <Pressable onPress={back} hitSlop={8} style={styles.backBtn} accessibilityLabel={pos === 0 ? 'Close' : 'Back'}>
+          <Text style={styles.backIcon}>{pos === 0 ? '✕' : '‹'}</Text>
         </Pressable>
-        <Image source={require('../../assets/images/logo-mark.png')} style={styles.headerLogo} contentFit="contain" />
-        <View style={styles.headerSide} />
+        <View style={styles.bar}>
+          <View style={[styles.barFill, { width: `${((pos + 1) / flow.length) * 100}%` }]} />
+        </View>
       </View>
 
       <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
         <ScrollView contentContainerStyle={styles.body} keyboardShouldPersistTaps="handled">
+          <Text style={styles.stepLabel}>
+            STEP {pos + 1} OF {flow.length}
+          </Text>
           {step === 0 && (
             <>
-              <Text style={styles.title}>Create your account</Text>
+              <Text style={styles.title}>
+                Create your <Text style={styles.titleItalic}>account</Text>
+              </Text>
               <Field label="Name" value={name} onChangeText={(t) => setName(t.slice(0, 50))} counter={`${name.length} / 50`} autoCapitalize="words" autoFocus />
               {viaApple ? (
                 <View style={styles.appleNote}>
@@ -159,15 +219,39 @@ export default function SignUp() {
                 </View>
               ) : (
                 <>
-                  <Field
-                    label={usePhone ? 'Phone' : 'Email'}
-                    value={contact}
-                    onChangeText={setContact}
-                    keyboardType={usePhone ? 'phone-pad' : 'email-address'}
-                    autoCapitalize="none"
-                    autoCorrect={false}
-                    error={contact.length > 4 && !contactOk ? (usePhone ? 'Please enter a valid phone number.' : 'Please enter a valid email.') : undefined}
-                  />
+                  {usePhone ? (
+                    <View style={styles.phoneRow}>
+                      <Pressable
+                        onPress={() => setPicking(true)}
+                        style={styles.countryBtn}
+                        accessibilityLabel={`Country code ${country.name} ${country.dial}. Tap to change.`}>
+                        <Text style={styles.fieldLabel}>Code</Text>
+                        <Text style={styles.countryBtnText}>
+                          {flagOf(country.code)} {country.dial} ▾
+                        </Text>
+                      </Pressable>
+                      <View style={{ flex: 1 }}>
+                        <Field
+                          label="Phone"
+                          value={contact}
+                          onChangeText={(t) => setContact(t.replace(/[^0-9 ]/g, '').slice(0, 18))}
+                          keyboardType="phone-pad"
+                          autoCorrect={false}
+                          error={contact.length > 4 && !contactOk ? 'Please enter a valid phone number.' : undefined}
+                        />
+                      </View>
+                    </View>
+                  ) : (
+                    <Field
+                      label="Email"
+                      value={contact}
+                      onChangeText={setContact}
+                      keyboardType="email-address"
+                      autoCapitalize="none"
+                      autoCorrect={false}
+                      error={contact.length > 4 && !contactOk ? 'Please enter a valid email.' : undefined}
+                    />
+                  )}
                   <Pressable
                     onPress={() => {
                       setUsePhone(!usePhone);
@@ -200,8 +284,10 @@ export default function SignUp() {
 
           {step === 1 && (
             <>
-              <Text style={styles.title}>We sent you a code</Text>
-              <Text style={styles.help}>Enter it below to verify {contact.trim()}.</Text>
+              <Text style={styles.title}>
+                We sent you a <Text style={styles.titleItalic}>code</Text>
+              </Text>
+              <Text style={styles.help}>Enter it below to verify {usePhone ? fullPhone : contact.trim()}.</Text>
               <Field label="Verification code" value={code} onChangeText={(t) => setCode(t.replace(/[^0-9]/g, '').slice(0, 6))} keyboardType="number-pad" autoFocus />
               <Pressable onPress={() => setResent(true)}>
                 <Text style={styles.link}>{resent ? 'New code sent.' : usePhone ? 'Didn’t receive a text?' : 'Didn’t receive an email?'}</Text>
@@ -212,7 +298,9 @@ export default function SignUp() {
 
           {step === 2 && (
             <>
-              <Text style={styles.title}>You’ll need a password</Text>
+              <Text style={styles.title}>
+                You’ll need a <Text style={styles.titleItalic}>password</Text>
+              </Text>
               <Text style={styles.help}>Make sure it’s 8 characters or more.</Text>
               <Field label="Password" value={password} onChangeText={setPassword} secureTextEntry={!showPassword} autoCapitalize="none" autoCorrect={false} autoFocus />
               <Pressable onPress={() => setShowPassword(!showPassword)}>
@@ -223,21 +311,21 @@ export default function SignUp() {
 
           {step === 3 && (
             <>
-              <Text style={styles.title}>Pick a profile picture</Text>
+              <Text style={styles.title}>
+                Pick a profile <Text style={styles.titleItalic}>picture</Text>
+              </Text>
               <Text style={styles.help}>Have a favourite photo? Add it now so your running buddies know who to look for.</Text>
               <Pressable onPress={pickPhoto} style={styles.photo}>
-                {photoUri ? (
-                  <Image source={{ uri: photoUri }} style={styles.photoImg} />
-                ) : (
-                  <Text style={styles.photoPlus}>📷</Text>
-                )}
+                {photoUri ? <Image source={{ uri: photoUri }} style={styles.photoImg} /> : <Text style={styles.photoPlus}>+</Text>}
               </Pressable>
             </>
           )}
 
           {step === 4 && (
             <>
-              <Text style={styles.title}>What should we call you?</Text>
+              <Text style={styles.title}>
+                What should we <Text style={styles.titleItalic}>call you?</Text>
+              </Text>
               <Text style={styles.help}>Your @username is unique. You can always change it later.</Text>
               <Field
                 label="Username"
@@ -252,78 +340,114 @@ export default function SignUp() {
         </ScrollView>
 
         <View style={styles.footer}>
+          <Pressable
+            onPress={next}
+            disabled={!canNext}
+            style={({ pressed }) => [styles.next, !canNext && styles.nextOff, pressed && { opacity: 0.85 }]}>
+            <Text style={[styles.nextText, !canNext && styles.nextTextOff]}>{nextLabel}</Text>
+          </Pressable>
           {skippable ? (
-            <>
-              <Pressable
-                onPress={next}
-                disabled={!canNext}
-                style={({ pressed }) => [styles.next, !canNext && styles.nextOff, pressed && { opacity: 0.8 }]}>
-                <Text style={[styles.nextText, !canNext && styles.nextTextOff]}>{nextLabel}</Text>
-              </Pressable>
-              <Pressable
-                onPress={() => {
-                  if (step === 3) setPhotoUri(undefined);
-                  if (step === 4) setUsername('');
-                  if (!isLast) setPos(pos + 1);
-                  else next();
-                }}
-                style={({ pressed }) => [styles.skip, pressed && { opacity: 0.7 }]}>
-                <Text style={styles.skipText}>Skip for now</Text>
-              </Pressable>
-            </>
-          ) : (
             <Pressable
-              onPress={next}
-              disabled={!canNext}
-              style={({ pressed }) => [styles.next, !canNext && styles.nextOff, pressed && { opacity: 0.8 }]}>
-              <Text style={[styles.nextText, !canNext && styles.nextTextOff]}>{nextLabel}</Text>
+              onPress={() => {
+                if (step === 3) setPhotoUri(undefined);
+                if (step === 4) setUsername('');
+                if (!isLast) setPos(pos + 1);
+                else next();
+              }}
+              style={({ pressed }) => [styles.skip, pressed && { opacity: 0.7 }]}>
+              <Text style={styles.skipText}>Skip for now</Text>
             </Pressable>
-          )}
+          ) : null}
         </View>
       </KeyboardAvoidingView>
+
+      <CountryPicker
+        visible={picking}
+        onClose={() => setPicking(false)}
+        onPick={(c) => {
+          setCountry(c);
+          setPicking(false);
+        }}
+      />
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  screen: { flex: 1, backgroundColor: colors.ink },
-  header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: space.lg, height: 52 },
-  headerSide: { width: 32 },
-  headerIcon: { color: '#FFFFFF', fontSize: 22, fontWeight: '600' },
-  headerLogo: { width: 46, height: 22 },
-  body: { paddingHorizontal: space.xxl, paddingTop: space.lg, paddingBottom: space.xxl },
-  title: { color: '#FFFFFF', fontSize: 30, fontWeight: '800', letterSpacing: -0.5, marginBottom: space.md },
-  help: { color: DIM, fontSize: 15, lineHeight: 21, marginBottom: space.lg },
-  label: { color: '#FFFFFF', fontSize: 16, fontWeight: '700', marginTop: space.sm, marginBottom: space.xs },
-  field: { borderWidth: 1, borderColor: EDGE, borderRadius: 6, paddingHorizontal: space.md, paddingTop: space.sm, paddingBottom: 6 },
+  screen: { flex: 1, backgroundColor: colors.bg },
+  header: { flexDirection: 'row', alignItems: 'center', gap: space.lg, paddingHorizontal: space.xl, paddingTop: space.sm },
+  backBtn: { width: 44, height: 44, borderRadius: 22, borderWidth: 1, borderColor: EDGE, alignItems: 'center', justifyContent: 'center' },
+  backIcon: { color: colors.ink, fontSize: 22, lineHeight: 26, fontFamily: fonts.sansMedium },
+  bar: { flex: 1, height: 3, borderRadius: 2, backgroundColor: '#E6DDCC', overflow: 'hidden' },
+  barFill: { height: 3, borderRadius: 2, backgroundColor: colors.olive },
+  body: { paddingHorizontal: space.xl, paddingTop: space.xl, paddingBottom: space.xxl },
+  stepLabel: { color: colors.muted, fontSize: 10, letterSpacing: 2.5, fontFamily: fonts.sansSemi, marginBottom: space.sm },
+  title: { color: colors.ink, fontSize: 38, lineHeight: 40, fontFamily: fonts.serif, marginBottom: space.lg },
+  titleItalic: { fontFamily: fonts.serifItalic },
+  help: { color: colors.muted, fontSize: 15, lineHeight: 21, marginBottom: space.lg, fontFamily: fonts.sans },
+  label: { color: colors.ink, fontSize: 16, fontFamily: fonts.sansSemi, marginTop: space.sm, marginBottom: space.xs },
+  field: { backgroundColor: colors.card, borderWidth: 1, borderColor: EDGE, borderRadius: radius.md, paddingHorizontal: space.md, paddingTop: space.sm, paddingBottom: 6 },
   fieldTop: { flexDirection: 'row', justifyContent: 'space-between' },
-  fieldLabel: { color: DIM, fontSize: 13 },
-  fieldInput: { color: '#FFFFFF', fontSize: 18, paddingVertical: 4 },
-  error: { color: '#FF6B6B', fontSize: 13, marginTop: 4 },
+  fieldLabel: { color: colors.muted, fontSize: 13, fontFamily: fonts.sans },
+  fieldInput: { color: colors.ink, fontSize: 18, paddingVertical: 4, fontFamily: fonts.sans },
+  error: { color: ERROR, fontSize: 13, marginTop: 4, fontFamily: fonts.sans },
   dobRow: { flexDirection: 'row', gap: space.md },
-  appleNote: { borderWidth: 1, borderColor: EDGE, borderRadius: 6, padding: space.md, marginBottom: space.lg },
-  appleNoteText: { color: '#FFFFFF', fontSize: 15 },
-  link: { color: colors.accent, fontSize: 15, fontWeight: '600' },
-  testNote: { color: '#6E6585', fontSize: 13, marginTop: space.xl },
+  phoneRow: { flexDirection: 'row', gap: space.sm },
+  countryBtn: {
+    backgroundColor: colors.card,
+    borderWidth: 1,
+    borderColor: EDGE,
+    borderRadius: radius.md,
+    paddingHorizontal: space.md,
+    paddingTop: space.sm,
+    paddingBottom: 6,
+    marginBottom: space.lg,
+    minWidth: 104,
+  },
+  countryBtnText: { color: colors.ink, fontSize: 18, paddingVertical: 4, fontFamily: fonts.sans },
+  appleNote: { backgroundColor: colors.card, borderWidth: 1, borderColor: EDGE, borderRadius: radius.md, padding: space.md, marginBottom: space.lg },
+  appleNoteText: { color: colors.ink, fontSize: 15, fontFamily: fonts.sans },
+  link: { color: colors.olive, fontSize: 15, fontFamily: fonts.sansSemi },
+  testNote: { color: colors.muted, fontSize: 13, marginTop: space.xl, fontFamily: fonts.sans },
   photo: {
     alignSelf: 'center',
     width: 160,
     height: 160,
     borderRadius: 80,
-    borderWidth: 2,
-    borderColor: EDGE,
+    borderWidth: 1.5,
+    borderStyle: 'dashed',
+    borderColor: '#B9AE98',
+    backgroundColor: colors.card,
     alignItems: 'center',
     justifyContent: 'center',
     overflow: 'hidden',
     marginTop: space.xl,
   },
   photoImg: { width: 160, height: 160 },
-  photoPlus: { fontSize: 40 },
-  footer: { paddingHorizontal: space.xxl, paddingBottom: space.lg, paddingTop: space.sm, gap: space.md, borderTopWidth: 1, borderTopColor: EDGE },
-  next: { height: 52, borderRadius: radius.pill, backgroundColor: '#FFFFFF', alignItems: 'center', justifyContent: 'center' },
-  nextOff: { backgroundColor: '#4A3F66' },
-  nextText: { color: colors.ink, fontSize: 17, fontWeight: '800' },
-  nextTextOff: { color: '#8C83A3' },
-  skip: { height: 52, borderRadius: radius.pill, borderWidth: 1, borderColor: '#6E6585', alignItems: 'center', justifyContent: 'center' },
-  skipText: { color: '#FFFFFF', fontSize: 17, fontWeight: '700' },
+  photoPlus: { fontSize: 44, color: colors.olive, fontFamily: fonts.sans },
+  footer: { paddingHorizontal: space.xl, paddingBottom: space.lg, paddingTop: space.sm, gap: space.md },
+  next: { height: 54, borderRadius: radius.pill, backgroundColor: colors.olive, alignItems: 'center', justifyContent: 'center' },
+  nextOff: { backgroundColor: '#CFC8B6' },
+  nextText: { color: colors.bg, fontSize: 15, fontFamily: fonts.sansSemi },
+  nextTextOff: { color: '#F3EDE2' },
+  skip: { height: 54, borderRadius: radius.pill, borderWidth: 1, borderColor: EDGE, alignItems: 'center', justifyContent: 'center' },
+  skipText: { color: colors.ink, fontSize: 15, fontFamily: fonts.sansSemi },
+  sheet: { flex: 1, backgroundColor: colors.bg },
+  sheetHead: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: space.xl, paddingTop: space.lg, paddingBottom: space.md },
+  sheetTitle: { fontFamily: fonts.serif, fontSize: 28, color: colors.ink },
+  search: {
+    marginHorizontal: space.xl,
+    marginBottom: space.sm,
+    height: 46,
+    borderRadius: 23,
+    backgroundColor: colors.sand,
+    paddingHorizontal: space.lg,
+    fontSize: 15,
+    color: colors.ink,
+    fontFamily: fonts.sans,
+  },
+  countryRow: { flexDirection: 'row', alignItems: 'center', gap: space.md, paddingHorizontal: space.xl, paddingVertical: 14, borderBottomWidth: 1, borderBottomColor: colors.line },
+  countryFlag: { fontSize: 22 },
+  countryName: { flex: 1, fontSize: 16, color: colors.ink, fontFamily: fonts.sans },
+  countryDial: { fontSize: 15, color: colors.muted, fontFamily: fonts.sansMedium },
 });

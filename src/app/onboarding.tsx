@@ -17,7 +17,7 @@ import {
 import type { Profile } from '@/data/types';
 import { ROLES, type Role } from '@/data/roles';
 import { useStore } from '@/state/store';
-import { colors, radius, space } from '@/theme';
+import { colors, fonts, radius, space } from '@/theme';
 
 type Draft = Partial<Profile> & { activities: Profile['activities']; goals: Profile['goals']; availability: Profile['availability'] };
 
@@ -73,18 +73,22 @@ export default function Onboarding() {
     <SafeAreaView style={styles.screen}>
       <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
         <View style={styles.header}>
-          <Pressable onPress={() => (step === 0 ? router.back() : setStep(step - 1))} hitSlop={12}>
-            <Text style={styles.back}>‹ Back</Text>
+          <Pressable
+            onPress={() => (step === 0 ? router.back() : setStep(step - 1))}
+            hitSlop={8}
+            style={styles.backBtn}
+            accessibilityLabel="Back">
+            <Text style={styles.back}>‹</Text>
           </Pressable>
-          <Text style={styles.count}>
-            {step + 1} / {STEPS.length}
-          </Text>
-        </View>
-        <View style={styles.bar}>
-          <View style={[styles.barFill, { width: `${((step + 1) / STEPS.length) * 100}%` }]} />
+          <View style={styles.bar}>
+            <View style={[styles.barFill, { width: `${((step + 1) / STEPS.length) * 100}%` }]} />
+          </View>
         </View>
 
         <View style={styles.body}>
+          <Text style={styles.count}>
+            STEP {step + 1} OF {STEPS.length}
+          </Text>
           {step === 0 && (
             <>
               <Text style={styles.q}>How will you use Mile Club?</Text>
@@ -94,12 +98,14 @@ export default function Onboarding() {
                 const on = d.role === r;
                 return (
                   <Pressable key={r} onPress={() => set({ role: r })} style={[styles.role, on && styles.roleOn]}>
-                    <Text style={{ fontSize: 34 }}>{ROLES[r].emoji}</Text>
                     <View style={{ flex: 1 }}>
-                      <Text style={[styles.roleName, on && { color: '#fff' }]}>
-                        {r === 'member' ? `I want to move: join the ${ROLES.member.name}` : `I’m a coach: become a ${ROLES.coach.name}`}
+                      <Text style={[styles.roleName, on && { color: colors.bg }]}>
+                        {r === 'member' ? 'I want to run' : 'I’m a coach'}
                       </Text>
-                      <Text style={[styles.rolePitch, on && { color: '#fff', opacity: 0.85 }]}>{ROLES[r].pitch}</Text>
+                      <Text style={[styles.rolePitch, on && { color: colors.oliveSoft }]}>{ROLES[r].pitch}</Text>
+                    </View>
+                    <View style={[styles.tick, on && styles.tickOn]}>
+                      {on ? <Text style={styles.tickMark}>✓</Text> : null}
                     </View>
                   </Pressable>
                 );
@@ -259,8 +265,8 @@ export default function Onboarding() {
                 style={styles.input}
               />
               <Pressable onPress={() => setAgreed(!agreed)} style={styles.agree}>
-                <View style={[styles.box, agreed && { backgroundColor: colors.ink }]}>
-                  {agreed && <Text style={{ color: '#fff', fontWeight: '900' }}>✓</Text>}
+                <View style={[styles.box, agreed && { backgroundColor: colors.olive, borderColor: colors.olive }]}>
+                  {agreed && <Text style={{ color: colors.bg, fontWeight: '900' }}>✓</Text>}
                 </View>
                 <Text style={styles.agreeText}>
                   I agree to the community guidelines: be kind, show up, respect everyone’s pace.
@@ -271,7 +277,7 @@ export default function Onboarding() {
         </View>
 
         <View style={styles.footer}>
-          <Button title={step === STEPS.length - 1 ? 'FIND MY PEOPLE' : 'NEXT'} onPress={next} disabled={!valid} />
+          <Button title={step === STEPS.length - 1 ? 'Find my people' : 'Next'} onPress={next} disabled={!valid} />
         </View>
       </KeyboardAvoidingView>
     </SafeAreaView>
@@ -280,35 +286,39 @@ export default function Onboarding() {
 
 const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: colors.bg },
-  header: { flexDirection: 'row', justifyContent: 'space-between', paddingHorizontal: space.xl, paddingTop: space.md },
-  back: { fontSize: 17, fontWeight: '700', color: colors.ink },
-  count: { fontSize: 15, fontWeight: '700', color: colors.muted },
-  bar: { height: 4, backgroundColor: colors.line, marginHorizontal: space.xl, marginTop: space.md, borderRadius: 2 },
-  barFill: { height: 4, backgroundColor: colors.accent, borderRadius: 2 },
+  header: { flexDirection: 'row', alignItems: 'center', gap: space.lg, paddingHorizontal: space.xl, paddingTop: space.sm },
+  backBtn: { width: 44, height: 44, borderRadius: 22, borderWidth: 1, borderColor: '#D8CFBE', alignItems: 'center', justifyContent: 'center' },
+  back: { fontSize: 24, lineHeight: 28, color: colors.ink, fontFamily: fonts.sansMedium },
+  bar: { flex: 1, height: 3, backgroundColor: '#E6DDCC', borderRadius: 2, overflow: 'hidden' },
+  barFill: { height: 3, backgroundColor: colors.olive, borderRadius: 2 },
   body: { flex: 1, padding: space.xl },
-  q: { fontSize: 30, fontWeight: '900', color: colors.ink, letterSpacing: -0.5, marginBottom: space.sm },
+  count: { fontSize: 10, letterSpacing: 2.5, color: colors.muted, fontFamily: fonts.sansSemi, marginBottom: space.sm },
+  q: { fontSize: 38, lineHeight: 40, color: colors.ink, fontFamily: fonts.serif, marginBottom: space.sm },
   input: {
-    backgroundColor: colors.card, borderWidth: 1.5, borderColor: colors.line, borderRadius: radius.md,
-    paddingHorizontal: space.lg, paddingVertical: 14, fontSize: 17, color: colors.ink,
+    backgroundColor: colors.card, borderWidth: 1, borderColor: '#D8CFBE', borderRadius: radius.md,
+    paddingHorizontal: space.lg, paddingVertical: 14, fontSize: 17, color: colors.ink, fontFamily: fonts.sans,
   },
   photoRow: { flexDirection: 'row', alignItems: 'center', gap: space.lg, marginTop: space.lg },
   photoEmpty: {
-    width: 72, height: 72, borderRadius: 36, borderWidth: 2, borderColor: colors.line, borderStyle: 'dashed',
+    width: 72, height: 72, borderRadius: 36, borderWidth: 1.5, borderColor: '#B9AE98', borderStyle: 'dashed',
     alignItems: 'center', justifyContent: 'center', backgroundColor: colors.card,
   },
-  photoText: { fontSize: 16, fontWeight: '700', color: colors.accent },
+  photoText: { fontSize: 16, color: colors.olive, fontFamily: fonts.sansSemi },
   agree: { flexDirection: 'row', gap: space.md, marginTop: space.xl, alignItems: 'flex-start' },
   box: {
-    width: 26, height: 26, borderRadius: 7, borderWidth: 2, borderColor: colors.ink,
+    width: 26, height: 26, borderRadius: 13, borderWidth: 1.5, borderColor: '#B9AE98',
     alignItems: 'center', justifyContent: 'center',
   },
-  agreeText: { flex: 1, fontSize: 15, color: colors.ink, lineHeight: 21 },
+  agreeText: { flex: 1, fontSize: 15, color: colors.ink, lineHeight: 21, fontFamily: fonts.sans },
   role: {
-    flexDirection: 'row', gap: space.lg, alignItems: 'center', padding: space.lg, borderRadius: radius.lg,
-    borderWidth: 1.5, borderColor: colors.line, backgroundColor: colors.card, marginBottom: space.md,
+    flexDirection: 'row', gap: space.lg, alignItems: 'center', padding: 22, borderRadius: 26,
+    borderWidth: 1, borderColor: '#D8CFBE', marginBottom: space.md,
   },
-  roleOn: { backgroundColor: colors.ink, borderColor: colors.ink },
-  roleName: { fontSize: 18, fontWeight: '900', color: colors.ink },
-  rolePitch: { fontSize: 14, color: colors.muted, marginTop: 4, lineHeight: 20 },
+  roleOn: { backgroundColor: colors.olive, borderColor: colors.olive },
+  roleName: { fontSize: 26, lineHeight: 28, color: colors.ink, fontFamily: fonts.serif },
+  rolePitch: { fontSize: 13, color: colors.muted, marginTop: 6, lineHeight: 18, fontFamily: fonts.sans },
+  tick: { width: 26, height: 26, borderRadius: 13, borderWidth: 1.5, borderColor: '#B9AE98', alignItems: 'center', justifyContent: 'center' },
+  tickOn: { backgroundColor: colors.peach, borderColor: colors.peach },
+  tickMark: { color: colors.ink, fontSize: 13, fontWeight: '900' },
   footer: { padding: space.xl, paddingTop: space.sm },
 });

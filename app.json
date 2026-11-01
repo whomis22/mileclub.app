@@ -33,7 +33,8 @@
         }
       ],
       "expo-sqlite",
-      "expo-apple-authentication"
+      "expo-apple-authentication",
+      "expo-localization"
     ],
     "experiments": {
       "typedRoutes": true,
