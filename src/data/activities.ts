@@ -7,9 +7,50 @@ function inDays(n: number) {
   return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
 }
 
+// A start time a few hours from now (rounded to 15 min), for last-minute sessions.
+function soon(hours: number) {
+  const d = new Date(Date.now() + hours * 3600000);
+  d.setMinutes(Math.ceil(d.getMinutes() / 15) * 15, 0, 0);
+  const pad = (x: number) => String(x).padStart(2, '0');
+  return {
+    date: `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`,
+    time: `${pad(d.getHours())}:${pad(d.getMinutes())}`,
+  };
+}
+
 // Sample activities, always placed in the coming days so the list never looks stale.
 export function sampleActivities(): Activity[] {
   return [
+    {
+      id: 's1', type: 'running', title: 'Canal Ring 6K', ...soon(1),
+      location: 'Westerkerk steps', neighborhood: 'Jordaan', distance: '6 km', pace: '6:00/km',
+      level: 'Beginner', groupSize: 8, participants: ['femke', 'tom', 'sanne'], hostId: 'femke', free: true,
+      description: 'A quick loop along Prinsengracht and Keizersgracht. Two spots just opened up.',
+    },
+    {
+      id: 's2', type: 'running', title: 'Tempo Tuesday Intervals', ...soon(2),
+      location: 'Olympic Stadium track', neighborhood: 'Oud-Zuid', distance: '8 km', pace: '4:50/km',
+      level: 'Advanced', groupSize: 10, participants: ['noah', 'daan', 'lucas'], hostId: 'noah', free: true,
+      description: '6 x 800m with 90s rest. Warm-up jog from the stadium together.',
+    },
+    {
+      id: 's3', type: 'yoga', title: 'Rooftop Stretch & Breathe', ...soon(3),
+      location: 'NDSM Wharf, rooftop terrace', neighborhood: 'Noord', level: 'Beginner', groupSize: 12,
+      participants: ['amira', 'yasmin'], hostId: 'amira', free: true,
+      description: '40 minutes of easy stretching with a view over the IJ. Perfect after work.',
+    },
+    {
+      id: 's4', type: 'cycling', title: 'Amstel Spin', ...soon(4),
+      location: 'Amstelpark, main gate', neighborhood: 'Zuidas', distance: '25 km', level: 'Intermediate',
+      groupSize: 6, participants: ['tom'], hostId: 'tom', free: true,
+      description: 'Easy ride south along the Amstel to Ouderkerk and back. Lights on bikes please.',
+    },
+    {
+      id: 's5', type: 'running', title: 'Oosterpark Social 5K', ...soon(5),
+      location: 'Oosterpark, by the pond', neighborhood: 'Oost', distance: '5 km', pace: '6:45/km',
+      level: 'Beginner', groupSize: 12, participants: ['lotte', 'amira', 'sanne', 'daan'], hostId: 'lotte', free: true,
+      description: 'Chatty pace, two laps. Drinks at the park café after.',
+    },
     {
       id: 'a1', type: 'running', title: 'Vondelpark Easy 5K', date: inDays(1), time: '18:30',
       location: 'Vondelpark, main entrance (Stadhouderskade)', neighborhood: 'Oud-Zuid', distance: '5 km', pace: '6:30/km',

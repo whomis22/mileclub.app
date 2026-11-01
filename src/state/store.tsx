@@ -9,6 +9,8 @@ type State = {
   myActivities: Activity[]; // activities the user created
   joined: string[]; // ids of activities the user joined
   blocked: string[]; // person ids
+  skipped: string[]; // activity ids swiped left
+  kudos: string[]; // feed post ids the user high-fived
 };
 
 type Store = State & {
@@ -16,12 +18,16 @@ type Store = State & {
   saveProfile: (p: Profile) => void;
   createActivity: (a: Omit<Activity, 'id' | 'participants' | 'hostId'>) => Activity;
   toggleJoin: (id: string) => void;
+  join: (id: string) => void;
+  skip: (id: string) => void;
+  clearSkipped: () => void;
+  toggleKudos: (postId: string) => void;
   block: (personId: string) => void;
   reset: () => void;
 };
 
 const KEY = 'mileclub-state-v1';
-const empty: State = { profile: null, myActivities: [], joined: [], blocked: [] };
+const empty: State = { profile: null, myActivities: [], joined: [], blocked: [], skipped: [], kudos: [] };
 
 function load(): State {
   try {
@@ -68,6 +74,14 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       update((s) => ({
         ...s,
         joined: s.joined.includes(id) ? s.joined.filter((x) => x !== id) : [...s.joined, id],
+      })),
+    join: (id) => update((s) => (s.joined.includes(id) ? s : { ...s, joined: [...s.joined, id] })),
+    skip: (id) => update((s) => (s.skipped.includes(id) ? s : { ...s, skipped: [...s.skipped, id] })),
+    clearSkipped: () => update((s) => ({ ...s, skipped: [] })),
+    toggleKudos: (postId) =>
+      update((s) => ({
+        ...s,
+        kudos: s.kudos.includes(postId) ? s.kudos.filter((x) => x !== postId) : [...s.kudos, postId],
       })),
     block: (personId) => update((s) => ({ ...s, blocked: [...s.blocked, personId] })),
     reset: () => update(() => empty),

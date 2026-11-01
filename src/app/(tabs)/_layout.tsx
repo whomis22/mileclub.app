@@ -20,6 +20,8 @@ export default function TabsLayout() {
         tabBarStyle: { backgroundColor: colors.card, borderTopColor: colors.line },
         tabBarLabelStyle: { fontWeight: '700' },
       }}>
+      <Tabs.Screen name="feed" options={{ title: 'Feed', tabBarIcon: icon('🏠') }} />
+      <Tabs.Screen name="now" options={{ title: 'Swipe', tabBarIcon: icon('⚡') }} />
       <Tabs.Screen name="discover" options={{ title: 'People', tabBarIcon: icon('👋') }} />
       <Tabs.Screen name="activities" options={{ title: 'Activities', tabBarIcon: icon('📍') }} />
       <Tabs.Screen name="profile" options={{ title: 'You', tabBarIcon: icon('🙂') }} />

@@ -4,5 +4,5 @@ import { useStore } from '@/state/store';
 
 export default function Index() {
   const { profile } = useStore();
-  return <Redirect href={profile ? '/discover' : '/welcome'} />;
+  return <Redirect href={profile ? '/feed' : '/welcome'} />;
 }
