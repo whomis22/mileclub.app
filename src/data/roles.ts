@@ -1,7 +1,7 @@
 // The two kinds of accounts. Change the names here and they update across the app.
 export const ROLES = {
   member: { name: 'Crew', one: 'Crew member', emoji: '🙌', pitch: 'Join runs and workouts, meet people, book coaching.' },
-  coach: { name: 'Captain', one: 'Captain', emoji: '⭐', pitch: 'You’re a coach. Host paid sessions and get paid.' },
+  coach: { name: 'Captain', one: 'Captain', emoji: '⭐', pitch: 'You’re a coach. Host your own paid sessions.' },
 } as const;
 
 export type Role = keyof typeof ROLES;

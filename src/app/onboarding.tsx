@@ -100,11 +100,6 @@ export default function Onboarding() {
                         {r === 'member' ? `I want to move: join the ${ROLES.member.name}` : `I’m a coach: become a ${ROLES.coach.name}`}
                       </Text>
                       <Text style={[styles.rolePitch, on && { color: '#fff', opacity: 0.85 }]}>{ROLES[r].pitch}</Text>
-                      {r === 'coach' && (
-                        <Text style={[styles.roleFine, on && { color: colors.peach }]}>
-                          You keep 80% of what you earn. Mile Club keeps 20%.
-                        </Text>
-                      )}
                     </View>
                   </Pressable>
                 );
@@ -315,6 +310,5 @@ const styles = StyleSheet.create({
   roleOn: { backgroundColor: colors.ink, borderColor: colors.ink },
   roleName: { fontSize: 18, fontWeight: '900', color: colors.ink },
   rolePitch: { fontSize: 14, color: colors.muted, marginTop: 4, lineHeight: 20 },
-  roleFine: { fontSize: 13, fontWeight: '800', color: colors.accent, marginTop: 6 },
   footer: { padding: space.xl, paddingTop: space.sm },
 });
