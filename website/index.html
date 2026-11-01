@@ -13,33 +13,54 @@
 <style>
 /* Layout: one scrolling page. Hero with a fanned stack of run cards, how it works, features, coaches band, contact form. */
 :root {
-  --cream: #F7F1E6;
-  --cream-2: #EFE6D4;
+  /* white page; each colour option below only swaps these tokens */
+  --cream: #FFFFFF;
+  --cream-2: #F7F5F0;
+  --field: #FAF9F6;
   --olive: #556B2F;
   --olive-ink: #3A4A1F;
   --peach: #F4B595;
-  --peach-soft: #FBE3D4;
+  --peach-soft: #FDEEE5;
   --ink: #2A3318;
   --muted: #6B7058;
-  --line: #E2D8C3;
-  --card: #FFFDF8;
-  --on-olive: #F7F1E6;
+  --line: #ECE7DC;
+  --card: #FFFFFF;
+  --on-olive: #FFFFFF;
   --mark-m: #556B2F;
+  --band: #FDEEE5; --on-band: #3A4A1F; --band-chip: #FFFFFF; --band-btn: #556B2F; --on-band-btn: #FFFFFF;
+  --c1a: #F4B595; --c1b: #D98B66; --c2a: #8FA65E; --c2b: #556B2F; --c3a: #556B2F; --c3b: #2F3B19;
   --display: "Outfit", "Avenir Next", "Segoe UI", system-ui, sans-serif;
   --body: "Figtree", "Helvetica Neue", Arial, system-ui, sans-serif;
   --r: 22px;
+  color-scheme: light;
 }
-@media (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"]) {
-    --cream: #1C2112; --cream-2: #242B17; --olive: #8FA65E; --olive-ink: #C9D7A6;
-    --peach: #F4B595; --peach-soft: #3A2A20; --ink: #EFE9DC; --muted: #B3B49F;
-    --line: #343C22; --card: #232A16; --on-olive: #1C2112; --mark-m: #A9BF78; color-scheme: dark;
-  }
+/* Option 2: Peach Pop */
+:root[data-palette="peach"] {
+  --olive: #C8643F; --olive-ink: #3B2A22; --ink: #3B2A22; --muted: #7A6A60; --peach: #F4B595; --peach-soft: #FDEEE5;
+  --line: #F1E4DA; --cream-2: #FFF7F1; --mark-m: #556B2F;
+  --band: #F4B595; --on-band: #3B2A22; --band-chip: #FDEEE5; --band-btn: #3B2A22; --on-band-btn: #FFFFFF;
+  --c1a: #FBD3BC; --c1b: #F4B595; --c2a: #E99A74; --c2b: #C8643F; --c3a: #E07A52; --c3b: #A84E2E;
 }
-:root[data-theme="dark"] {
-  --cream: #1C2112; --cream-2: #242B17; --olive: #8FA65E; --olive-ink: #C9D7A6;
-  --peach: #F4B595; --peach-soft: #3A2A20; --ink: #EFE9DC; --muted: #B3B49F;
-  --line: #343C22; --card: #232A16; --on-olive: #1C2112; --mark-m: #A9BF78; color-scheme: dark;
+/* Option 3: Black & Olive */
+:root[data-palette="black"] {
+  --olive: #161616; --olive-ink: #161616; --ink: #161616; --muted: #666660; --peach: #F4B595; --peach-soft: #F3F3EF;
+  --line: #E8E8E3; --cream-2: #F5F5F2; --mark-m: #556B2F;
+  --band: #161616; --on-band: #FFFFFF; --band-chip: #2A2A2A; --band-btn: #F4B595; --on-band-btn: #161616;
+  --c1a: #F4B595; --c1b: #D98B66; --c2a: #6F8640; --c2b: #3A4A1F; --c3a: #2A2A2A; --c3b: #0E0E0E;
+}
+/* Option 4: Olive & Sky */
+:root[data-palette="sky"] {
+  --olive: #556B2F; --olive-ink: #24331A; --ink: #24331A; --muted: #5F6B5C; --peach: #F4B595; --peach-soft: #E7F2F8;
+  --line: #E1ECF1; --cream-2: #F3F8FB; --mark-m: #556B2F;
+  --band: #CFE6F2; --on-band: #24331A; --band-chip: #FFFFFF; --band-btn: #556B2F; --on-band-btn: #FFFFFF;
+  --c1a: #A9D2E8; --c1b: #6FA9C9; --c2a: #F4B595; --c2b: #D98B66; --c3a: #556B2F; --c3b: #2F3B19;
+}
+/* Option 5: Olive & Sunshine */
+:root[data-palette="sun"] {
+  --olive: #556B2F; --olive-ink: #2F3B19; --ink: #2F3B19; --muted: #6B6E55; --peach: #F2C94C; --peach-soft: #FDF5D9;
+  --line: #EFEAD6; --cream-2: #FFFBEE; --mark-m: #556B2F;
+  --band: #F7DC7A; --on-band: #2F3B19; --band-chip: #FFF6D2; --band-btn: #2F3B19; --on-band-btn: #FFFFFF;
+  --c1a: #F7DC7A; --c1b: #E2B63A; --c2a: #F4B595; --c2b: #D98B66; --c3a: #556B2F; --c3b: #2F3B19;
 }
 * { box-sizing: border-box; }
 html { scroll-behavior: smooth; }
@@ -94,9 +115,9 @@ nav a:hover { color: var(--olive-ink); }
 .run > * { position: relative; }
 .r1 > div, .r2 > div { visibility: hidden; }
 .r2 .tag { margin-left: auto; }
-.r1 { background: linear-gradient(160deg, #C98A69, #8A5A3F); transform: translate(-82%, -47%) rotate(-10deg); }
-.r2 { background: linear-gradient(160deg, #6F8640, #3A4A1F); transform: translate(-18%, -53%) rotate(9deg); }
-.r3 { background: linear-gradient(165deg, #556B2F 0%, #2F3B19 100%); transform: translate(-50%, -48%) rotate(-1deg); z-index: 2; animation: bob 5s ease-in-out infinite; }
+.r1 { background: linear-gradient(160deg, var(--c1a), var(--c1b)); transform: translate(-82%, -47%) rotate(-10deg); }
+.r2 { background: linear-gradient(160deg, var(--c2a), var(--c2b)); transform: translate(-18%, -53%) rotate(9deg); }
+.r3 { background: linear-gradient(165deg, var(--c3a), var(--c3b)); transform: translate(-50%, -48%) rotate(-1deg); z-index: 2; animation: bob 5s ease-in-out infinite; }
 @keyframes bob { 50% { transform: translate(-50%, -51%) rotate(1deg); } }
 .tag { align-self: flex-start; font: 600 .75rem var(--body); letter-spacing: .06em; text-transform: uppercase; background: rgba(255,253,248,.18); padding: 5px 10px; border-radius: 999px; }
 .run h3 { color: #FFFDF8; font-size: 1.6rem; margin-bottom: 8px; }
@@ -127,12 +148,12 @@ section { padding-block: 84px; }
 .feat p { color: var(--muted); margin-top: 6px; }
 
 /* coaches band */
-.coach { background: var(--olive); color: var(--on-olive); border-radius: 32px; padding: clamp(32px, 6vw, 64px); display: grid; grid-template-columns: 1.2fr 1fr; gap: 40px; align-items: center; }
-.coach h2 { color: var(--on-olive); }
+.coach { background: var(--band); color: var(--on-band); border-radius: 32px; padding: clamp(32px, 6vw, 64px); display: grid; grid-template-columns: 1.2fr 1fr; gap: 40px; align-items: center; }
+.coach h2 { color: var(--on-band); }
 .coach p { opacity: .9; margin-top: 16px; font-size: 1.1rem; max-width: 46ch; }
 .coach ul { list-style: none; padding: 0; margin: 0; display: grid; gap: 12px; }
-.coach li { display: flex; gap: 12px; align-items: flex-start; background: color-mix(in srgb, var(--on-olive) 10%, transparent); padding: 14px 18px; border-radius: 16px; font-weight: 500; }
-.coach li::before { content: ""; flex: none; width: 10px; height: 10px; margin-top: 8px; border-radius: 50%; background: var(--peach); }
+.coach li { display: flex; gap: 12px; align-items: flex-start; background: var(--band-chip); padding: 14px 18px; border-radius: 16px; font-weight: 500; }
+.coach li::before { content: ""; flex: none; width: 10px; height: 10px; margin-top: 8px; border-radius: 50%; background: var(--band-btn); }
 
 /* contact */
 .contact { display: grid; grid-template-columns: .9fr 1.1fr; gap: 48px; align-items: start; }
@@ -142,13 +163,13 @@ form { background: var(--card); border: 1px solid var(--line); border-radius: va
 .row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
 label, legend { display: block; font-weight: 600; font-size: .92rem; margin-bottom: 6px; color: var(--olive-ink); }
 .opt { font-weight: 400; color: var(--muted); }
-input, textarea { width: 100%; font: inherit; color: var(--ink); background: var(--cream); border: 1.5px solid var(--line); border-radius: 12px; padding: 12px 14px; }
+input, textarea { width: 100%; font: inherit; color: var(--ink); background: var(--field); border: 1.5px solid var(--line); border-radius: 12px; padding: 12px 14px; }
 input:focus, textarea:focus { outline: none; border-color: var(--olive); }
 textarea { min-height: 130px; resize: vertical; }
 fieldset { border: 0; padding: 0; margin: 0; }
 .who { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
 .who input { position: absolute; opacity: 0; width: 1px; height: 1px; }
-.who label { margin: 0; cursor: pointer; padding: 14px; border: 1.5px solid var(--line); border-radius: 12px; background: var(--cream); font-weight: 600; text-align: center; }
+.who label { margin: 0; cursor: pointer; padding: 14px; border: 1.5px solid var(--line); border-radius: 12px; background: var(--field); font-weight: 600; text-align: center; }
 .who input:checked + label { border-color: var(--olive); background: var(--peach-soft); }
 .who input:focus-visible + label { outline: 3px solid var(--peach); outline-offset: 2px; }
 .err { color: #B4442A; font-size: .9rem; min-height: 1.2em; }
@@ -156,6 +177,13 @@ fieldset { border: 0; padding: 0; margin: 0; }
 .sent { display: none; padding: 16px; border-radius: 14px; background: var(--peach-soft); color: var(--olive-ink); font-weight: 500; }
 .sent.show { display: block; }
 
+.picker { position: fixed; z-index: 40; left: 50%; transform: translateX(-50%); bottom: calc(14px + env(safe-area-inset-bottom, 0px)); display: flex; align-items: center; gap: 6px; padding: 8px; background: #FFFFFF; border: 1px solid #E5E2DA; border-radius: 999px; box-shadow: 0 14px 34px -14px rgba(0,0,0,.35); max-width: calc(100vw - 24px); overflow-x: auto; }
+.picker b { font: 600 .8rem var(--body); color: #444; padding: 0 8px 0 10px; white-space: nowrap; }
+.picker button { flex: none; display: flex; align-items: center; gap: 8px; border: 0; background: transparent; padding: 6px 12px 6px 6px; border-radius: 999px; font: 600 .82rem var(--body); color: #333; cursor: pointer; white-space: nowrap; }
+.picker button[aria-pressed="true"] { background: #F1EFEA; box-shadow: inset 0 0 0 1.5px #222; }
+.picker i { width: 22px; height: 22px; border-radius: 50%; border: 1px solid rgba(0,0,0,.12); }
+@media (max-width: 640px) { .picker button span { display: none; } .picker button { padding: 6px; } }
+footer { padding-bottom: 90px; }
 footer { border-top: 1px solid var(--line); padding-block: 36px; color: var(--muted); font-size: .92rem; }
 footer .wrap { display: flex; flex-wrap: wrap; gap: 16px; justify-content: space-between; align-items: center; }
 
@@ -174,7 +202,7 @@ footer .wrap { display: flex; flex-wrap: wrap; gap: 16px; justify-content: space
 </style>
 </head>
 <body>
-<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs><symbol id="mc" viewBox="30 70 142 76"><path style="fill:var(--mark-m)" d="M37.40800000000001 140.0V77.408H59.68000000000001V140.0ZM76.70400000000001 140.0V103.776Q76.70400000000001 99.80799999999999 74.272 97.568Q71.84 95.328 68.256 95.328Q65.69600000000001 95.328 63.77600000000001 96.352Q61.85600000000001 97.376 60.76800000000001 99.232Q59.68000000000001 101.088 59.68000000000001 103.776L50.97600000000001 100.32Q50.97600000000001 92.768 54.30400000000001 87.392Q57.632000000000005 82.01599999999999 63.26400000000001 79.072Q68.89600000000002 76.128 76.06400000000001 76.128Q82.46400000000001 76.128 87.64800000000001 79.136Q92.83200000000001 82.144 95.90400000000001 87.52000000000001Q98.97600000000001 92.896 98.97600000000001 100.19200000000001V140.0ZM116.00000000000001 140.0V103.776Q116.00000000000001 99.80799999999999 113.56800000000001 97.568Q111.13600000000001 95.328 107.552 95.328Q105.12 95.328 103.13600000000001 96.352Q101.15200000000002 97.376 100.06400000000002 99.232Q98.97600000000001 101.088 98.97600000000001 103.776L85.92000000000002 103.136Q86.17600000000002 94.688 89.632 88.672Q93.08800000000001 82.656 99.168 79.392Q105.248 76.128 112.92800000000001 76.128Q120.22400000000002 76.128 125.98400000000002 79.19999999999999Q131.74400000000003 82.27199999999999 135.008 88.096Q138.272 93.92 138.272 101.98400000000001V140.0Z"/><path style="fill:var(--peach)" d="M142.49599999999998 141.408Q132.512 141.408 124.512 137.184Q116.51199999999999 132.96 111.904 125.536Q107.29599999999999 118.112 107.29599999999999 108.768Q107.29599999999999 99.29599999999999 111.96799999999999 91.872Q116.63999999999999 84.44800000000001 124.63999999999999 80.16Q132.64 75.872 142.75199999999998 75.872Q150.048 75.872 156.064 78.304Q162.07999999999998 80.73599999999999 167.072 85.6L152.992 99.68Q151.072 97.75999999999999 148.576 96.8Q146.07999999999998 95.84 142.75199999999998 95.84Q139.168 95.84 136.288 97.44Q133.408 99.03999999999999 131.68 101.856Q129.952 104.672 129.952 108.64Q129.952 112.48 131.68 115.36Q133.408 118.24 136.288 119.904Q139.168 121.568 142.75199999999998 121.568Q146.33599999999998 121.568 148.896 120.416Q151.456 119.264 153.37599999999998 117.088L167.584 131.168Q162.33599999999998 136.288 156.25599999999997 138.848Q150.176 141.408 142.49599999999998 141.408Z"/></symbol></defs></svg>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs><symbol id="mc" viewBox="30 70 142 76"><path style="fill:var(--mark-m)" d="M37.40800000000001 140.0V77.408H59.68000000000001V140.0ZM76.70400000000001 140.0V103.776Q76.70400000000001 99.80799999999999 74.272 97.568Q71.84 95.328 68.256 95.328Q65.69600000000001 95.328 63.77600000000001 96.352Q61.85600000000001 97.376 60.76800000000001 99.232Q59.68000000000001 101.088 59.68000000000001 103.776L50.97600000000001 100.32Q50.97600000000001 92.768 54.30400000000001 87.392Q57.632000000000005 82.01599999999999 63.26400000000001 79.072Q68.89600000000002 76.128 76.06400000000001 76.128Q82.46400000000001 76.128 87.64800000000001 79.136Q92.83200000000001 82.144 95.90400000000001 87.52000000000001Q98.97600000000001 92.896 98.97600000000001 100.19200000000001V140.0ZM116.00000000000001 140.0V103.776Q116.00000000000001 99.80799999999999 113.56800000000001 97.568Q111.13600000000001 95.328 107.552 95.328Q105.12 95.328 103.13600000000001 96.352Q101.15200000000002 97.376 100.06400000000002 99.232Q98.97600000000001 101.088 98.97600000000001 103.776L85.92000000000002 103.136Q86.17600000000002 94.688 89.632 88.672Q93.08800000000001 82.656 99.168 79.392Q105.248 76.128 112.92800000000001 76.128Q120.22400000000002 76.128 125.98400000000002 79.19999999999999Q131.74400000000003 82.27199999999999 135.008 88.096Q138.272 93.92 138.272 101.98400000000001V140.0Z"/><path style="fill:#F4B595" d="M142.49599999999998 141.408Q132.512 141.408 124.512 137.184Q116.51199999999999 132.96 111.904 125.536Q107.29599999999999 118.112 107.29599999999999 108.768Q107.29599999999999 99.29599999999999 111.96799999999999 91.872Q116.63999999999999 84.44800000000001 124.63999999999999 80.16Q132.64 75.872 142.75199999999998 75.872Q150.048 75.872 156.064 78.304Q162.07999999999998 80.73599999999999 167.072 85.6L152.992 99.68Q151.072 97.75999999999999 148.576 96.8Q146.07999999999998 95.84 142.75199999999998 95.84Q139.168 95.84 136.288 97.44Q133.408 99.03999999999999 131.68 101.856Q129.952 104.672 129.952 108.64Q129.952 112.48 131.68 115.36Q133.408 118.24 136.288 119.904Q139.168 121.568 142.75199999999998 121.568Q146.33599999999998 121.568 148.896 120.416Q151.456 119.264 153.37599999999998 117.088L167.584 131.168Q162.33599999999998 136.288 156.25599999999997 138.848Q150.176 141.408 142.49599999999998 141.408Z"/></symbol></defs></svg>
 
 <header>
   <div class="wrap bar">
@@ -264,7 +292,7 @@ footer .wrap { display: flex; flex-wrap: wrap; gap: 16px; justify-content: space
         <div>
           <h2>Coach? Host your own sessions.</h2>
           <p>Run a track session, a beginners' club or a long-run group, and get paid for it. Mile Club brings the runners to you.</p>
-          <a class="btn" href="#contact" style="background:var(--peach);color:#3A4A1F;margin-top:26px">Ask us about coaching</a>
+          <a class="btn" href="#contact" style="background:var(--band-btn);color:var(--on-band-btn);margin-top:26px">Ask us about coaching</a>
         </div>
         <ul>
           <li>Create paid sessions in minutes</li>
@@ -312,6 +340,16 @@ footer .wrap { display: flex; flex-wrap: wrap; gap: 16px; justify-content: space
   </div>
 </footer>
 
+
+<div class="picker" role="group" aria-label="Colour options (preview only)">
+  <b>Colours</b>
+  <button type="button" data-p="" aria-pressed="true"><i style="background:linear-gradient(135deg,#556B2F 50%,#F4B595 50%)"></i><span>1 Olive &amp; Peach</span></button>
+  <button type="button" data-p="peach" aria-pressed="false"><i style="background:linear-gradient(135deg,#C8643F 50%,#F4B595 50%)"></i><span>2 Peach Pop</span></button>
+  <button type="button" data-p="black" aria-pressed="false"><i style="background:linear-gradient(135deg,#161616 50%,#556B2F 50%)"></i><span>3 Black &amp; Olive</span></button>
+  <button type="button" data-p="sky" aria-pressed="false"><i style="background:linear-gradient(135deg,#556B2F 50%,#A9D2E8 50%)"></i><span>4 Olive &amp; Sky</span></button>
+  <button type="button" data-p="sun" aria-pressed="false"><i style="background:linear-gradient(135deg,#556B2F 50%,#F2C94C 50%)"></i><span>5 Olive &amp; Sunshine</span></button>
+</div>
+
 <script>
 document.getElementById('contact-form').addEventListener('submit', function (e) {
   e.preventDefault();
@@ -325,6 +363,17 @@ document.getElementById('contact-form').addEventListener('submit', function (e) 
   ok.textContent = 'Thanks, ' + name.split(' ')[0] + '! In the live site this would reach the Mile Club inbox and we would reply to ' + email + '.';
   ok.classList.add('show');
 });
+
+(function () {
+  var btns = document.querySelectorAll('.picker button');
+  function set(p) {
+    if (p) document.documentElement.setAttribute('data-palette', p); else document.documentElement.removeAttribute('data-palette');
+    btns.forEach(function (b) { b.setAttribute('aria-pressed', String(b.dataset.p === p)); });
+    try { localStorage.setItem('mc-palette', p); } catch (e) {}
+  }
+  btns.forEach(function (b) { b.addEventListener('click', function () { set(b.dataset.p); }); });
+  try { var saved = localStorage.getItem('mc-palette'); if (saved) set(saved); } catch (e) {}
+})();
 </script>
 </body>
 </html>
