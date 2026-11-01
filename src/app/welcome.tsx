@@ -6,7 +6,7 @@ import { StatusBar } from 'expo-status-bar';
 
 import { colors, radius, space } from '@/theme';
 
-// Minimal dark welcome screen: small logo on top; headline, Get started
+// Minimal dark welcome screen: logo in the middle; headline, Get started
 // and a quiet "Log in" link at the bottom.
 
 function PillButton({ title, icon, onPress, filled }: {
@@ -36,7 +36,7 @@ export default function Welcome() {
   return (
     <SafeAreaView style={styles.screen}>
       <StatusBar style="light" />
-      <View style={styles.header}>
+      <View style={styles.middle}>
         <Image
           source={require('../../assets/images/logo-mark.png')}
           style={styles.logo}
@@ -44,8 +44,6 @@ export default function Welcome() {
           accessibilityLabel="Mile Club"
         />
       </View>
-
-      <View style={styles.middle} />
 
       <View style={styles.actions}>
         <Text style={styles.hero}>
@@ -75,9 +73,8 @@ const DIM = '#B9B0CC';
 
 const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: colors.ink, paddingHorizontal: space.xxl },
-  header: { alignItems: 'center', paddingTop: space.md },
-  logo: { width: 50, height: 24 },
-  middle: { flex: 1, justifyContent: 'center' },
+  logo: { width: '44%', aspectRatio: 512 / 244 },
+  middle: { flex: 1, alignItems: 'center', justifyContent: 'center', paddingBottom: space.xxl },
   hero: { color: '#FFFFFF', fontSize: 34, fontWeight: '800', lineHeight: 40, letterSpacing: -0.5, marginBottom: space.md },
   heroAccent: { color: colors.accent },
   actions: { gap: space.md },
