@@ -1,6 +1,5 @@
 import type {
   ActivityId,
-  AgeRange,
   Goal,
   GroupSize,
   Level,
@@ -11,7 +10,7 @@ import type {
 
 export type Profile = {
   firstName: string;
-  ageRange: AgeRange;
+  age: number;
   neighborhood: Neighborhood;
   activities: ActivityId[];
   level: Level;

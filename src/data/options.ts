@@ -20,8 +20,6 @@ export function activityInfo(id: ActivityId) {
 export const LEVELS = ['Beginner', 'Intermediate', 'Advanced'] as const;
 export type Level = (typeof LEVELS)[number];
 
-export const AGE_RANGES = ['18–24', '25–29', '30–35', '36+'] as const;
-export type AgeRange = (typeof AGE_RANGES)[number];
 
 export const GOALS = [
   'Get more active',

@@ -18,7 +18,7 @@ export default function ProfileTab() {
         <Avatar name={profile.firstName} uri={profile.photoUri} size={88} />
         <Text style={styles.name}>{profile.firstName}</Text>
         <Text style={styles.meta}>
-          {profile.ageRange} · {profile.neighborhood}, Amsterdam
+          {profile.age ? `${profile.age} · ` : ''}{profile.neighborhood}, Amsterdam
         </Text>
         <View style={{ marginTop: space.sm }}>
           <Badge label="MILE CLUB MEMBER" />

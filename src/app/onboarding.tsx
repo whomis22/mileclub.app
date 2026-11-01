@@ -7,7 +7,6 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Avatar, Body, Button, Chip, Chips, Label } from '@/components/ui';
 import {
   ACTIVITIES,
-  AGE_RANGES,
   AVAILABILITY,
   GOALS,
   GROUP_SIZES,
@@ -35,7 +34,7 @@ export default function Onboarding() {
   const set = (patch: Partial<Draft>) => setD((prev) => ({ ...prev, ...patch }));
 
   const valid = [
-    !!d.firstName?.trim() && !!d.ageRange,
+    !!d.firstName?.trim() && !!d.age && d.age >= 18 && d.age <= 99,
     !!d.neighborhood,
     d.activities.length > 0 && !!d.level,
     d.goals.length > 0,
@@ -98,12 +97,22 @@ export default function Onboarding() {
                 style={styles.input}
                 autoCapitalize="words"
               />
-              <Label>Age range</Label>
-              <Chips>
-                {AGE_RANGES.map((a) => (
-                  <Chip key={a} label={a} selected={d.ageRange === a} onPress={() => set({ ageRange: a })} />
-                ))}
-              </Chips>
+              <Label>Age</Label>
+              <TextInput
+                value={d.age ? String(d.age) : ''}
+                onChangeText={(t) => {
+                  const n = parseInt(t.replace(/[^0-9]/g, ''), 10);
+                  set({ age: Number.isNaN(n) ? undefined : n });
+                }}
+                placeholder="Your age"
+                placeholderTextColor={colors.muted}
+                style={styles.input}
+                keyboardType="number-pad"
+                maxLength={2}
+              />
+              {d.age !== undefined && d.age < 18 ? (
+                <Body muted>You need to be 18 or older to join Mile Club.</Body>
+              ) : null}
             </>
           )}
 

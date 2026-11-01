@@ -38,7 +38,7 @@ export default function PersonDetail() {
         <Avatar name={p.firstName} color={p.color} size={96} />
         <Text style={styles.name}>{p.firstName}</Text>
         <Text style={styles.meta}>
-          {p.ageRange} · {p.neighborhood} · {formatKm(distanceKm(profile.neighborhood, p.neighborhood))}
+          {p.age} · {p.neighborhood} · {formatKm(distanceKm(profile.neighborhood, p.neighborhood))}
         </Text>
         <View style={styles.badges}>
           <Badge label={`${score}% MATCH`} />
