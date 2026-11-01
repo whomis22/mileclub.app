@@ -1,13 +1,15 @@
 export const colors = {
-  bg: '#F3F6FB',
+  bg: '#FAF7FC',
   card: '#FFFFFF',
-  ink: '#0B1F3A',
-  muted: '#5B6B82',
-  line: '#DCE3EE',
-  accent: '#2F6BFF',
-  accentSoft: '#DCE7FF',
+  ink: '#1B1035',
+  muted: '#6E6585',
+  line: '#E9E2F0',
+  accent: '#FF4D8D',
+  accentSoft: '#FFE0EC',
   green: '#1F8A5B',
   greenSoft: '#DDF2E7',
+  purple: '#A855F7',
+  peach: '#FFB057',
   danger: '#C0392B',
 } as const;
 

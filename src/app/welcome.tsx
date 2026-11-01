@@ -1,10 +1,11 @@
 import { router } from 'expo-router';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { StatusBar } from 'expo-status-bar';
 
 import { colors, radius, space } from '@/theme';
 
-// Clean, minimal welcome screen: small wordmark on top, one big headline,
+// Clean, minimal dark welcome screen: small wordmark on top, one big headline,
 // stacked pill buttons, and a quiet "Log in" link at the bottom.
 // Real sign-in (Apple / Google / email) isn't built yet, so every button
 // starts profile setup for now.
@@ -34,12 +35,13 @@ export default function Welcome() {
 
   return (
     <SafeAreaView style={styles.screen}>
+      <StatusBar style="light" />
       <View style={styles.header}>
         <Text style={styles.wordmark}>MILE CLUB</Text>
       </View>
 
       <View style={styles.middle}>
-        <Text style={styles.hero}>See who’s running in Amsterdam right now.</Text>
+        <Text style={styles.hero}>See who’s running in Amsterdam <Text style={styles.heroAccent}>right now.</Text></Text>
       </View>
 
       <View style={styles.actions}>
@@ -73,12 +75,16 @@ export default function Welcome() {
   );
 }
 
+const DIM = '#B9B0CC';
+const EDGE = '#3A2D5C';
+
 const styles = StyleSheet.create({
-  screen: { flex: 1, backgroundColor: colors.bg, paddingHorizontal: space.xxl },
+  screen: { flex: 1, backgroundColor: colors.ink, paddingHorizontal: space.xxl },
   header: { alignItems: 'center', paddingTop: space.md },
-  wordmark: { color: colors.ink, fontSize: 18, fontWeight: '900', letterSpacing: 3 },
+  wordmark: { color: '#FFFFFF', fontSize: 18, fontWeight: '900', letterSpacing: 3 },
   middle: { flex: 1, justifyContent: 'center' },
-  hero: { color: colors.ink, fontSize: 34, fontWeight: '800', lineHeight: 40, letterSpacing: -0.5 },
+  hero: { color: '#FFFFFF', fontSize: 36, fontWeight: '800', lineHeight: 42, letterSpacing: -0.5 },
+  heroAccent: { color: colors.accent },
   actions: { gap: space.md },
   pill: {
     height: 52,
@@ -88,15 +94,15 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     gap: space.sm,
   },
-  pillOutline: { backgroundColor: '#fff', borderWidth: 1, borderColor: colors.line },
+  pillOutline: { backgroundColor: '#FFFFFF' },
   pillFilled: { backgroundColor: colors.accent },
   pillIcon: { fontSize: 18, fontWeight: '800', color: colors.ink },
   pillText: { fontSize: 16, fontWeight: '700', color: colors.ink },
   orRow: { flexDirection: 'row', alignItems: 'center', gap: space.sm, marginVertical: space.xs },
-  orLine: { flex: 1, height: 1, backgroundColor: colors.line },
-  orText: { color: colors.muted, fontSize: 14 },
-  terms: { color: colors.muted, fontSize: 13, lineHeight: 18, marginTop: space.xs },
-  link: { color: colors.accent, fontWeight: '600' },
+  orLine: { flex: 1, height: 1, backgroundColor: EDGE },
+  orText: { color: DIM, fontSize: 14 },
+  terms: { color: DIM, fontSize: 13, lineHeight: 18, marginTop: space.xs },
+  link: { color: colors.peach, fontWeight: '600' },
   footer: { paddingVertical: space.xxl },
-  footerText: { color: colors.muted, fontSize: 15 },
+  footerText: { color: DIM, fontSize: 15 },
 });
