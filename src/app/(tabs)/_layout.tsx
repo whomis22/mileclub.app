@@ -14,8 +14,8 @@ type TabBarProps = {
 
 // Members and coaches get different tab bars. Coaches open on their Studio and
 // still have a Join tab to swipe into other people's runs.
-const MEMBER_TABS = ['now', 'feed', 'activities', 'messages', 'profile'];
-const COACH_TABS = ['studio', 'feed', 'now', 'messages', 'profile'];
+const MEMBER_TABS = ['feed', 'now', 'activities', 'messages', 'profile'];
+const COACH_TABS = ['feed', 'studio', 'now', 'messages', 'profile'];
 const COACH_TITLES: Record<string, string> = { now: 'Join' };
 
 // Floating olive pill at the bottom. The open tab is a cream pill with its name.
@@ -59,9 +59,9 @@ export default function TabsLayout() {
     <Tabs
       tabBar={(props) => <PillTabBar {...(props as unknown as TabBarProps)} isCoach={isCoach} />}
       screenOptions={{ headerShown: false, sceneStyle: { backgroundColor: colors.bg } }}>
+      <Tabs.Screen name="feed" options={{ title: 'Explore' }} />
       <Tabs.Screen name="now" options={{ title: 'Home' }} />
       <Tabs.Screen name="studio" options={{ title: 'Studio' }} />
-      <Tabs.Screen name="feed" options={{ title: 'Explore' }} />
       <Tabs.Screen name="activities" options={{ title: 'Runs' }} />
       <Tabs.Screen name="messages" options={{ title: 'Messages' }} />
       <Tabs.Screen name="profile" options={{ title: 'You' }} />
