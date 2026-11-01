@@ -22,7 +22,7 @@ export default function Train() {
 
   return (
     <Screen>
-      <Title sub={`Paid sessions from ${ROLES.coach.name}s, local coaches who know Amsterdam.`}>Train with a pro</Title>
+      <Title sub={`Paid sessions from ${ROLES.coach.name}s, local coaches near you.`}>Train with a pro</Title>
 
       {isCoach ? (
         <View style={styles.dash}>

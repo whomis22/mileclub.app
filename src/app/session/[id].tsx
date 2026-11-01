@@ -37,7 +37,7 @@ export default function SessionDetail() {
 
       <Label>Where</Label>
       <Body>📍 {s.location}</Body>
-      <Body muted>{s.neighborhood}, Amsterdam</Body>
+      <Body muted>{s.neighborhood}</Body>
       <Label>What you get</Label>
       <Body>{s.description}</Body>
 
