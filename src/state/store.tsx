@@ -12,7 +12,10 @@ export type RequestStatus = 'pending' | 'accepted' | 'declined';
 // Someone asking to book one of the user's own coach sessions.
 export type IncomingRequest = { id: string; sessionId: string; personId: string; status: RequestStatus; note?: string };
 
-// Demo: sample coaches answer a request after this long.
+// Someone asking to join one of the user's own group runs.
+export type RunRequest = { id: string; activityId: string; personId: string; status: RequestStatus; at: number };
+
+// Demo: sample coaches and hosts answer a request after this long.
 const DEMO_REPLY_MS = 20000;
 
 type State = {
@@ -26,6 +29,9 @@ type State = {
   booked: string[]; // old: sessions booked before requests existed (treated as accepted)
   requests: Record<string, { status: RequestStatus; at: number }>; // user's booking requests, by session id
   incoming: IncomingRequest[]; // requests to the user's own sessions (when they're a coach)
+  // Group runs: swiping to join sends a request; the user takes part only once the host accepts.
+  runRequests: Record<string, { status: RequestStatus; at: number }>; // the user's requests, by activity id
+  runIncoming: RunRequest[]; // people asking to join runs the user hosts
 };
 
 type Store = State & {
@@ -43,13 +49,16 @@ type Store = State & {
   book: (sessionId: string) => void;
   statusOf: (sessionId: string) => RequestStatus | undefined;
   respond: (requestId: string, status: 'accepted' | 'declined') => void;
+  runStatus: (activityId: string) => RequestStatus | undefined;
+  cancelRunRequest: (activityId: string) => void;
+  respondRun: (requestId: string, status: 'accepted' | 'declined') => void;
   cancelBooking: (sessionId: string) => void;
   block: (personId: string) => void;
   reset: () => void;
 };
 
 const KEY = 'mileclub-state-v1';
-const empty: State = { profile: null, myActivities: [], joined: [], blocked: [], skipped: [], kudos: [], mySessions: [], booked: [], requests: {}, incoming: [] };
+const empty: State = { profile: null, myActivities: [], joined: [], blocked: [], skipped: [], kudos: [], mySessions: [], booked: [], requests: {}, incoming: [], runRequests: {}, runIncoming: [] };
 
 function load(): State {
   try {
@@ -81,11 +90,13 @@ export function StoreProvider({ children }: { children: ReactNode }) {
 
   const activities = [...state.myActivities, ...samples]
     .filter((a) => !state.blocked.includes(a.hostId))
-    .map((a) =>
-      state.joined.includes(a.id) && !a.participants.includes('me')
-        ? { ...a, participants: [...a.participants, 'me'] }
-        : a,
-    );
+    .map((a) => {
+      const accepted = state.runIncoming
+        .filter((r) => r.activityId === a.id && r.status === 'accepted' && !a.participants.includes(r.personId))
+        .map((r) => r.personId);
+      const me = state.joined.includes(a.id) && !a.participants.includes('me') ? ['me'] : [];
+      return accepted.length || me.length ? { ...a, participants: [...a.participants, ...accepted, ...me] } : a;
+    });
 
   // Demo: sample coaches accept pending requests after a short wait.
   useEffect(() => {
@@ -94,10 +105,20 @@ export function StoreProvider({ children }: { children: ReactNode }) {
         const due = Object.entries(prev.requests).filter(
           ([, r]) => r.status === 'pending' && Date.now() - r.at > DEMO_REPLY_MS,
         );
-        if (!due.length) return prev;
+        const runDue = Object.entries(prev.runRequests ?? {}).filter(
+          ([, r]) => r.status === 'pending' && Date.now() - r.at > DEMO_REPLY_MS,
+        );
+        if (!due.length && !runDue.length) return prev;
         const requests = { ...prev.requests };
         for (const [id, r] of due) requests[id] = { ...r, status: 'accepted' };
-        const next = { ...prev, requests };
+        // Demo: hosts of sample runs accept, and the run moves into the user's plans.
+        const runRequests = { ...prev.runRequests };
+        const joined = [...prev.joined];
+        for (const [id, r] of runDue) {
+          runRequests[id] = { ...r, status: 'accepted' };
+          if (!joined.includes(id)) joined.push(id);
+        }
+        const next = { ...prev, requests, runRequests, joined };
         try {
           Storage.setItemSync(KEY, JSON.stringify(next));
         } catch {}
@@ -145,15 +166,43 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     saveProfile: (profile) => update((s) => ({ ...s, profile })),
     createActivity: (input) => {
       const activity: Activity = { ...input, id: `me-${Date.now()}`, participants: ['me'], hostId: 'me' };
-      update((s) => ({ ...s, myActivities: [activity, ...s.myActivities] }));
+      // Demo: a couple of people ask to join straight away, so there are requests to accept or decline.
+      const asking: RunRequest[] = PEOPLE.filter((p) => p.activities.includes(input.type))
+        .sort(() => Math.random() - 0.5)
+        .slice(0, Math.min(3, Math.max(0, input.groupSize - 1)))
+        .map((p, i) => ({ id: `${activity.id}-r${i}`, activityId: activity.id, personId: p.id, status: 'pending', at: Date.now() }));
+      update((s) => ({ ...s, myActivities: [activity, ...s.myActivities], runIncoming: [...asking, ...s.runIncoming] }));
       return activity;
     },
+    // Join button on a run: ask to join, cancel a waiting request, or leave once accepted.
     toggleJoin: (id) =>
-      update((s) => ({
-        ...s,
-        joined: s.joined.includes(id) ? s.joined.filter((x) => x !== id) : [...s.joined, id],
-      })),
-    join: (id) => update((s) => (s.joined.includes(id) ? s : { ...s, joined: [...s.joined, id] })),
+      update((s) => {
+        if (s.joined.includes(id)) {
+          const runRequests = { ...s.runRequests };
+          delete runRequests[id];
+          return { ...s, joined: s.joined.filter((x) => x !== id), runRequests };
+        }
+        const runRequests = { ...s.runRequests };
+        if (runRequests[id]?.status === 'pending') delete runRequests[id];
+        else runRequests[id] = { status: 'pending', at: Date.now() };
+        return { ...s, runRequests };
+      }),
+    // Swipe to join: sends a request to the host.
+    join: (id) =>
+      update((s) =>
+        s.joined.includes(id) || s.runRequests[id]
+          ? s
+          : { ...s, runRequests: { ...s.runRequests, [id]: { status: 'pending', at: Date.now() } } },
+      ),
+    runStatus: (id) => (state.joined.includes(id) ? 'accepted' : state.runRequests[id]?.status),
+    cancelRunRequest: (id) =>
+      update((s) => {
+        const runRequests = { ...s.runRequests };
+        delete runRequests[id];
+        return { ...s, runRequests, joined: s.joined.filter((x) => x !== id) };
+      }),
+    respondRun: (rid, status) =>
+      update((s) => ({ ...s, runIncoming: s.runIncoming.map((r) => (r.id === rid ? { ...r, status } : r)) })),
     skip: (id) => update((s) => (s.skipped.includes(id) ? s : { ...s, skipped: [...s.skipped, id] })),
     clearSkipped: () => update((s) => ({ ...s, skipped: [] })),
     toggleKudos: (postId) =>

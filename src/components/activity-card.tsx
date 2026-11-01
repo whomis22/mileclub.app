@@ -4,6 +4,7 @@ import { StyleSheet, Text, View } from 'react-native';
 import { activityInfo } from '@/data/options';
 import type { Activity } from '@/data/types';
 import { friendlyDate } from '@/lib/format';
+import { useStore } from '@/state/store';
 import { colors, space } from '@/theme';
 
 import { Badge, Card } from './ui';
@@ -11,7 +12,9 @@ import { Badge, Card } from './ui';
 export function ActivityCard({ activity }: { activity: Activity }) {
   const info = activityInfo(activity.type);
   const filled = activity.participants.length;
+  const { runStatus } = useStore();
   const joined = activity.participants.includes('me');
+  const status = runStatus(activity.id);
   const full = filled >= activity.groupSize;
   return (
     <Card onPress={() => router.push(`/activity/${activity.id}`)}>
@@ -33,6 +36,10 @@ export function ActivityCard({ activity }: { activity: Activity }) {
         </Text>
         {joined ? (
           <Badge label={activity.hostId === 'me' ? "YOU'RE HOSTING" : "YOU'RE IN"} tone="green" />
+        ) : status === 'pending' ? (
+          <Badge label="WAITING FOR HOST" tone="plain" />
+        ) : status === 'declined' ? (
+          <Badge label="NOT ACCEPTED" tone="plain" />
         ) : full ? (
           <Badge label="WAITLIST" tone="plain" />
         ) : (

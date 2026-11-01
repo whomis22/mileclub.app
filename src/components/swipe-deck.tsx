@@ -98,11 +98,14 @@ export function SwipeDeck({
           {...pan.handlers}
           style={[styles.cardWrap, { transform: [{ translateX: pos.x }, { translateY: pos.y }, { rotate }] }]}>
           <DeckCard a={top} home={home} onJoin={() => pan.fly('right')} />
-          <Animated.View style={[styles.stamp, styles.stampIn, { opacity: inOpacity }]}>
-            <Text style={[styles.stampText, { color: deckColors.olive }]}>I’M IN</Text>
+          {/* While dragging, the card tints olive (join) or dark (skip) and shows a big label. */}
+          <Animated.View pointerEvents="none" style={[styles.tint, { backgroundColor: deckColors.olive, opacity: Animated.multiply(inOpacity, 0.45) }]} />
+          <Animated.View pointerEvents="none" style={[styles.tint, { backgroundColor: '#000', opacity: Animated.multiply(skipOpacity, 0.45) }]} />
+          <Animated.View pointerEvents="none" style={[styles.stamp, styles.stampIn, { opacity: inOpacity }]}>
+            <Text style={[styles.stampText, { color: deckColors.olive }]}>JOIN ✓</Text>
           </Animated.View>
-          <Animated.View style={[styles.stamp, styles.stampSkip, { opacity: skipOpacity }]}>
-            <Text style={[styles.stampText, { color: '#8A8577' }]}>NEXT</Text>
+          <Animated.View pointerEvents="none" style={[styles.stamp, styles.stampSkip, { opacity: skipOpacity }]}>
+            <Text style={[styles.stampText, { color: '#A1402A' }]}>✕ SKIP</Text>
           </Animated.View>
         </Animated.View>
       )}
@@ -229,6 +232,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#F5F0E6EE',
   },
   stampIn: { left: 24, borderColor: deckColors.olive, transform: [{ rotate: '-12deg' }] },
-  stampSkip: { right: 24, borderColor: '#8A8577', transform: [{ rotate: '12deg' }] },
+  tint: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, borderRadius: 30 },
+  stampSkip: { right: 24, borderColor: '#A1402A', transform: [{ rotate: '12deg' }] },
   stampText: { fontSize: 26, fontWeight: '900', letterSpacing: 2 },
 });

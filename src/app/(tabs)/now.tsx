@@ -15,7 +15,7 @@ const SERIF = fonts.serif;
 const ink = colors.ink;
 
 export default function Now() {
-  const { profile, activities, skipped, join, skip, clearSkipped } = useStore();
+  const { profile, activities, skipped, runRequests, join, skip, clearSkipped } = useStore();
   const deck = useRef<SwipeDeckHandle | null>(null);
   const [joinedMsg, setJoinedMsg] = useState<Activity | null>(null);
   const [now] = useState(() => Date.now());
@@ -30,7 +30,8 @@ export default function Now() {
         a.hostId !== 'me' &&
         !a.participants.includes('me') &&
         a.participants.length < a.groupSize &&
-        !skipped.includes(a.id)
+        !skipped.includes(a.id) &&
+        !runRequests[a.id]
       );
     })
     .sort((a, b) => startsAt(a).getTime() - startsAt(b).getTime());
@@ -53,9 +54,9 @@ export default function Now() {
         <Text style={styles.title}>Your week at{'\n'}Mile Club</Text>
 
         {joinedMsg && (
-          <Pressable style={styles.toast} onPress={() => router.push(`/activity/${joinedMsg.id}`)}>
+          <Pressable style={styles.toast} onPress={() => router.push('/activities')}>
             <Text style={styles.toastText}>
-              You’re in for {joinedMsg.title} at {joinedMsg.time}. Tap for details.
+              Request sent for {joinedMsg.title}. You’re in once the host accepts. See it in My runs.
             </Text>
           </Pressable>
         )}
@@ -75,7 +76,21 @@ export default function Now() {
                 setJoinedMsg(null);
               }}
             />
-            <Text style={styles.hint}>Swipe right to join · left to explore more</Text>
+            <View style={styles.choices}>
+              <Pressable
+                onPress={() => deck.current?.swipe('left')}
+                style={({ pressed }) => [styles.choice, styles.skipBtn, pressed && { opacity: 0.7 }]}
+                accessibilityLabel="Skip this run">
+                <Text style={styles.skipBtnText}>← ✕ Skip</Text>
+              </Pressable>
+              <Pressable
+                onPress={() => deck.current?.swipe('right')}
+                style={({ pressed }) => [styles.choice, styles.joinBtn, pressed && { opacity: 0.8 }]}
+                accessibilityLabel="Join this run">
+                <Text style={styles.joinBtnText}>Join ✓ →</Text>
+              </Pressable>
+            </View>
+            <Text style={styles.hint}>Swipe left to skip, right to join</Text>
           </>
         ) : (
           <View style={styles.empty}>
@@ -108,7 +123,13 @@ const styles = StyleSheet.create({
   title: { fontFamily: SERIF, fontSize: 38, lineHeight: 40, color: ink, marginTop: 18 },
   toast: { backgroundColor: deckColors.peach, borderRadius: 16, padding: 12, marginTop: 12 },
   toastText: { color: colors.onPeach, fontFamily: fonts.sansSemi, fontSize: 13 },
-  hint: { textAlign: 'center', color: colors.muted, fontFamily: fonts.sans, fontSize: 12, marginTop: 14 },
+  hint: { textAlign: 'center', color: colors.muted, fontFamily: fonts.sans, fontSize: 12, marginTop: 8 },
+  choices: { flexDirection: 'row', gap: 12, marginTop: 14 },
+  choice: { flex: 1, height: 48, borderRadius: 24, alignItems: 'center', justifyContent: 'center' },
+  skipBtn: { borderWidth: 1, borderColor: colors.edge },
+  skipBtnText: { color: colors.ink, fontFamily: fonts.sansSemi, fontSize: 15 },
+  joinBtn: { backgroundColor: colors.olive },
+  joinBtnText: { color: colors.onBrand, fontFamily: fonts.sansSemi, fontSize: 15 },
   empty: { flex: 1, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 12, gap: 10 },
   emptyTitle: { fontFamily: SERIF, fontSize: 26, color: ink },
   emptySub: { fontSize: 14, color: colors.muted, fontFamily: fonts.sans, textAlign: 'center', lineHeight: 20 },
