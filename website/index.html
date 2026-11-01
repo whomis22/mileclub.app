@@ -5,11 +5,12 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <link rel="icon" href="icon.png">
 <title>Mile Club</title>
+<script>document.documentElement.setAttribute("data-palette","black");</script>
 <meta name="claude:viewport-fit-sides" content="cover">
 <meta name="description" content="Mile Club matches you with people who run at your pace. Swipe to join a run happening soon, meet up, and run together.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Outfit:wght@500;700;800&family=Figtree:wght@400;500;600&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Outfit:wght@500;700;800&family=Figtree:wght@400;500;600&family=Archivo:wght@400;500;600;800&family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600&family=Sora:wght@600;700;800&family=Manrope:wght@400;500;600&family=Unbounded:wght@600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600&display=swap">
 <style>
 /* Layout: one scrolling page. Hero with a fanned stack of run cards, how it works, features, coaches band, contact form. */
 :root {
@@ -34,6 +35,13 @@
   --r: 22px;
   color-scheme: light;
 }
+/* Font options */
+:root[data-font="archivo"] { --display: "Archivo", "Helvetica Neue", Arial, sans-serif; --body: "Archivo", "Helvetica Neue", Arial, sans-serif; }
+:root[data-font="bricolage"] { --display: "Bricolage Grotesque", "Avenir Next", system-ui, sans-serif; --body: "DM Sans", "Helvetica Neue", Arial, sans-serif; }
+:root[data-font="sora"] { --display: "Sora", "Avenir Next", system-ui, sans-serif; --body: "Manrope", "Helvetica Neue", Arial, sans-serif; }
+:root[data-font="unbounded"] { --display: "Unbounded", "Avenir Next", system-ui, sans-serif; --body: "Plus Jakarta Sans", "Helvetica Neue", Arial, sans-serif; }
+:root[data-font="unbounded"] h1 { font-size: clamp(2.2rem, 6vw, 3.9rem); letter-spacing: -0.02em; }
+:root[data-font="unbounded"] h2 { font-size: clamp(1.7rem, 3.8vw, 2.5rem); }
 /* Option 2: Peach Pop */
 :root[data-palette="peach"] {
   --olive: #C8643F; --olive-ink: #3B2A22; --ink: #3B2A22; --muted: #7A6A60; --peach: #F4B595; --peach-soft: #FDEEE5;
@@ -181,8 +189,8 @@ fieldset { border: 0; padding: 0; margin: 0; }
 .picker b { font: 600 .8rem var(--body); color: #444; padding: 0 8px 0 10px; white-space: nowrap; }
 .picker button { flex: none; display: flex; align-items: center; gap: 8px; border: 0; background: transparent; padding: 6px 12px 6px 6px; border-radius: 999px; font: 600 .82rem var(--body); color: #333; cursor: pointer; white-space: nowrap; }
 .picker button[aria-pressed="true"] { background: #F1EFEA; box-shadow: inset 0 0 0 1.5px #222; }
-.picker i { width: 22px; height: 22px; border-radius: 50%; border: 1px solid rgba(0,0,0,.12); }
-@media (max-width: 640px) { .picker button span { display: none; } .picker button { padding: 6px; } }
+.picker .fa { display: grid; place-items: center; width: 28px; height: 28px; border-radius: 50%; background: #161616; color: #fff; font-weight: 800; font-size: .8rem; }
+@media (max-width: 640px) { .picker button span:not(.fa) { display: none; } .picker button { padding: 4px; } .picker b { display: none; } }
 footer { padding-bottom: 90px; }
 footer { border-top: 1px solid var(--line); padding-block: 36px; color: var(--muted); font-size: .92rem; }
 footer .wrap { display: flex; flex-wrap: wrap; gap: 16px; justify-content: space-between; align-items: center; }
@@ -341,13 +349,13 @@ footer .wrap { display: flex; flex-wrap: wrap; gap: 16px; justify-content: space
 </footer>
 
 
-<div class="picker" role="group" aria-label="Colour options (preview only)">
-  <b>Colours</b>
-  <button type="button" data-p="" aria-pressed="true"><i style="background:linear-gradient(135deg,#556B2F 50%,#F4B595 50%)"></i><span>1 Olive &amp; Peach</span></button>
-  <button type="button" data-p="peach" aria-pressed="false"><i style="background:linear-gradient(135deg,#C8643F 50%,#F4B595 50%)"></i><span>2 Peach Pop</span></button>
-  <button type="button" data-p="black" aria-pressed="false"><i style="background:linear-gradient(135deg,#161616 50%,#556B2F 50%)"></i><span>3 Black &amp; Olive</span></button>
-  <button type="button" data-p="sky" aria-pressed="false"><i style="background:linear-gradient(135deg,#556B2F 50%,#A9D2E8 50%)"></i><span>4 Olive &amp; Sky</span></button>
-  <button type="button" data-p="sun" aria-pressed="false"><i style="background:linear-gradient(135deg,#556B2F 50%,#F2C94C 50%)"></i><span>5 Olive &amp; Sunshine</span></button>
+<div class="picker" role="group" aria-label="Font options (preview only)">
+  <b>Fonts</b>
+  <button type="button" data-f="" aria-pressed="true"><span class="fa" style="font-family:Outfit">Aa</span><span>1 Outfit</span></button>
+  <button type="button" data-f="archivo" aria-pressed="false"><span class="fa" style="font-family:Archivo">Aa</span><span>2 Archivo</span></button>
+  <button type="button" data-f="bricolage" aria-pressed="false"><span class="fa" style="font-family:'Bricolage Grotesque'">Aa</span><span>3 Bricolage</span></button>
+  <button type="button" data-f="sora" aria-pressed="false"><span class="fa" style="font-family:Sora">Aa</span><span>4 Sora</span></button>
+  <button type="button" data-f="unbounded" aria-pressed="false"><span class="fa" style="font-family:Unbounded">Aa</span><span>5 Unbounded</span></button>
 </div>
 
 <script>
@@ -366,13 +374,13 @@ document.getElementById('contact-form').addEventListener('submit', function (e) 
 
 (function () {
   var btns = document.querySelectorAll('.picker button');
-  function set(p) {
-    if (p) document.documentElement.setAttribute('data-palette', p); else document.documentElement.removeAttribute('data-palette');
-    btns.forEach(function (b) { b.setAttribute('aria-pressed', String(b.dataset.p === p)); });
-    try { localStorage.setItem('mc-palette', p); } catch (e) {}
+  function set(f) {
+    if (f) document.documentElement.setAttribute('data-font', f); else document.documentElement.removeAttribute('data-font');
+    btns.forEach(function (b) { b.setAttribute('aria-pressed', String(b.dataset.f === f)); });
+    try { localStorage.setItem('mc-font', f); } catch (e) {}
   }
-  btns.forEach(function (b) { b.addEventListener('click', function () { set(b.dataset.p); }); });
-  try { var saved = localStorage.getItem('mc-palette'); if (saved) set(saved); } catch (e) {}
+  btns.forEach(function (b) { b.addEventListener('click', function () { set(b.dataset.f); }); });
+  try { var saved = localStorage.getItem('mc-font'); if (saved) set(saved); } catch (e) {}
 })();
 </script>
 </body>
