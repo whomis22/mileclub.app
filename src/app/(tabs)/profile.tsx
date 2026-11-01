@@ -46,6 +46,9 @@ export default function ProfileTab() {
             <Button title="Host a session" variant="secondary" style={{ flex: 1 }} onPress={() => router.push('/host-session')} />
             <Button title="Earnings" style={{ flex: 1 }} onPress={() => router.push('/earnings')} />
           </View>
+          <View style={{ marginTop: space.sm }}>
+            <Button title="Booking requests" variant="ghost" onPress={() => router.push('/requests')} />
+          </View>
         </Card>
       ) : (
         <Card style={styles.coachCard}>

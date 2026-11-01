@@ -5,11 +5,12 @@ import { findCoach, type CoachSession } from '@/data/coaches';
 import { activityInfo } from '@/data/options';
 import { euro } from '@/data/roles';
 import { friendlyDate } from '@/lib/format';
+import type { RequestStatus } from '@/state/store';
 import { colors, radius, space } from '@/theme';
 
 import { Avatar, Badge, Card } from './ui';
 
-export function SessionCard({ s, mine, booked }: { s: CoachSession; mine?: boolean; booked?: boolean }) {
+export function SessionCard({ s, mine, status }: { s: CoachSession; mine?: boolean; status?: RequestStatus }) {
   const coach = findCoach(s.coachId);
   const left = s.spots - s.booked;
   return (
@@ -32,8 +33,11 @@ export function SessionCard({ s, mine, booked }: { s: CoachSession; mine?: boole
           {coach && <Avatar name={coach.name} color={coach.color} size={24} />}
           <Text style={styles.coach}>{mine ? 'You’re hosting' : coach?.name}</Text>
         </View>
-        {booked ? (
-          <Badge label="BOOKED" tone="green" />
+        {status ? (
+          <Badge
+            label={{ pending: 'REQUESTED', accepted: 'BOOKED', declined: 'DECLINED' }[status]}
+            tone={status === 'accepted' ? 'green' : 'plain'}
+          />
         ) : (
           <Badge label={left > 0 ? `${left} SPOTS LEFT` : 'FULL'} tone={left > 0 && left <= 3 ? 'accent' : 'plain'} />
         )}

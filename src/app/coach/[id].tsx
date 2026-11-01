@@ -10,7 +10,7 @@ import { colors, space } from '@/theme';
 
 export default function CoachProfile() {
   const { id } = useLocalSearchParams<{ id: string }>();
-  const { sessions, booked } = useStore();
+  const { sessions, statusOf } = useStore();
   const c = findCoach(id);
   if (!c) return <Screen edges={[]}><Body>This coach isn’t available.</Body></Screen>;
   const theirs = sessions.filter((s) => s.coachId === c.id);
@@ -36,7 +36,7 @@ export default function CoachProfile() {
       <Label>Specialties</Label>
       <Chips>{c.specialties.map((s) => <Chip key={s} label={s} />)}</Chips>
       <Label>Book a session</Label>
-      {theirs.map((s) => <SessionCard key={s.id} s={s} booked={booked.includes(s.id)} />)}
+      {theirs.map((s) => <SessionCard key={s.id} s={s} status={statusOf(s.id)} />)}
     </Screen>
   );
 }

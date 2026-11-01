@@ -9,7 +9,7 @@ import { useStore } from '@/state/store';
 import { colors, radius, space } from '@/theme';
 
 export default function Train() {
-  const { profile, sessions, booked } = useStore();
+  const { profile, sessions, statusOf, incoming } = useStore();
   if (!profile) return <Redirect href="/welcome" />;
   const isCoach = profile.role === 'coach';
 
@@ -17,7 +17,8 @@ export default function Train() {
   const others = sessions
     .filter((s) => s.coachId !== 'me')
     .sort((a, b) => (a.date + a.time).localeCompare(b.date + b.time));
-  const myBookings = others.filter((s) => booked.includes(s.id));
+  const myBookings = others.filter((s) => statusOf(s.id));
+  const pendingCount = incoming.filter((r) => r.status === 'pending').length;
   const earned = mine.reduce((sum, s) => sum + split(s.price * s.booked).coach, 0);
 
   return (
@@ -37,12 +38,22 @@ export default function Train() {
               <Text style={styles.dashLabel}>Sessions hosted</Text>
             </View>
           </View>
+          {pendingCount > 0 && (
+            <Pressable style={styles.reqBanner} onPress={() => router.push('/requests')}>
+              <Text style={styles.reqText}>
+                {pendingCount} new booking request{pendingCount === 1 ? '' : 's'} · Review →
+              </Text>
+            </Pressable>
+          )}
           <View style={styles.dashBtns}>
             <Pressable style={[styles.dashBtn, { backgroundColor: colors.accent }]} onPress={() => router.push('/host-session')}>
               <Text style={styles.dashBtnText}>+ Host a session</Text>
             </Pressable>
             <Pressable style={[styles.dashBtn, { backgroundColor: '#ffffff22' }]} onPress={() => router.push('/earnings')}>
-              <Text style={styles.dashBtnText}>See earnings</Text>
+              <Text style={styles.dashBtnText}>Earnings</Text>
+            </Pressable>
+            <Pressable style={[styles.dashBtn, { backgroundColor: '#ffffff22' }]} onPress={() => router.push('/requests')}>
+              <Text style={styles.dashBtnText}>Requests</Text>
             </Pressable>
           </View>
         </View>
@@ -77,13 +88,13 @@ export default function Train() {
 
       {myBookings.length > 0 && (
         <>
-          <Label>You booked</Label>
-          {myBookings.map((s) => <SessionCard key={s.id} s={s} booked />)}
+          <Label>Your bookings</Label>
+          {myBookings.map((s) => <SessionCard key={s.id} s={s} status={statusOf(s.id)} />)}
         </>
       )}
 
       <Label>Upcoming sessions</Label>
-      {others.filter((s) => !booked.includes(s.id)).map((s) => <SessionCard key={s.id} s={s} />)}
+      {others.filter((s) => !statusOf(s.id)).map((s) => <SessionCard key={s.id} s={s} />)}
 
       {isCoach && mine.length === 0 && (
         <Button title="+ HOST YOUR FIRST SESSION" variant="secondary" onPress={() => router.push('/host-session')} />
@@ -98,6 +109,8 @@ const styles = StyleSheet.create({
   dashRow: { flexDirection: 'row', marginTop: space.md },
   dashValue: { color: '#fff', fontSize: 30, fontWeight: '900' },
   dashLabel: { color: '#fff', opacity: 0.7, fontSize: 12, fontWeight: '700' },
+  reqBanner: { backgroundColor: colors.peach, borderRadius: radius.md, padding: space.md, marginTop: space.md },
+  reqText: { color: colors.ink, fontWeight: '900', fontSize: 14 },
   dashBtns: { flexDirection: 'row', gap: space.sm, marginTop: space.lg },
   dashBtn: { flex: 1, borderRadius: radius.pill, paddingVertical: 12, alignItems: 'center' },
   dashBtnText: { color: '#fff', fontWeight: '900', fontSize: 14 },
