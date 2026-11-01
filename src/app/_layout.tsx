@@ -1,6 +1,7 @@
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 
+import { LaunchScreen } from '@/components/launch-screen';
 import { StoreProvider } from '@/state/store';
 import { colors } from '@/theme';
 
@@ -26,6 +27,7 @@ export default function RootLayout() {
         <Stack.Screen name="host-session" options={{ headerShown: true, title: 'Host a session', presentation: 'modal' }} />
         <Stack.Screen name="create-activity" options={{ headerShown: true, title: 'New activity', presentation: 'modal' }} />
       </Stack>
+      <LaunchScreen />
     </StoreProvider>
   );
 }

@@ -32,6 +32,7 @@ function PillButton({ title, icon, onPress, filled }: {
 
 export default function Welcome() {
   const start = () => router.push('/onboarding');
+  const signUp = () => router.push('/signup');
 
   return (
     <SafeAreaView style={styles.screen}>
@@ -45,8 +46,8 @@ export default function Welcome() {
       </View>
 
       <View style={styles.actions}>
-        <PillButton title="Continue with Apple" onPress={start} />
-        <PillButton title="Continue with Google" onPress={start} />
+        <PillButton title="Continue with Apple" onPress={signUp} />
+        <PillButton title="Continue with Google" onPress={signUp} />
 
         <View style={styles.orRow}>
           <View style={styles.orLine} />
@@ -54,7 +55,7 @@ export default function Welcome() {
           <View style={styles.orLine} />
         </View>
 
-        <PillButton title="Create account" onPress={start} filled />
+        <PillButton title="Create account" onPress={signUp} filled />
 
         <Text style={styles.terms}>
           By signing up, you agree to our <Text style={styles.link}>Terms</Text>,{' '}

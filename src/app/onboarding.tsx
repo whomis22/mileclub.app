@@ -1,5 +1,5 @@
 import * as ImagePicker from 'expo-image-picker';
-import { router } from 'expo-router';
+import { router, useLocalSearchParams } from 'expo-router';
 import { useState } from 'react';
 import { KeyboardAvoidingView, Platform, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -31,7 +31,15 @@ export default function Onboarding() {
   const { saveProfile } = useStore();
   const [step, setStep] = useState(0);
   const [agreed, setAgreed] = useState(false);
-  const [d, setD] = useState<Draft>({ activities: [], goals: [], availability: [] });
+  const params = useLocalSearchParams<{ firstName?: string; age?: string; photoUri?: string }>();
+  const [d, setD] = useState<Draft>({
+    activities: [],
+    goals: [],
+    availability: [],
+    firstName: params.firstName,
+    age: params.age ? Number(params.age) : undefined,
+    photoUri: params.photoUri,
+  });
   const set = (patch: Partial<Draft>) => setD((prev) => ({ ...prev, ...patch }));
 
   const valid = [
