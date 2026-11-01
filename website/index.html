@@ -173,6 +173,10 @@ label, legend { display: block; font-weight: 600; font-size: .92rem; margin-bott
 .opt { font-weight: 400; color: var(--muted); }
 input, textarea { width: 100%; font: inherit; color: var(--ink); background: var(--field); border: 1.5px solid var(--line); border-radius: 12px; padding: 12px 14px; }
 input:focus, textarea:focus { outline: none; border-color: var(--olive); }
+.tel { display: flex; gap: 8px; }
+.tel select { flex: none; width: 112px; font: inherit; color: var(--ink); background: var(--field); border: 1.5px solid var(--line); border-radius: 12px; padding: 12px 8px; }
+.tel select:focus { outline: none; border-color: var(--olive); }
+.tel input { min-width: 0; }
 textarea { min-height: 130px; resize: vertical; }
 fieldset { border: 0; padding: 0; margin: 0; }
 .who { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
@@ -321,7 +325,7 @@ footer .wrap { display: flex; flex-wrap: wrap; gap: 16px; justify-content: space
       <form id="contact-form" novalidate>
         <div class="row">
           <div><label for="f-name">Name</label><input id="f-name" name="name" autocomplete="name" required placeholder="Sam Jones"></div>
-          <div><label for="f-phone">Phone number <span class="opt">(optional)</span></label><input id="f-phone" name="phone" type="tel" autocomplete="tel" placeholder="+31 6 1234 5678"></div>
+          <div><label for="f-phone">Phone number <span class="opt">(optional)</span></label><div class="tel"><select id="f-cc" name="country_code" aria-label="Country code"></select><input id="f-phone" name="phone" type="tel" autocomplete="tel-national" inputmode="tel" placeholder="Phone number"></div></div>
         </div>
         <div><label for="f-email">Email</label><input id="f-email" name="email" type="email" autocomplete="email" required placeholder="sam@example.com"></div>
         <fieldset>
@@ -371,6 +375,28 @@ document.getElementById('contact-form').addEventListener('submit', function (e) 
   ok.textContent = 'Thanks, ' + name.split(' ')[0] + '! In the live site this would reach the Mile Club inbox and we would reply to ' + email + '.';
   ok.classList.add('show');
 });
+
+(function () {
+  // [ISO code, dial code, name]
+  var C = [["US","1","United States"],["GB","44","United Kingdom"],["CA","1","Canada"],["AU","61","Australia"],["NZ","64","New Zealand"],["IE","353","Ireland"],["NL","31","Netherlands"],["BE","32","Belgium"],["DE","49","Germany"],["FR","33","France"],["ES","34","Spain"],["PT","351","Portugal"],["IT","39","Italy"],["CH","41","Switzerland"],["AT","43","Austria"],["DK","45","Denmark"],["SE","46","Sweden"],["NO","47","Norway"],["FI","358","Finland"],["PL","48","Poland"],["CZ","420","Czechia"],["GR","30","Greece"],["TR","90","Turkey"],["AE","971","United Arab Emirates"],["SA","966","Saudi Arabia"],["IL","972","Israel"],["ZA","27","South Africa"],["NG","234","Nigeria"],["KE","254","Kenya"],["EG","20","Egypt"],["IN","91","India"],["PK","92","Pakistan"],["SG","65","Singapore"],["MY","60","Malaysia"],["PH","63","Philippines"],["ID","62","Indonesia"],["TH","66","Thailand"],["JP","81","Japan"],["KR","82","South Korea"],["CN","86","China"],["HK","852","Hong Kong"],["MX","52","Mexico"],["BR","55","Brazil"],["AR","54","Argentina"],["CO","57","Colombia"],["CL","56","Chile"]];
+  var TZ = {"Europe/London":"GB","Europe/Dublin":"IE","Europe/Amsterdam":"NL","Europe/Brussels":"BE","Europe/Berlin":"DE","Europe/Paris":"FR","Europe/Madrid":"ES","Europe/Lisbon":"PT","Europe/Rome":"IT","Europe/Zurich":"CH","Europe/Vienna":"AT","Europe/Copenhagen":"DK","Europe/Stockholm":"SE","Europe/Oslo":"NO","Europe/Helsinki":"FI","Europe/Warsaw":"PL","Europe/Prague":"CZ","Europe/Athens":"GR","Europe/Istanbul":"TR","Asia/Dubai":"AE","Asia/Riyadh":"SA","Asia/Jerusalem":"IL","Africa/Johannesburg":"ZA","Africa/Lagos":"NG","Africa/Nairobi":"KE","Africa/Cairo":"EG","Asia/Kolkata":"IN","Asia/Calcutta":"IN","Asia/Karachi":"PK","Asia/Singapore":"SG","Asia/Kuala_Lumpur":"MY","Asia/Manila":"PH","Asia/Jakarta":"ID","Asia/Bangkok":"TH","Asia/Tokyo":"JP","Asia/Seoul":"KR","Asia/Shanghai":"CN","Asia/Hong_Kong":"HK","America/Mexico_City":"MX","America/Sao_Paulo":"BR","America/Argentina/Buenos_Aires":"AR","America/Bogota":"CO","America/Santiago":"CL","America/Toronto":"CA","America/Vancouver":"CA","Pacific/Auckland":"NZ"};
+  function flag(iso) { return iso.replace(/./g, function (ch) { return String.fromCodePoint(127397 + ch.charCodeAt(0)); }); }
+  var sel = document.getElementById('f-cc');
+  C.forEach(function (c) { var o = document.createElement('option'); o.value = c[0]; o.textContent = flag(c[0]) + ' +' + c[1]; o.title = c[2]; sel.appendChild(o); });
+  // Guess the visitor's country from their device settings (time zone first, then language)
+  var guess = '';
+  try {
+    var tz = Intl.DateTimeFormat().resolvedOptions().timeZone || '';
+    guess = TZ[tz] || '';
+    if (!guess && /^Australia\//.test(tz)) guess = 'AU';
+    if (!guess && /^America\//.test(tz)) guess = 'US';
+  } catch (e) {}
+  if (!guess) {
+    var langs = navigator.languages || [navigator.language || ''];
+    for (var i = 0; i < langs.length && !guess; i++) { var m = /-([A-Z]{2})$/i.exec(langs[i] || ''); if (m) guess = m[1].toUpperCase(); }
+  }
+  sel.value = C.some(function (c) { return c[0] === guess; }) ? guess : 'US';
+})();
 
 (function () {
   var btns = document.querySelectorAll('.picker button');
