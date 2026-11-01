@@ -30,8 +30,8 @@ export default function NewPost() {
   }
 
   function share() {
-    if (!uri) return;
-    addPost(uri, caption);
+    if (!uri && !caption.trim()) return;
+    addPost(uri ?? undefined, caption);
     router.back();
   }
 
@@ -43,11 +43,15 @@ export default function NewPost() {
           <Pressable style={styles.change} onPress={fromLibrary}>
             <Text style={styles.changeText}>Change photo</Text>
           </Pressable>
+          <Pressable style={[styles.change, { right: undefined, left: 12 }]} onPress={() => setUri(null)}>
+            <Text style={styles.changeText}>Remove</Text>
+          </Pressable>
         </View>
       ) : (
         <View style={styles.empty}>
           <Text style={styles.emptyIcon}>📷</Text>
-          <Text style={styles.emptyTitle}>Share a moment from your workout</Text>
+          <Text style={styles.emptyTitle}>Add a photo</Text>
+          <Text style={styles.emptySub}>Or just write something below to post it as text.</Text>
           <View style={styles.row}>
             <Button title="Choose photo" onPress={fromLibrary} style={{ flex: 1 }} />
             <Button title="Take photo" variant="ghost" onPress={fromCamera} style={{ flex: 1 }} />
@@ -57,14 +61,14 @@ export default function NewPost() {
 
       <TextInput
         style={styles.input}
-        placeholder="Write a caption…"
+        placeholder={uri ? 'Write a caption…' : 'What’s on your mind?'}
         placeholderTextColor={colors.muted}
         value={caption}
         onChangeText={setCaption}
         multiline
-        maxLength={300}
+        maxLength={280}
       />
-      <Button title="Share to Explore" onPress={share} disabled={!uri} />
+      <Button title="Share to Explore" onPress={share} disabled={!uri && !caption.trim()} />
       <Text style={styles.note}>Everyone on Mile Club can see and comment on your post.</Text>
     </ScrollView>
   );
@@ -79,6 +83,7 @@ const styles = themed(() => StyleSheet.create({
   empty: { borderRadius: 24, borderWidth: 1.5, borderStyle: 'dashed', borderColor: colors.dashed, padding: space.xl, alignItems: 'center', gap: space.md },
   emptyIcon: { fontSize: 40 },
   emptyTitle: { fontFamily: fonts.serif, fontSize: 20, color: colors.ink, textAlign: 'center' },
+  emptySub: { fontFamily: fonts.sans, fontSize: 13, color: colors.muted, textAlign: 'center', marginTop: -6 },
   row: { flexDirection: 'row', gap: space.md, alignSelf: 'stretch', marginTop: space.sm },
   input: { minHeight: 90, borderRadius: radius.md, borderWidth: 1, borderColor: colors.line, backgroundColor: colors.card, padding: space.md, fontFamily: fonts.sans, fontSize: 15, color: colors.ink, textAlignVertical: 'top' },
   note: { fontFamily: fonts.sans, fontSize: 12, color: colors.muted, textAlign: 'center' },

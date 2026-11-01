@@ -6,7 +6,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { authorName, useComments } from '@/components/comment-preview';
 import { Avatar } from '@/components/ui';
 import { agoLabel } from '@/data/comments';
-import { FEED } from '@/data/feed';
+import { FEED, TEXT_POSTS } from '@/data/feed';
 import { findPerson } from '@/data/people';
 import { useStore } from '@/state/store';
 import { colors, fonts, radius, space, themed, useTheme } from '@/theme';
@@ -20,10 +20,11 @@ export default function PostComments() {
   const all = useComments(id);
 
   const sample = FEED.find((p) => p.id === id);
+  const textPost = TEXT_POSTS.find((p) => p.id === id);
   const mine = myPosts.find((p) => p.id === id);
-  const owner = sample ? findPerson(sample.personId) : null;
+  const owner = findPerson(sample?.personId ?? textPost?.personId ?? '');
   const ownerName = mine ? profile?.firstName ?? 'You' : owner?.firstName ?? 'Member';
-  const caption = mine ? mine.caption : sample?.note ?? sample?.title;
+  const caption = mine ? mine.caption : textPost?.text ?? sample?.note ?? sample?.title;
 
   function send() {
     if (!text.trim()) return;

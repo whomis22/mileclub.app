@@ -44,3 +44,13 @@ export const FEED: FeedPost[] = [
     note: 'Three months ago I could not run to the tram. Thank you Thursday crew 🥹',
   },
 ];
+
+// Short text posts ("tweets") from members, shown between workouts on Explore.
+export type TextPost = { id: string; personId: string; text: string; hoursAgo: number; likes: number };
+
+export const TEXT_POSTS: TextPost[] = [
+  { id: 't1', personId: 'lucas', text: 'Who else is doing the Saturday sunrise run? Need someone to make sure I actually get out of bed 😅', hoursAgo: 1, likes: 9 },
+  { id: 't2', personId: 'yasmin', text: 'Hot take: the coffee after the run is the real reason we run.', hoursAgo: 4, likes: 31 },
+  { id: 't3', personId: 'noah', text: 'First week back after an injury. Slow and steady. Thanks for the patience, crew 🙏', hoursAgo: 12, likes: 22 },
+  { id: 't4', personId: 'lotte', text: 'Any tips for running in the rain without hating every minute?', hoursAgo: 28, likes: 7 },
+];

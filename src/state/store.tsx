@@ -16,7 +16,7 @@ export type IncomingRequest = { id: string; sessionId: string; personId: string;
 export type RunRequest = { id: string; activityId: string; personId: string; status: RequestStatus; at: number };
 
 // A photo the user posted on Explore (mock: the picture stays on this phone only).
-export type MyPost = { id: string; uri: string; caption: string; at: number };
+export type MyPost = { id: string; uri?: string; caption: string; at: number }; // no uri = text-only post
 
 // A comment under any Explore post. authorId is 'me' or a sample person id.
 export type PostComment = { id: string; authorId: string; text: string; at: number };
@@ -62,7 +62,7 @@ type Store = State & {
   cancelRunRequest: (activityId: string) => void;
   respondRun: (requestId: string, status: 'accepted' | 'declined') => void;
   toggleFollow: (id: string) => void;
-  addPost: (uri: string, caption: string) => void;
+  addPost: (uri: string | undefined, caption: string) => void;
   deletePost: (id: string) => void;
   addComment: (postId: string, text: string) => void;
   deleteComment: (postId: string, commentId: string) => void;
