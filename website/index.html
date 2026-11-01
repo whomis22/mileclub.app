@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <link rel="icon" href="icon.png">
 <title>Mile Club</title>
-<script>(function(){var r=document.documentElement;r.setAttribute("data-palette","black");r.setAttribute("data-dark","night");try{if(localStorage.getItem("mc-mode")==="dark")r.setAttribute("data-mode","dark");var d=localStorage.getItem("mc-dark");if(d)r.setAttribute("data-dark",d);}catch(e){}})();</script>
+<script>(function(){var r=document.documentElement;r.setAttribute("data-palette","black");r.setAttribute("data-dark","black");try{if(localStorage.getItem("mc-mode")==="dark")r.setAttribute("data-mode","dark");var d=localStorage.getItem("mc-dark");if(d)r.setAttribute("data-dark",d);}catch(e){}})();</script>
 <meta name="claude:viewport-fit-sides" content="cover">
 <meta name="description" content="Mile Club matches you with people who run at your pace. Swipe to join a run happening soon, meet up, and run together.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -96,6 +96,13 @@
   --olive: #6B8239; --on-olive: #F7F1E6; --peach-soft: #2E261D; --mark-m: #8FA65E;
   --band: #556B2F; --on-band: #F7F1E6; --band-chip: #627838; --band-btn: #F4B595; --on-band-btn: #15170F; --c3a: #2C3320; --c3b: #15170F; color-scheme: dark;
 }
+:root[data-palette="black"][data-mode="dark"][data-dark="black"] {
+  --cream: #000000; --cream-2: #141414; --field: #1C1C1C; --card: #141414; --line: #262626; --ink: #F7F1E6; --olive-ink: #F7F1E6; --muted: #9A968C;
+  --olive: #556B2F; --on-olive: #F7F1E6; --peach: #F6C6A8; --peach-soft: #1F2618; --mark-m: #8FA65E;
+  --band: #141414; --on-band: #F7F1E6; --band-chip: #1F2618; --band-btn: #F6C6A8; --on-band-btn: #262A1C; --c3a: #1C1C1C; --c3b: #000000; color-scheme: dark;
+}
+:root[data-dark="black"] .coach { box-shadow: inset 0 0 0 1px #262626; }
+:root[data-mode="dark"][data-dark="black"] .hero h1 em { color: #C5D49A; }
 :root[data-mode="dark"] .run { box-shadow: 0 24px 50px -24px rgba(0,0,0,.8); }
 :root[data-mode="dark"] .r3 { outline: 1px solid rgba(255,255,255,.08); }
 * { box-sizing: border-box; }
@@ -395,7 +402,8 @@ footer .wrap { display: flex; flex-wrap: wrap; gap: 16px; justify-content: space
 
 <div class="picker darks" role="group" aria-label="Dark mode options (preview only)">
   <b>Dark style</b>
-  <button type="button" data-d="night" aria-pressed="true"><span class="sw" style="background:linear-gradient(135deg,#15170F 55%,#F4B595 55%)"></span><span>E Olive night (app)</span></button>
+  <button type="button" data-d="black" aria-pressed="true"><span class="sw" style="background:linear-gradient(135deg,#000 55%,#556B2F 55%)"></span><span>True black (app)</span></button>
+  <button type="button" data-d="night" aria-pressed="false"><span class="sw" style="background:linear-gradient(135deg,#15170F 55%,#F4B595 55%)"></span><span>E Olive night</span></button>
   <button type="button" data-d="charcoal" aria-pressed="false"><span class="sw" style="background:linear-gradient(135deg,#121212 55%,#556B2F 55%)"></span><span>A Charcoal</span></button>
   <button type="button" data-d="olive" aria-pressed="false"><span class="sw" style="background:linear-gradient(135deg,#141A0E 55%,#B5C98A 55%)"></span><span>B Deep Olive</span></button>
   <button type="button" data-d="midnight" aria-pressed="false"><span class="sw" style="background:linear-gradient(135deg,#0E1116 55%,#F4B595 55%)"></span><span>C Midnight</span></button>
