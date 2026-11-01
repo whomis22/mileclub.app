@@ -3,7 +3,7 @@ import { Storage } from 'expo-sqlite/kv-store';
 
 // Mile Club look: Rich Olive (brand, buttons), Warm Cream (backgrounds),
 // Soft Peach (highlights, likes, social bits). Logo: olive m + peach c on cream.
-// Dark mode is "Olive night" (picked by Yana 2026-11-01): olive-black background,
+// Dark mode is "True black" (picked by Yana 2026-11-01): pure black background,
 // cream text, same olive and peach.
 const light = {
   bg: '#F7F1E6', // warm cream
@@ -38,32 +38,32 @@ const light = {
 };
 
 const dark: typeof light = {
-  bg: '#15170F',
-  card: '#1E2117',
-  sand: '#262A1E',
-  ink: '#F1EBDD',
-  muted: '#A39E8C',
-  line: '#2C3022',
-  edge: '#3A3F2E',
-  track: '#2C3022',
-  dashed: '#5A5E4C',
-  off: '#33382A',
-  offText: '#7D7A6C',
+  bg: '#000000',
+  card: '#141414',
+  sand: '#1C1C1C',
+  ink: '#F7F1E6',
+  muted: '#9A968C',
+  line: '#262626',
+  edge: '#333333',
+  track: '#262626',
+  dashed: '#555555',
+  off: '#2A2A2A',
+  offText: '#777777',
   inkBg: '#2F3D29',
   link: '#C5D49A',
   olive: '#556B2F',
   oliveDark: '#2F3D29',
-  oliveSoft: '#2A3320',
+  oliveSoft: '#1F2618',
   peach: '#F6C6A8',
   peachDeep: '#F4B595',
   black: '#111111',
   onBrand: '#F7F1E6',
   onPeach: '#262A1C',
-  overlay: 'rgba(0,0,0,0.6)',
+  overlay: 'rgba(0,0,0,0.7)',
   accent: '#556B2F',
-  accentSoft: '#2A3320',
+  accentSoft: '#1F2618',
   green: '#556B2F',
-  greenSoft: '#2A3320',
+  greenSoft: '#1F2618',
   purple: '#C98B68',
   danger: '#E8956F',
 };
