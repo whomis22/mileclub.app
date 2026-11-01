@@ -15,6 +15,7 @@ import {
   SOCIAL,
 } from '@/data/options';
 import type { Profile } from '@/data/types';
+import { ROLES, type Role } from '@/data/roles';
 import { useStore } from '@/state/store';
 import { colors, radius, space } from '@/theme';
 
@@ -24,7 +25,7 @@ function toggle<T>(list: T[], item: T) {
   return list.includes(item) ? list.filter((x) => x !== item) : [...list, item];
 }
 
-const STEPS = ['You', 'Where', 'Move', 'Goals', 'When', 'Vibe', 'Safety'] as const;
+const STEPS = ['Join as', 'You', 'Where', 'Move', 'Goals', 'When', 'Vibe', 'Safety'] as const;
 
 export default function Onboarding() {
   const { saveProfile } = useStore();
@@ -34,6 +35,7 @@ export default function Onboarding() {
   const set = (patch: Partial<Draft>) => setD((prev) => ({ ...prev, ...patch }));
 
   const valid = [
+    !!d.role,
     !!d.firstName?.trim() && !!d.age && d.age >= 18 && d.age <= 99,
     !!d.neighborhood,
     d.activities.length > 0 && !!d.level,
@@ -77,6 +79,33 @@ export default function Onboarding() {
         <View style={styles.body}>
           {step === 0 && (
             <>
+              <Text style={styles.q}>How will you use Mile Club?</Text>
+              <Body muted>You can switch later in your profile.</Body>
+              <View style={{ height: space.lg }} />
+              {(Object.keys(ROLES) as Role[]).map((r) => {
+                const on = d.role === r;
+                return (
+                  <Pressable key={r} onPress={() => set({ role: r })} style={[styles.role, on && styles.roleOn]}>
+                    <Text style={{ fontSize: 34 }}>{ROLES[r].emoji}</Text>
+                    <View style={{ flex: 1 }}>
+                      <Text style={[styles.roleName, on && { color: '#fff' }]}>
+                        {r === 'member' ? `I want to move: join the ${ROLES.member.name}` : `I’m a coach: become a ${ROLES.coach.name}`}
+                      </Text>
+                      <Text style={[styles.rolePitch, on && { color: '#fff', opacity: 0.85 }]}>{ROLES[r].pitch}</Text>
+                      {r === 'coach' && (
+                        <Text style={[styles.roleFine, on && { color: colors.peach }]}>
+                          You keep 80% of what you earn. Mile Club keeps 20%.
+                        </Text>
+                      )}
+                    </View>
+                  </Pressable>
+                );
+              })}
+            </>
+          )}
+
+          {step === 1 && (
+            <>
               <Text style={styles.q}>Let’s start with you</Text>
               <Pressable onPress={pickPhoto} style={styles.photoRow}>
                 {d.photoUri ? (
@@ -116,7 +145,7 @@ export default function Onboarding() {
             </>
           )}
 
-          {step === 1 && (
+          {step === 2 && (
             <>
               <Text style={styles.q}>Which neighbourhood are you in?</Text>
               <Body muted>We use this to find people and activities close by.</Body>
@@ -129,7 +158,7 @@ export default function Onboarding() {
             </>
           )}
 
-          {step === 2 && (
+          {step === 3 && (
             <>
               <Text style={styles.q}>How do you like to move?</Text>
               <Label>Pick any</Label>
@@ -164,7 +193,7 @@ export default function Onboarding() {
             </>
           )}
 
-          {step === 3 && (
+          {step === 4 && (
             <>
               <Text style={styles.q}>What are you hoping for?</Text>
               <Label>Pick any</Label>
@@ -176,7 +205,7 @@ export default function Onboarding() {
             </>
           )}
 
-          {step === 4 && (
+          {step === 5 && (
             <>
               <Text style={styles.q}>When are you usually free?</Text>
               <Label>Pick any</Label>
@@ -193,7 +222,7 @@ export default function Onboarding() {
             </>
           )}
 
-          {step === 5 && (
+          {step === 6 && (
             <>
               <Text style={styles.q}>What’s your vibe?</Text>
               <Label>Group size</Label>
@@ -211,7 +240,7 @@ export default function Onboarding() {
             </>
           )}
 
-          {step === 6 && (
+          {step === 7 && (
             <>
               <Text style={styles.q}>Staying safe</Text>
               <Body muted>
@@ -271,5 +300,13 @@ const styles = StyleSheet.create({
     alignItems: 'center', justifyContent: 'center',
   },
   agreeText: { flex: 1, fontSize: 15, color: colors.ink, lineHeight: 21 },
+  role: {
+    flexDirection: 'row', gap: space.lg, alignItems: 'center', padding: space.lg, borderRadius: radius.lg,
+    borderWidth: 1.5, borderColor: colors.line, backgroundColor: colors.card, marginBottom: space.md,
+  },
+  roleOn: { backgroundColor: colors.ink, borderColor: colors.ink },
+  roleName: { fontSize: 18, fontWeight: '900', color: colors.ink },
+  rolePitch: { fontSize: 14, color: colors.muted, marginTop: 4, lineHeight: 20 },
+  roleFine: { fontSize: 13, fontWeight: '800', color: colors.accent, marginTop: 6 },
   footer: { padding: space.xl, paddingTop: space.sm },
 });

@@ -80,7 +80,7 @@ export function sampleActivities(): Activity[] {
       id: 'a5', type: 'strength', title: 'Beginner Strength Session', date: inDays(4), time: '12:15',
       location: 'Partner gym, Zuidas', neighborhood: 'Zuidas', level: 'Beginner', groupSize: 6,
       participants: ['mateo', 'lotte'], hostId: 'mateo', free: false, partner: 'Partner gym (free first visit)',
-      description: 'Learn the basic lifts with a small group. Captain will coach form.',
+      description: 'Learn the basic lifts with a small group. Mateo will show you good form.',
     },
     {
       id: 'a6', type: 'running', title: 'Amstel Long Run', date: inDays(5), time: '08:00',

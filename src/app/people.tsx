@@ -18,7 +18,7 @@ export default function Discover() {
   );
 
   return (
-    <Screen>
+    <Screen edges={['bottom']}>
       <Title sub={`${matches.length} people near ${profile.neighborhood} who move like you`}>
         Hi {profile.firstName} 👋
       </Title>
@@ -29,7 +29,7 @@ export default function Discover() {
             <View style={{ flex: 1 }}>
               <View style={styles.nameRow}>
                 <Text style={styles.name}>{person.firstName}</Text>
-                {person.isCaptain && <Badge label="CAPTAIN" tone="green" />}
+                {person.isCaptain && <Badge label="TOP HOST" tone="green" />}
               </View>
               <Text style={styles.meta}>
                 {person.level} · {formatKm(km)}

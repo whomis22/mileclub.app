@@ -22,7 +22,7 @@ export default function TabsLayout() {
       }}>
       <Tabs.Screen name="feed" options={{ title: 'Feed', tabBarIcon: icon('🏠') }} />
       <Tabs.Screen name="now" options={{ title: 'Swipe', tabBarIcon: icon('⚡') }} />
-      <Tabs.Screen name="discover" options={{ title: 'People', tabBarIcon: icon('👋') }} />
+      <Tabs.Screen name="train" options={{ title: 'Train', tabBarIcon: icon('⭐') }} />
       <Tabs.Screen name="activities" options={{ title: 'Activities', tabBarIcon: icon('📍') }} />
       <Tabs.Screen name="profile" options={{ title: 'You', tabBarIcon: icon('🙂') }} />
     </Tabs>

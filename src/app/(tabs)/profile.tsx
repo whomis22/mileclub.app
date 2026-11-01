@@ -3,13 +3,15 @@ import { Alert, StyleSheet, Text, View } from 'react-native';
 
 import { Avatar, Badge, Body, Button, Card, Chip, Chips, Label, Screen } from '@/components/ui';
 import { activityInfo } from '@/data/options';
+import { ROLES } from '@/data/roles';
 import { useStore } from '@/state/store';
 import { colors, space } from '@/theme';
 
 export default function ProfileTab() {
-  const { profile, activities, reset } = useStore();
+  const { profile, activities, reset, setRole } = useStore();
   if (!profile) return null;
   const hosting = activities.filter((a) => a.hostId === 'me').length;
+  const role = profile.role ?? 'member';
   const going = activities.filter((a) => a.participants.includes('me')).length;
 
   return (
@@ -21,7 +23,7 @@ export default function ProfileTab() {
           {profile.age ? `${profile.age} · ` : ''}{profile.neighborhood}, Amsterdam
         </Text>
         <View style={{ marginTop: space.sm }}>
-          <Badge label="MILE CLUB MEMBER" />
+          <Badge label={`${ROLES[role].emoji} ${role === 'coach' ? ROLES.coach.name.toUpperCase() : `${ROLES.member.name.toUpperCase()} MEMBER`}`} />
         </View>
       </View>
 
@@ -35,6 +37,26 @@ export default function ProfileTab() {
           <Text style={styles.statLabel}>Hosting</Text>
         </Card>
       </View>
+
+      {role === 'coach' ? (
+        <Card style={styles.coachCard}>
+          <Text style={styles.coachTitle}>{ROLES.coach.emoji} You’re a {ROLES.coach.name}</Text>
+          <Body muted>Host paid sessions. You keep 80%, Mile Club keeps 20%.</Body>
+          <View style={{ flexDirection: 'row', gap: space.sm, marginTop: space.md }}>
+            <Button title="Host a session" variant="secondary" style={{ flex: 1 }} onPress={() => router.push('/host-session')} />
+            <Button title="Earnings" style={{ flex: 1 }} onPress={() => router.push('/earnings')} />
+          </View>
+        </Card>
+      ) : (
+        <Card style={styles.coachCard}>
+          <Text style={styles.coachTitle}>Are you a coach?</Text>
+          <Body muted>
+            Become a {ROLES.coach.name}: host paid training sessions and keep 80% of what you earn.
+          </Body>
+          <View style={{ height: space.md }} />
+          <Button title={`Become a ${ROLES.coach.name}`} variant="secondary" onPress={() => setRole('coach')} />
+        </Card>
+      )}
 
       <Label>Activities</Label>
       <Chips>
@@ -63,6 +85,9 @@ export default function ProfileTab() {
       ) : null}
 
       <View style={{ height: space.xxl }} />
+      {role === 'coach' && (
+        <Button title={`Switch back to a ${ROLES.member.one} account`} variant="ghost" style={{ marginBottom: space.md }} onPress={() => setRole('member')} />
+      )}
       <Button
         title="Start over"
         variant="ghost"
@@ -91,5 +116,7 @@ const styles = StyleSheet.create({
   stats: { flexDirection: 'row', gap: space.md, marginTop: space.xl },
   stat: { flex: 1, alignItems: 'center' },
   statNum: { fontSize: 28, fontWeight: '900', color: colors.accent },
+  coachCard: { marginTop: space.lg },
+  coachTitle: { fontSize: 18, fontWeight: '900', color: colors.ink, marginBottom: 4 },
   statLabel: { fontSize: 13, fontWeight: '700', color: colors.muted },
 });

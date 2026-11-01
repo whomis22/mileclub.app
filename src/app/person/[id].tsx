@@ -42,7 +42,7 @@ export default function PersonDetail() {
         </Text>
         <View style={styles.badges}>
           <Badge label={`${score}% MATCH`} />
-          {p.isCaptain && <Badge label="✓ VERIFIED CAPTAIN" tone="green" />}
+          {p.isCaptain && <Badge label="✓ VERIFIED HOST" tone="green" />}
         </View>
         {p.isCaptain && (
           <Text style={styles.captain}>

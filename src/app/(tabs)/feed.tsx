@@ -25,7 +25,12 @@ export default function Feed() {
 
   return (
     <Screen>
-      <Text style={styles.brand}>mile club</Text>
+      <View style={styles.top}>
+        <Text style={styles.brand}>mile club</Text>
+        <Pressable style={styles.people} onPress={() => router.push('/people')}>
+          <Text style={styles.peopleText}>👋 People near you</Text>
+        </Pressable>
+      </View>
 
       <View style={styles.week}>
         <Text style={styles.weekKicker}>THIS WEEK IN AMSTERDAM</Text>
@@ -51,7 +56,7 @@ export default function Feed() {
               <View style={{ flex: 1 }}>
                 <Text style={styles.name}>
                   {person.firstName}
-                  {person.isCaptain ? <Text style={styles.captain}>  ★ CAPTAIN</Text> : null}
+                  {person.isCaptain ? <Text style={styles.captain}>  ★ TOP HOST</Text> : null}
                 </Text>
                 <Text style={styles.meta}>
                   {info.emoji} {hoursAgoLabel(post.hoursAgo)} · {post.place}
@@ -113,7 +118,10 @@ function PostStat({ label, value }: { label: string; value: string }) {
 }
 
 const styles = StyleSheet.create({
-  brand: { fontSize: 26, fontWeight: '900', color: colors.ink, letterSpacing: -0.5, marginBottom: space.md },
+  top: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: space.md },
+  brand: { fontSize: 26, fontWeight: '900', color: colors.ink, letterSpacing: -0.5 },
+  people: { backgroundColor: colors.card, borderRadius: radius.pill, borderWidth: 1.5, borderColor: colors.line, paddingVertical: 8, paddingHorizontal: 12 },
+  peopleText: { fontWeight: '800', color: colors.ink, fontSize: 13 },
   week: { backgroundColor: colors.ink, borderRadius: radius.lg, padding: space.lg, marginBottom: space.lg },
   weekKicker: { color: colors.peach, fontSize: 12, fontWeight: '900', letterSpacing: 1 },
   weekRow: { flexDirection: 'row', marginTop: space.md },

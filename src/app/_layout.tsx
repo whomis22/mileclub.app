@@ -19,6 +19,11 @@ export default function RootLayout() {
         }}>
         <Stack.Screen name="activity/[id]" options={{ headerShown: true, title: '' }} />
         <Stack.Screen name="person/[id]" options={{ headerShown: true, title: '' }} />
+        <Stack.Screen name="people" options={{ headerShown: true, title: 'People near you' }} />
+        <Stack.Screen name="coach/[id]" options={{ headerShown: true, title: '' }} />
+        <Stack.Screen name="session/[id]" options={{ headerShown: true, title: '' }} />
+        <Stack.Screen name="earnings" options={{ headerShown: true, title: 'Earnings' }} />
+        <Stack.Screen name="host-session" options={{ headerShown: true, title: 'Host a session', presentation: 'modal' }} />
         <Stack.Screen name="create-activity" options={{ headerShown: true, title: 'New activity', presentation: 'modal' }} />
       </Stack>
     </StoreProvider>

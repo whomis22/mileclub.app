@@ -52,7 +52,7 @@ export default function ActivityDetail() {
             <Text style={styles.hostName}>{host.firstName}</Text>
             <Text style={styles.hostMeta}>
               {host.isCaptain
-                ? `Captain · ${host.sessionsHosted} sessions hosted · ★ ${host.rating}`
+                ? `Top host · ${host.sessionsHosted} sessions hosted · ★ ${host.rating}`
                 : 'Community member'}
             </Text>
           </View>

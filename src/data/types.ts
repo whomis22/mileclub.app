@@ -1,3 +1,4 @@
+import type { Role } from './roles';
 import type {
   ActivityId,
   Goal,
@@ -9,6 +10,9 @@ import type {
 } from './options';
 
 export type Profile = {
+  role?: Role; // missing means 'member' (profiles made before roles existed)
+  coachHeadline?: string;
+  coachBio?: string;
   firstName: string;
   age: number;
   neighborhood: Neighborhood;
