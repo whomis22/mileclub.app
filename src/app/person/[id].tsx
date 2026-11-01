@@ -2,6 +2,7 @@ import { router, useLocalSearchParams } from 'expo-router';
 import { Alert, Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { ActivityCard } from '@/components/activity-card';
+import { FollowButton } from '@/components/follow-button';
 import { Avatar, Badge, Body, Chip, Chips, Label, Screen } from '@/components/ui';
 import { activityInfo, distanceKm } from '@/data/options';
 import { findPerson } from '@/data/people';
@@ -44,6 +45,9 @@ export default function PersonDetail() {
         <View style={styles.badges}>
           <Badge label={`${score}% MATCH`} />
           {p.isCaptain && <Badge label="✓ VERIFIED HOST" tone="green" />}
+        </View>
+        <View style={{ marginTop: space.md }}>
+          <FollowButton id={p.id} name={p.firstName} />
         </View>
         {p.isCaptain && (
           <Text style={styles.captain}>

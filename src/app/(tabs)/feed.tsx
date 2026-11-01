@@ -26,9 +26,8 @@ function duration(min: number) {
 
 export default function Explore() {
   useTheme();
-  const { profile, kudos, toggleKudos, blocked } = useStore();
+  const { profile, kudos, toggleKudos, blocked, following, toggleFollow } = useStore();
   const [filter, setFilter] = useState<(typeof FILTERS)[number]>('For you');
-  const [following, setFollowing] = useState<string[]>([]);
   if (!profile) return <Redirect href="/welcome" />;
 
   let posts = FEED.filter((p) => !blocked.includes(p.personId));
@@ -79,9 +78,9 @@ export default function Explore() {
                 </Text>
               </Pressable>
               <Pressable
-                onPress={() => setFollowing((l) => (follows ? l.filter((x) => x !== person.id) : [...l, person.id]))}
+                onPress={() => toggleFollow(person.id)}
                 style={[styles.follow, follows && styles.following]}>
-                <Text style={styles.followText}>{follows ? 'Following' : 'Follow'}</Text>
+                <Text style={[styles.followText, follows && { color: colors.ink }]}>{follows ? 'Following' : 'Follow'}</Text>
               </Pressable>
             </View>
 

@@ -1,15 +1,17 @@
 import { router } from 'expo-router';
-import { Alert, StyleSheet, Text, View } from 'react-native';
+import { Alert, Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { Avatar, Badge, Body, Button, Card, Chip, Chips, Label, MenuButton, Screen } from '@/components/ui';
+import { findCoach } from '@/data/coaches';
 import { activityInfo } from '@/data/options';
+import { findPerson } from '@/data/people';
 import { ROLES } from '@/data/roles';
 import { useStore } from '@/state/store';
 import { colors, fonts, space, themed, useTheme } from '@/theme';
 
 export default function ProfileTab() {
   useTheme();
-  const { profile, activities, reset, setRole } = useStore();
+  const { profile, activities, reset, setRole, following } = useStore();
   if (!profile) return null;
   const hosting = activities.filter((a) => a.hostId === 'me').length;
   const role = profile.role ?? 'member';
@@ -45,6 +47,29 @@ export default function ProfileTab() {
           <Text style={styles.statLabel}>SPORTS</Text>
         </View>
       </View>
+
+      <Card style={styles.followCard}>
+        <Text style={styles.followTitle}>Following · {following.length}</Text>
+        <Text style={styles.followNote}>🔒 Only you can see who you follow and who follows you.</Text>
+        {following.length === 0 ? (
+          <Body muted>Tap Follow on someone’s profile or post to see their runs in Explore.</Body>
+        ) : (
+          <View style={styles.followRow}>
+            {following.map((id) => {
+              const p = findPerson(id);
+              const c = p ? undefined : findCoach(id);
+              const name = p?.firstName ?? c?.name;
+              if (!name) return null;
+              return (
+                <Pressable key={id} style={styles.followPerson} onPress={() => router.push(p ? `/person/${id}` : `/coach/${id}`)}>
+                  <Avatar name={name} color={p?.color ?? c?.color} size={44} />
+                  <Text style={styles.followName} numberOfLines={1}>{name.split(' ')[0]}</Text>
+                </Pressable>
+              );
+            })}
+          </View>
+        )}
+      </Card>
 
       {role === 'coach' ? (
         <Card style={styles.coachCard}>
@@ -129,6 +154,12 @@ const styles = themed(() => StyleSheet.create({
   stat: { flex: 1, alignItems: 'center' },
   statMid: { borderLeftWidth: 1, borderRightWidth: 1, borderColor: colors.line },
   statNum: { fontSize: 30, fontFamily: fonts.serif, color: colors.ink },
+  followCard: { marginTop: space.lg, gap: 6 },
+  followTitle: { fontFamily: fonts.serif, fontSize: 22, color: colors.ink },
+  followNote: { fontFamily: fonts.sans, fontSize: 12, color: colors.muted },
+  followRow: { flexDirection: 'row', flexWrap: 'wrap', gap: space.md, marginTop: space.sm },
+  followPerson: { alignItems: 'center', width: 56 },
+  followName: { fontFamily: fonts.sansMedium, fontSize: 12, color: colors.ink, marginTop: 4 },
   coachCard: { marginTop: space.lg },
   coachTitle: { fontSize: 24, fontFamily: fonts.serif, color: colors.ink, marginBottom: 4 },
   statLabel: { fontSize: 10, letterSpacing: 1.5, fontFamily: fonts.sansMedium, color: colors.muted, marginTop: 2 },

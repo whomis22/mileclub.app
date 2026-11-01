@@ -1,6 +1,7 @@
 import { useLocalSearchParams } from 'expo-router';
 import { StyleSheet, Text, View } from 'react-native';
 
+import { FollowButton } from '@/components/follow-button';
 import { SessionCard } from '@/components/session-card';
 import { Avatar, Badge, Body, Chip, Chips, Label, Screen } from '@/components/ui';
 import { findCoach } from '@/data/coaches';
@@ -26,9 +27,11 @@ export default function CoachProfile() {
           <Badge label={`${ROLES.coach.emoji} ${ROLES.coach.name.toUpperCase()}`} />
           <Badge label={c.neighborhood.toUpperCase()} tone="plain" />
         </View>
+        <View style={{ marginTop: space.md }}>
+          <FollowButton id={c.id} name={c.name} />
+        </View>
       </View>
       <View style={styles.stats}>
-        <Stat value={c.followers.toLocaleString()} label="Fans" />
         <Stat value={`★ ${c.rating}`} label="Rating" />
         <Stat value={`${c.sessionsRun}`} label="Sessions run" />
       </View>

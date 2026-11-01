@@ -32,6 +32,7 @@ type State = {
   // Group runs: swiping to join sends a request; the user takes part only once the host accepts.
   runRequests: Record<string, { status: RequestStatus; at: number }>; // the user's requests, by activity id
   runIncoming: RunRequest[]; // people asking to join runs the user hosts
+  following: string[]; // people and coaches the user follows (private: only the user sees this list)
 };
 
 type Store = State & {
@@ -52,13 +53,14 @@ type Store = State & {
   runStatus: (activityId: string) => RequestStatus | undefined;
   cancelRunRequest: (activityId: string) => void;
   respondRun: (requestId: string, status: 'accepted' | 'declined') => void;
+  toggleFollow: (id: string) => void;
   cancelBooking: (sessionId: string) => void;
   block: (personId: string) => void;
   reset: () => void;
 };
 
 const KEY = 'mileclub-state-v1';
-const empty: State = { profile: null, myActivities: [], joined: [], blocked: [], skipped: [], kudos: [], mySessions: [], booked: [], requests: {}, incoming: [], runRequests: {}, runIncoming: [] };
+const empty: State = { profile: null, myActivities: [], joined: [], blocked: [], skipped: [], kudos: [], mySessions: [], booked: [], requests: {}, incoming: [], runRequests: {}, runIncoming: [], following: [] };
 
 function load(): State {
   try {
@@ -210,6 +212,8 @@ export function StoreProvider({ children }: { children: ReactNode }) {
         ...s,
         kudos: s.kudos.includes(postId) ? s.kudos.filter((x) => x !== postId) : [...s.kudos, postId],
       })),
+    toggleFollow: (id) =>
+      update((s) => ({ ...s, following: s.following.includes(id) ? s.following.filter((x) => x !== id) : [...s.following, id] })),
     block: (personId) => update((s) => ({ ...s, blocked: [...s.blocked, personId] })),
     reset: () => update(() => empty),
   };

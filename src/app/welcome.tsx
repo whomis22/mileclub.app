@@ -1,6 +1,6 @@
 import * as AppleAuthentication from 'expo-apple-authentication';
 import { Image } from 'expo-image';
-import { router } from 'expo-router';
+import { router, type Href } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { useEffect, useState } from 'react';
 import { Alert, Platform, Pressable, StyleSheet, Text, View } from 'react-native';
@@ -19,7 +19,7 @@ const CARDS = [
 
 export default function Welcome() {
   const { isDark } = useTheme();
-  const logIn = () => router.push('/onboarding');
+  const logIn = () => router.push('/login' as Href);
   const signUp = () => router.push('/signup');
   const [appleReady, setAppleReady] = useState(false);
 

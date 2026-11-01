@@ -74,7 +74,7 @@ export default function Train() {
               <Avatar name={c.name} color={c.color} size={56} />
               <Text style={styles.coachName} numberOfLines={1}>{c.name.split(' ')[0]}</Text>
               <Text style={styles.coachHead} numberOfLines={2}>{c.headline}</Text>
-              <Text style={styles.coachRating}>★ {c.rating} · {c.followers.toLocaleString()} fans</Text>
+              <Text style={styles.coachRating}>★ {c.rating} · {c.sessionsRun} sessions run</Text>
             </Pressable>
           ))}
         </View>
