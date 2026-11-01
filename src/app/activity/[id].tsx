@@ -38,7 +38,7 @@ export default function ActivityDetail() {
 
       <Label>Where</Label>
       <Body>📍 {a.location}</Body>
-      <Body muted>{a.neighborhood}, Amsterdam</Body>
+      <Body muted>{a.neighborhood}</Body>
       {a.partner && <Body muted>🤝 {a.partner}</Body>}
 
       <Label>About</Label>

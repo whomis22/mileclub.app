@@ -33,7 +33,7 @@ export default function Feed() {
       </View>
 
       <View style={styles.week}>
-        <Text style={styles.weekKicker}>THIS WEEK IN AMSTERDAM</Text>
+        <Text style={styles.weekKicker}>THIS WEEK NEAR YOU</Text>
         <View style={styles.weekRow}>
           <WeekStat value={`${Math.round(crewKm)}`} unit="km" label="by your crew" />
           <WeekStat value={`${posts.reduce((s, p) => s + p.withCount + 1, 0)}`} label="people moved" />

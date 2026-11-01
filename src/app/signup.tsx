@@ -274,7 +274,7 @@ const styles = StyleSheet.create({
   header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: space.lg, height: 52 },
   headerSide: { width: 32 },
   headerIcon: { color: '#FFFFFF', fontSize: 22, fontWeight: '600' },
-  headerLogo: { width: 34, height: 34 },
+  headerLogo: { width: 46, height: 22 },
   body: { paddingHorizontal: space.xxl, paddingTop: space.lg, paddingBottom: space.xxl },
   title: { color: '#FFFFFF', fontSize: 30, fontWeight: '800', letterSpacing: -0.5, marginBottom: space.md },
   help: { color: DIM, fontSize: 15, lineHeight: 21, marginBottom: space.lg },

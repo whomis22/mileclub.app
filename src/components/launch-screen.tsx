@@ -46,7 +46,7 @@ export function LaunchScreen() {
 const styles = StyleSheet.create({
   screen: { backgroundColor: colors.ink, zIndex: 100 },
   center: { flex: 1, alignItems: 'center', justifyContent: 'center' },
-  logo: { width: 112, height: 112 },
+  logo: { width: 120, height: 57 },
   bottom: { alignItems: 'center' },
   name: { color: colors.accent, fontSize: 20, fontWeight: '700', letterSpacing: 0.3 },
 });

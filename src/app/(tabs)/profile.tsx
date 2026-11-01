@@ -20,7 +20,7 @@ export default function ProfileTab() {
         <Avatar name={profile.firstName} uri={profile.photoUri} size={88} />
         <Text style={styles.name}>{profile.firstName}</Text>
         <Text style={styles.meta}>
-          {profile.age ? `${profile.age} · ` : ''}{profile.neighborhood}, Amsterdam
+          {profile.age ? `${profile.age} · ` : ''}{profile.neighborhood}
         </Text>
         <View style={{ marginTop: space.sm }}>
           <Badge label={`${ROLES[role].emoji} ${role === 'coach' ? ROLES.coach.name.toUpperCase() : `${ROLES.member.name.toUpperCase()} MEMBER`}`} />
