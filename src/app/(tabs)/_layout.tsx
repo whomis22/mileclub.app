@@ -1,19 +1,20 @@
+import { router, type Href } from 'expo-router';
 import { Tabs } from 'expo-router/js-tabs';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { colors, fonts } from '@/theme';
+import { colors, fonts, themed, useTheme } from '@/theme';
 
 type TabBarProps = {
   state: { index: number; routes: { key: string; name: string }[] };
   descriptors: Record<string, { options: { title?: string; href?: string | null } }>;
-  navigation: { navigate: (name: string) => void };
+  navigation?: unknown;
 };
 
 const TAB_ORDER = ['now', 'feed', 'activities', 'messages', 'profile'];
 
 // Floating olive pill at the bottom. The open tab is a cream pill with its name.
-function PillTabBar({ state, descriptors, navigation }: TabBarProps) {
+function PillTabBar({ state, descriptors }: TabBarProps) {
   const insets = useSafeAreaInsets();
   const routes = state.routes.filter((r) => TAB_ORDER.includes(r.name));
   const current = state.routes[state.index]?.name;
@@ -28,7 +29,10 @@ function PillTabBar({ state, descriptors, navigation }: TabBarProps) {
               key={r.key}
               accessibilityRole="tab"
               accessibilityState={{ selected: focused }}
-              onPress={() => navigation.navigate(r.name)}
+              onPress={() => {
+                // Go through the router: the tab bar's own navigation prop is not always passed in.
+                if (!focused) router.navigate(`/${r.name}` as Href);
+              }}
               style={[styles.item, focused && styles.itemOn]}>
               <Text style={[styles.label, focused && styles.labelOn]} numberOfLines={1}>
                 {title}
@@ -42,6 +46,7 @@ function PillTabBar({ state, descriptors, navigation }: TabBarProps) {
 }
 
 export default function TabsLayout() {
+  useTheme();
   return (
     <Tabs
       tabBar={(props) => <PillTabBar {...(props as unknown as TabBarProps)} />}
@@ -56,7 +61,7 @@ export default function TabsLayout() {
   );
 }
 
-const styles = StyleSheet.create({
+const styles = themed(() => StyleSheet.create({
   wrap: { backgroundColor: colors.bg, paddingHorizontal: 16, paddingTop: 6 },
   bar: {
     height: 60, borderRadius: 30, backgroundColor: colors.olive, flexDirection: 'row', alignItems: 'center',
@@ -66,4 +71,4 @@ const styles = StyleSheet.create({
   itemOn: { backgroundColor: colors.onBrand, flex: 1.35 },
   label: { fontFamily: fonts.sansMedium, fontSize: 12, color: '#D9DDC4' },
   labelOn: { fontFamily: fonts.sansSemi, fontSize: 13, color: colors.onPeach },
-});
+}));

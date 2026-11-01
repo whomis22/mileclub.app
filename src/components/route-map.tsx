@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 
-import { colors } from '@/theme';
+import { colors, themed } from '@/theme';
 
 // Simple hand-drawn route shapes (points in a 0–100 box), so the feed looks like a map
 // without needing a real map provider yet.
@@ -59,7 +59,7 @@ export function RouteMap({ route, height = 150 }: { route: number; height?: numb
   );
 }
 
-const styles = StyleSheet.create({
+const styles = themed(() => StyleSheet.create({
   map: { backgroundColor: '#EFE9F5', borderRadius: 16, overflow: 'hidden', position: 'relative' },
   street: { position: 'absolute', backgroundColor: '#FFFFFF', opacity: 0.8 },
   water: { position: 'absolute', left: 0, right: 0, bottom: 0, backgroundColor: '#DCD3F2' },
@@ -67,4 +67,4 @@ const styles = StyleSheet.create({
     position: 'absolute', width: 12, height: 12, borderRadius: 6, marginLeft: -6, marginTop: -6,
     borderWidth: 2, borderColor: '#fff',
   },
-});
+}));

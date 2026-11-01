@@ -9,9 +9,9 @@ import { activityInfo } from '@/data/options';
 import { ROLES, euro } from '@/data/roles';
 import { friendlyDate } from '@/lib/format';
 import { useStore, type RequestStatus } from '@/state/store';
-import { colors, radius, space } from '@/theme';
+import { colors, radius, space, themed, useTheme } from '@/theme';
 
-const STATUS: Record<RequestStatus, { title: string; body: (coach: string) => string; bg: string; fg: string }> = {
+const STATUS = themed((): Record<RequestStatus, { title: string; body: (coach: string) => string; bg: string; fg: string }> => ({
   pending: {
     title: '⏳ Request sent',
     body: (c) => `${c} will accept or decline soon. You’re only charged if they accept.`,
@@ -23,9 +23,10 @@ const STATUS: Record<RequestStatus, { title: string; body: (coach: string) => st
     body: (c) => `${c} couldn’t take you for this one. You haven’t been charged.`,
     bg: '#F3EEF0', fg: colors.muted,
   },
-};
+}));
 
 export default function SessionDetail() {
+  useTheme();
   const { id } = useLocalSearchParams<{ id: string }>();
   const { sessions, statusOf, incoming, book, cancelBooking, profile } = useStore();
   const [checkout, setCheckout] = useState(false);
@@ -179,7 +180,7 @@ export default function SessionDetail() {
   );
 }
 
-const styles = StyleSheet.create({
+const styles = themed(() => StyleSheet.create({
   kind: { fontSize: 12, fontWeight: '900', color: colors.purple, letterSpacing: 0.8, marginTop: space.sm },
   title: { fontSize: 28, fontWeight: '900', color: colors.ink, letterSpacing: -0.5, marginTop: 2 },
   when: { fontSize: 16, fontWeight: '700', color: colors.link, marginTop: 4 },
@@ -206,4 +207,4 @@ const styles = StyleSheet.create({
   apButton: { backgroundColor: '#000', borderRadius: 12, height: 52, alignItems: 'center', justifyContent: 'center' },
   apButtonText: { color: '#fff', fontSize: 18, fontWeight: '600' },
   doneCircle: { width: 64, height: 64, borderRadius: 32, backgroundColor: '#007AFF', alignItems: 'center', justifyContent: 'center' },
-});
+}));

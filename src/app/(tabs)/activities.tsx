@@ -10,15 +10,16 @@ import { friendlyDate } from '@/lib/format';
 import { activityFit } from '@/lib/matching';
 import { useStore } from '@/state/store';
 import type { RequestStatus } from '@/state/store';
-import { colors, fonts, radius, space } from '@/theme';
+import { colors, fonts, radius, space, themed, useTheme } from '@/theme';
 
-const STATUS: Record<RequestStatus, { label: string; bg: string; fg: string }> = {
+const STATUS = themed((): Record<RequestStatus, { label: string; bg: string; fg: string }> => ({
   pending: { label: 'Waiting', bg: colors.sand, fg: colors.muted },
   accepted: { label: 'Accepted', bg: colors.olive, fg: colors.onBrand },
   declined: { label: 'Declined', bg: colors.sand, fg: colors.danger },
-};
+}));
 
 export default function Activities() {
+  useTheme();
   const { activities, profile, runRequests, runIncoming, respondRun } = useStore();
   const [filter, setFilter] = useState<ActivityId | 'all' | 'mine'>('all');
 
@@ -109,7 +110,7 @@ export default function Activities() {
   );
 }
 
-const styles = StyleSheet.create({
+const styles = themed(() => StyleSheet.create({
   row: { flexDirection: 'row', alignItems: 'center', gap: space.md },
   name: { fontFamily: fonts.sansSemi, fontSize: 16, color: colors.ink },
   meta: { fontFamily: fonts.sans, fontSize: 13, color: colors.muted, marginTop: 2 },
@@ -119,4 +120,4 @@ const styles = StyleSheet.create({
   acceptText: { color: colors.onBrand, fontSize: 18, fontWeight: '800' },
   decline: { width: 40, height: 40, borderRadius: 20, borderWidth: 1, borderColor: colors.edge, alignItems: 'center', justifyContent: 'center' },
   declineText: { color: colors.ink, fontSize: 16, fontWeight: '700' },
-});
+}));

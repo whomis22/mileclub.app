@@ -8,7 +8,7 @@ import { FEED } from '@/data/feed';
 import { findPerson } from '@/data/people';
 import { hoursAgoLabel } from '@/lib/time';
 import { useStore } from '@/state/store';
-import { colors, fonts, radius, space } from '@/theme';
+import { colors, fonts, radius, space, themed, useTheme } from '@/theme';
 
 const PHOTOS = [
   require('../../../assets/images/photos/river.png'),
@@ -25,6 +25,7 @@ function duration(min: number) {
 }
 
 export default function Explore() {
+  useTheme();
   const { profile, kudos, toggleKudos, blocked } = useStore();
   const [filter, setFilter] = useState<(typeof FILTERS)[number]>('For you');
   const [following, setFollowing] = useState<string[]>([]);
@@ -118,7 +119,7 @@ export default function Explore() {
   );
 }
 
-const styles = StyleSheet.create({
+const styles = themed(() => StyleSheet.create({
   top: { flexDirection: 'row', alignItems: 'center', gap: space.md },
   title: { flex: 1, fontFamily: fonts.serif, fontSize: 38, color: colors.ink },
   people: { borderRadius: radius.pill, borderWidth: 1, borderColor: colors.line, paddingVertical: 8, paddingHorizontal: 12 },
@@ -144,4 +145,4 @@ const styles = StyleSheet.create({
   count: { fontFamily: fonts.sansSemi, fontSize: 13, color: colors.ink },
   place: { flex: 1, textAlign: 'right', fontFamily: fonts.sans, fontSize: 12, color: colors.muted },
   caption: { fontFamily: fonts.sans, fontSize: 14, lineHeight: 20, color: colors.ink, marginTop: space.sm },
-});
+}));

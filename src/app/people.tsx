@@ -6,9 +6,10 @@ import { activityInfo } from '@/data/options';
 import { PEOPLE } from '@/data/people';
 import { formatKm, rankPeople } from '@/lib/matching';
 import { useStore } from '@/state/store';
-import { colors, space } from '@/theme';
+import { colors, space, themed, useTheme } from '@/theme';
 
 export default function Discover() {
+  useTheme();
   const { profile, blocked } = useStore();
   if (!profile) return <Redirect href="/welcome" />;
 
@@ -53,7 +54,7 @@ export default function Discover() {
   );
 }
 
-const styles = StyleSheet.create({
+const styles = themed(() => StyleSheet.create({
   row: { flexDirection: 'row', alignItems: 'center', gap: space.md },
   nameRow: { flexDirection: 'row', alignItems: 'center', gap: space.sm },
   name: { fontSize: 20, fontWeight: '800', color: colors.ink },
@@ -62,4 +63,4 @@ const styles = StyleSheet.create({
   scoreNum: { fontSize: 24, fontWeight: '900', color: colors.link },
   scoreLabel: { fontSize: 11, fontWeight: '700', color: colors.muted, textTransform: 'uppercase' },
   detail: { fontSize: 14, color: colors.ink, marginTop: space.md },
-});
+}));

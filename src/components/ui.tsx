@@ -3,7 +3,7 @@ import type { ReactNode } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View, type ViewStyle } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { colors, fonts, isDark, radius, space } from '@/theme';
+import { colors, getThemeMode, fonts, radius, space, themed } from '@/theme';
 
 export function Screen({ children, scroll = true, edges = ['top'] }: {
   children: ReactNode;
@@ -108,7 +108,7 @@ export function Badge({ label, tone = 'accent' }: { label: string; tone?: 'accen
   );
 }
 
-const styles = StyleSheet.create({
+const styles = themed(() => StyleSheet.create({
   screen: { flex: 1, backgroundColor: colors.bg },
   scroll: { padding: space.xl, paddingBottom: 48 },
   title: { fontSize: 38, fontFamily: fonts.serif, color: colors.ink, lineHeight: 40 },
@@ -131,13 +131,14 @@ const styles = StyleSheet.create({
   },
   badge: { borderRadius: radius.pill, paddingVertical: 4, paddingHorizontal: 10, alignSelf: 'flex-start' },
   badgeText: { fontSize: 12, fontFamily: fonts.sansSemi },
-});
+}));
 
 // The Mile Club mark: an olive "m" with a peach "c" tucked over its last leg.
-export function Logo({ size = 40, m = isDark ? colors.onBrand : colors.olive, c = colors.peachDeep }: { size?: number; m?: string; c?: string }) {
+export function Logo({ size = 40, m, c = colors.peachDeep }: { size?: number; m?: string; c?: string }) {
+  const mColor = m ?? (getThemeMode() === 'dark' ? colors.onBrand : colors.olive);
   return (
     <View style={{ flexDirection: 'row' }} accessibilityLabel="Mile Club" accessible>
-      <Text style={{ fontFamily: fonts.logo, fontSize: size, lineHeight: size * 1.15, color: m }}>m</Text>
+      <Text style={{ fontFamily: fonts.logo, fontSize: size, lineHeight: size * 1.15, color: mColor }}>m</Text>
       <Text style={{ fontFamily: fonts.logo, fontSize: size, lineHeight: size * 1.15, color: c, marginLeft: -size * 0.3 }}>c</Text>
     </View>
   );
@@ -146,11 +147,11 @@ export function Logo({ size = 40, m = isDark ? colors.onBrand : colors.olive, c 
 // Round outline button that opens the side menu.
 export function MenuButton({ onPress }: { onPress: () => void }) {
   return (
-    <Pressable onPress={onPress} accessibilityLabel="Open menu" style={({ pressed }) => [iconBtn, pressed && { opacity: 0.6 }]}>
+    <Pressable onPress={onPress} accessibilityLabel="Open menu" style={({ pressed }) => [shared.iconBtn, pressed && { opacity: 0.6 }]}>
       <View style={{ gap: 4 }}>
-        <View style={[bar, { width: 18 }]} />
-        <View style={[bar, { width: 12 }]} />
-        <View style={[bar, { width: 18 }]} />
+        <View style={[shared.bar, { width: 18 }]} />
+        <View style={[shared.bar, { width: 12 }]} />
+        <View style={[shared.bar, { width: 18 }]} />
       </View>
     </Pressable>
   );
@@ -161,14 +162,16 @@ export function IconButton({ label, onPress, children, filled }: { label: string
     <Pressable
       onPress={onPress}
       accessibilityLabel={label}
-      style={({ pressed }) => [iconBtn, filled && { backgroundColor: colors.olive, borderColor: colors.olive }, pressed && { opacity: 0.6 }]}>
+      style={({ pressed }) => [shared.iconBtn, filled && { backgroundColor: colors.olive, borderColor: colors.olive }, pressed && { opacity: 0.6 }]}>
       {children}
     </Pressable>
   );
 }
 
-const iconBtn: ViewStyle = {
-  width: 44, height: 44, borderRadius: 22, borderWidth: 1, borderColor: colors.line,
-  alignItems: 'center', justifyContent: 'center',
-};
-const bar: ViewStyle = { height: 2, borderRadius: 1, backgroundColor: colors.ink };
+const shared = themed(() => ({
+  iconBtn: {
+    width: 44, height: 44, borderRadius: 22, borderWidth: 1, borderColor: colors.line,
+    alignItems: 'center', justifyContent: 'center',
+  } as ViewStyle,
+  bar: { height: 2, borderRadius: 1, backgroundColor: colors.ink } as ViewStyle,
+}));

@@ -8,13 +8,13 @@ import { Avatar, MenuButton } from '@/components/ui';
 import type { Activity } from '@/data/types';
 import { startsAt } from '@/lib/time';
 import { useStore } from '@/state/store';
-import { colors, fonts } from '@/theme';
+import { colors, fonts, themed, useTheme } from '@/theme';
 
 const WINDOW_HOURS = 36;
 const SERIF = fonts.serif;
-const ink = colors.ink;
 
 export default function Now() {
+  useTheme();
   const { profile, activities, skipped, runRequests, join, skip, clearSkipped } = useStore();
   const deck = useRef<SwipeDeckHandle | null>(null);
   const [joinedMsg, setJoinedMsg] = useState<Activity | null>(null);
@@ -111,16 +111,16 @@ export default function Now() {
   );
 }
 
-const styles = StyleSheet.create({
+const styles = themed(() => StyleSheet.create({
   screen: { flex: 1, backgroundColor: deckColors.cream },
   wrap: { flex: 1, paddingHorizontal: 22, paddingTop: 8, paddingBottom: 12 },
   header: { flexDirection: 'row', alignItems: 'center', gap: 10 },
   hello: { fontSize: 11, color: colors.muted, fontFamily: fonts.sans },
-  name: { fontSize: 18, color: ink, fontFamily: SERIF },
+  name: { fontSize: 18, color: colors.ink, fontFamily: SERIF },
   bell: { width: 44, height: 44, borderRadius: 22, backgroundColor: colors.olive, alignItems: 'center', justifyContent: 'center' },
   bubble: { width: 18, height: 14, borderRadius: 6, borderBottomLeftRadius: 2, backgroundColor: colors.onBrand },
   badge: { position: 'absolute', top: 9, right: 9, width: 9, height: 9, borderRadius: 5, backgroundColor: colors.peachDeep, borderWidth: 1.5, borderColor: colors.olive },
-  title: { fontFamily: SERIF, fontSize: 38, lineHeight: 40, color: ink, marginTop: 18 },
+  title: { fontFamily: SERIF, fontSize: 38, lineHeight: 40, color: colors.ink, marginTop: 18 },
   toast: { backgroundColor: deckColors.peach, borderRadius: 16, padding: 12, marginTop: 12 },
   toastText: { color: colors.onPeach, fontFamily: fonts.sansSemi, fontSize: 13 },
   hint: { textAlign: 'center', color: colors.muted, fontFamily: fonts.sans, fontSize: 12, marginTop: 8 },
@@ -131,10 +131,10 @@ const styles = StyleSheet.create({
   joinBtn: { backgroundColor: colors.olive },
   joinBtnText: { color: colors.onBrand, fontFamily: fonts.sansSemi, fontSize: 15 },
   empty: { flex: 1, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 12, gap: 10 },
-  emptyTitle: { fontFamily: SERIF, fontSize: 26, color: ink },
+  emptyTitle: { fontFamily: SERIF, fontSize: 26, color: colors.ink },
   emptySub: { fontSize: 14, color: colors.muted, fontFamily: fonts.sans, textAlign: 'center', lineHeight: 20 },
   primary: { backgroundColor: deckColors.olive, borderRadius: 999, paddingVertical: 14, alignSelf: 'stretch', alignItems: 'center', marginTop: 10 },
   primaryText: { color: colors.onBrand, fontFamily: fonts.sansSemi, fontSize: 15 },
   secondary: { borderRadius: 999, paddingVertical: 12, alignSelf: 'stretch', alignItems: 'center', borderWidth: 1.5, borderColor: deckColors.olive },
   secondaryText: { color: deckColors.olive, fontFamily: fonts.sansSemi, fontSize: 15 },
-});
+}));

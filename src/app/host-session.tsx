@@ -8,7 +8,7 @@ import { ACTIVITIES, NEIGHBORHOOD_NAMES, type ActivityId, type Neighborhood } fr
 import { euro, split } from '@/data/roles';
 import { friendlyDate } from '@/lib/format';
 import { useStore } from '@/state/store';
-import { colors, radius, space } from '@/theme';
+import { colors, radius, space, themed, useTheme } from '@/theme';
 
 function nextDays(n: number) {
   const pad = (x: number) => String(x).padStart(2, '0');
@@ -24,6 +24,7 @@ const SPOTS = [1, 5, 10, 15, 25, 50];
 const PRICES = [10, 15, 20, 30, 40, 60];
 
 export default function HostSession() {
+  useTheme();
   const { hostSession, profile } = useStore();
   const [kind, setKind] = useState<SessionKind>('Group training');
   const [type, setType] = useState<ActivityId>(profile?.activities[0] ?? 'running');
@@ -124,7 +125,7 @@ export default function HostSession() {
   );
 }
 
-const styles = StyleSheet.create({
+const styles = themed(() => StyleSheet.create({
   input: {
     backgroundColor: colors.card, borderWidth: 1.5, borderColor: colors.line, borderRadius: radius.md,
     paddingHorizontal: space.lg, paddingVertical: 14, fontSize: 16, color: colors.ink,
@@ -134,4 +135,4 @@ const styles = StyleSheet.create({
   previewBig: { color: '#fff', fontSize: 22, fontWeight: '900', marginTop: 4 },
   previewSmall: { color: '#fff', opacity: 0.7, fontSize: 14, marginTop: 2 },
   previewFull: { color: colors.link, fontSize: 15, fontWeight: '800', marginTop: space.sm },
-});
+}));

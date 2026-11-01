@@ -6,9 +6,10 @@ import { Avatar, Badge, Body, Chip, Chips, Label, Screen } from '@/components/ui
 import { findCoach } from '@/data/coaches';
 import { ROLES } from '@/data/roles';
 import { useStore } from '@/state/store';
-import { colors, space } from '@/theme';
+import { colors, space, themed, useTheme } from '@/theme';
 
 export default function CoachProfile() {
+  useTheme();
   const { id } = useLocalSearchParams<{ id: string }>();
   const { sessions, statusOf } = useStore();
   const c = findCoach(id);
@@ -50,7 +51,7 @@ function Stat({ value, label }: { value: string; label: string }) {
   );
 }
 
-const styles = StyleSheet.create({
+const styles = themed(() => StyleSheet.create({
   head: { alignItems: 'center' },
   name: { fontSize: 28, fontWeight: '900', color: colors.ink, marginTop: space.md },
   headline: { fontSize: 15, color: colors.muted, marginTop: 2, textAlign: 'center' },
@@ -60,4 +61,4 @@ const styles = StyleSheet.create({
   },
   statValue: { fontSize: 20, fontWeight: '900', color: colors.ink },
   statLabel: { fontSize: 12, fontWeight: '700', color: colors.muted },
-});
+}));

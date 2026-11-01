@@ -7,9 +7,10 @@ import { Body, Button, Card, Chip, Chips, Label, Screen } from '@/components/ui'
 import { ROLES, euro, split } from '@/data/roles';
 import { friendlyDate } from '@/lib/format';
 import { useStore } from '@/state/store';
-import { colors, radius, space } from '@/theme';
+import { colors, radius, space, themed, useTheme } from '@/theme';
 
 export default function Earnings() {
+  useTheme();
   const { sessions } = useStore();
   const mine = sessions.filter((s) => s.coachId === 'me');
   const gross = mine.reduce((sum, s) => sum + s.price * s.booked, 0);
@@ -100,7 +101,7 @@ export default function Earnings() {
   );
 }
 
-const styles = StyleSheet.create({
+const styles = themed(() => StyleSheet.create({
   hero: { backgroundColor: colors.inkBg, borderRadius: radius.lg, padding: space.xl, alignItems: 'center' },
   heroKicker: { color: colors.peach, fontSize: 12, fontWeight: '900', letterSpacing: 1 },
   heroValue: { color: '#fff', fontSize: 48, fontWeight: '900', marginTop: 4 },
@@ -117,4 +118,4 @@ const styles = StyleSheet.create({
   calcSmall: { fontSize: 13, fontWeight: '700', color: colors.purple, marginTop: 2 },
   demo: { backgroundColor: colors.bg, borderRadius: radius.md, padding: space.md, marginTop: space.md, borderWidth: 1, borderColor: colors.line },
   demoText: { color: colors.muted, fontWeight: '700', fontSize: 13 },
-});
+}));

@@ -3,7 +3,7 @@ import { StyleSheet, Switch, Text, View } from 'react-native';
 import { Avatar, Logo, Screen } from '@/components/ui';
 import { setGroupSetting, useGroupSettings, type GroupSettings } from '@/lib/group-settings';
 import { useStore } from '@/state/store';
-import { colors, fonts, radius, space } from '@/theme';
+import { colors, fonts, radius, space, themed, useTheme } from '@/theme';
 
 const ROWS: { key: keyof GroupSettings; title: string; sub: string }[] = [
   { key: 'adminsOnly', title: 'Only admins can post', sub: 'Members can read and react, but not send messages.' },
@@ -12,6 +12,7 @@ const ROWS: { key: keyof GroupSettings; title: string; sub: string }[] = [
 ];
 
 export default function GroupSettingsScreen() {
+  useTheme();
   const settings = useGroupSettings();
   const { profile } = useStore();
 
@@ -57,7 +58,7 @@ export default function GroupSettingsScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const styles = themed(() => StyleSheet.create({
   top: { alignItems: 'center', gap: space.sm },
   icon: { width: 88, height: 88, borderRadius: 28, backgroundColor: colors.olive, alignItems: 'center', justifyContent: 'center' },
   title: { fontFamily: fonts.serif, fontSize: 30, color: colors.ink, marginTop: space.xs },
@@ -71,4 +72,4 @@ const styles = StyleSheet.create({
   owner: { backgroundColor: colors.olive, borderRadius: radius.pill, paddingVertical: 4, paddingHorizontal: 10 },
   ownerText: { fontFamily: fonts.sansSemi, fontSize: 11, color: colors.onBrand },
   note: { fontFamily: fonts.sans, fontSize: 12, color: colors.muted, textAlign: 'center', marginTop: space.lg },
-});
+}));

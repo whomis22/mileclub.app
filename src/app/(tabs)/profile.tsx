@@ -5,9 +5,10 @@ import { Avatar, Badge, Body, Button, Card, Chip, Chips, Label, MenuButton, Scre
 import { activityInfo } from '@/data/options';
 import { ROLES } from '@/data/roles';
 import { useStore } from '@/state/store';
-import { colors, fonts, space } from '@/theme';
+import { colors, fonts, space, themed, useTheme } from '@/theme';
 
 export default function ProfileTab() {
+  useTheme();
   const { profile, activities, reset, setRole } = useStore();
   if (!profile) return null;
   const hosting = activities.filter((a) => a.hostId === 'me').length;
@@ -119,7 +120,7 @@ export default function ProfileTab() {
   );
 }
 
-const styles = StyleSheet.create({
+const styles = themed(() => StyleSheet.create({
   head: { alignItems: 'center', marginTop: space.sm },
   ring: { borderWidth: 3, borderColor: colors.olive, borderRadius: 50, padding: 3 },
   name: { fontSize: 36, fontFamily: fonts.serif, color: colors.ink, marginTop: space.md },
@@ -131,4 +132,4 @@ const styles = StyleSheet.create({
   coachCard: { marginTop: space.lg },
   coachTitle: { fontSize: 24, fontFamily: fonts.serif, color: colors.ink, marginBottom: 4 },
   statLabel: { fontSize: 10, letterSpacing: 1.5, fontFamily: fonts.sansMedium, color: colors.muted, marginTop: 2 },
-});
+}));

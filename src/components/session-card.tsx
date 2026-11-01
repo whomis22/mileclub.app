@@ -6,7 +6,7 @@ import { activityInfo } from '@/data/options';
 import { euro } from '@/data/roles';
 import { friendlyDate } from '@/lib/format';
 import type { RequestStatus } from '@/state/store';
-import { colors, radius, space } from '@/theme';
+import { colors, radius, space, themed } from '@/theme';
 
 import { Avatar, Badge, Card } from './ui';
 
@@ -46,7 +46,7 @@ export function SessionCard({ s, mine, status }: { s: CoachSession; mine?: boole
   );
 }
 
-const styles = StyleSheet.create({
+const styles = themed(() => StyleSheet.create({
   row: { flexDirection: 'row', alignItems: 'center', gap: space.sm },
   kind: { fontSize: 11, fontWeight: '900', color: colors.purple, letterSpacing: 0.8 },
   title: { fontSize: 17, fontWeight: '800', color: colors.ink, marginTop: 2 },
@@ -54,4 +54,4 @@ const styles = StyleSheet.create({
   price: { backgroundColor: colors.inkBg, borderRadius: radius.pill, paddingVertical: 6, paddingHorizontal: 12 },
   priceText: { color: '#fff', fontWeight: '900', fontSize: 15 },
   coach: { fontSize: 13, fontWeight: '700', color: colors.ink },
-});
+}));

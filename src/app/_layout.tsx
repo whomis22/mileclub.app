@@ -7,9 +7,10 @@ import { StatusBar } from 'expo-status-bar';
 
 import { LaunchScreen } from '@/components/launch-screen';
 import { StoreProvider } from '@/state/store';
-import { colors, isDark } from '@/theme';
+import { colors, useTheme } from '@/theme';
 
 export default function RootLayout() {
+  const { isDark } = useTheme();
   const [fontsLoaded, fontError] = useFonts({
     InstrumentSerif_400Regular,
     InstrumentSerif_400Regular_Italic,

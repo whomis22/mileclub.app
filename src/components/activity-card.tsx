@@ -5,7 +5,7 @@ import { activityInfo } from '@/data/options';
 import type { Activity } from '@/data/types';
 import { friendlyDate } from '@/lib/format';
 import { useStore } from '@/state/store';
-import { colors, space } from '@/theme';
+import { colors, space, themed } from '@/theme';
 
 import { Badge, Card } from './ui';
 
@@ -50,11 +50,11 @@ export function ActivityCard({ activity }: { activity: Activity }) {
   );
 }
 
-const styles = StyleSheet.create({
+const styles = themed(() => StyleSheet.create({
   row: { flexDirection: 'row', alignItems: 'center', gap: space.md },
   emoji: { fontSize: 34 },
   when: { fontSize: 12, fontWeight: '800', color: colors.link, letterSpacing: 0.8 },
   title: { fontSize: 18, fontWeight: '800', color: colors.ink, marginTop: 2 },
   meta: { fontSize: 14, color: colors.muted, marginTop: 2 },
   spots: { fontSize: 14, fontWeight: '600', color: colors.ink },
-});
+}));

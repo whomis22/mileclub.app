@@ -7,9 +7,10 @@ import { activityInfo, distanceKm } from '@/data/options';
 import { findPerson } from '@/data/people';
 import { formatKm, matchScore } from '@/lib/matching';
 import { useStore } from '@/state/store';
-import { colors, space } from '@/theme';
+import { colors, space, themed, useTheme } from '@/theme';
 
 export default function PersonDetail() {
+  useTheme();
   const { id } = useLocalSearchParams<{ id: string }>();
   const { profile, activities, block } = useStore();
   const p = findPerson(id);
@@ -97,7 +98,7 @@ export default function PersonDetail() {
   );
 }
 
-const styles = StyleSheet.create({
+const styles = themed(() => StyleSheet.create({
   head: { alignItems: 'center' },
   name: { fontSize: 32, fontWeight: '900', color: colors.ink, marginTop: space.md },
   meta: { fontSize: 15, color: colors.muted, marginTop: 2 },
@@ -105,4 +106,4 @@ const styles = StyleSheet.create({
   captain: { fontSize: 13, color: colors.muted, marginTop: space.sm },
   safetyRow: { flexDirection: 'row', justifyContent: 'center', gap: space.xxl, marginTop: space.xxl },
   danger: { fontSize: 15, fontWeight: '700', color: colors.danger },
-});
+}));

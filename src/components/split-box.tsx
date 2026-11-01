@@ -1,7 +1,7 @@
 import { StyleSheet, Text, View } from 'react-native';
 
 import { euro, split } from '@/data/roles';
-import { colors, radius, space } from '@/theme';
+import { colors, radius, space, themed } from '@/theme';
 
 // Shows how a payment is shared: 80% to the coach, 20% to Mile Club.
 export function SplitBox({ gross, note }: { gross: number; note: string }) {
@@ -28,7 +28,7 @@ export function SplitBox({ gross, note }: { gross: number; note: string }) {
   );
 }
 
-const styles = StyleSheet.create({
+const styles = themed(() => StyleSheet.create({
   split: { backgroundColor: colors.card, borderRadius: radius.lg, borderWidth: 1, borderColor: colors.line, padding: space.lg, gap: space.sm },
   bar: { flexDirection: 'row', height: 12, borderRadius: 6, overflow: 'hidden', marginBottom: space.sm },
   barCoach: { backgroundColor: colors.accent },
@@ -36,4 +36,4 @@ const styles = StyleSheet.create({
   line: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   lineLabel: { fontSize: 15, fontWeight: '700', color: colors.ink },
   lineValue: { fontSize: 17, fontWeight: '900', color: colors.ink },
-});
+}));

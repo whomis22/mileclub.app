@@ -19,7 +19,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { COUNTRIES, defaultCountry, flagOf, type Country } from '@/data/countries';
-import { colors, fonts, isDark, radius, space } from '@/theme';
+import { colors, fonts, radius, space, themed, useTheme } from '@/theme';
 
 // Step-by-step sign-up, one task per screen:
 // account details -> verification code -> password -> photo -> username,
@@ -28,7 +28,6 @@ import { colors, fonts, isDark, radius, space } from '@/theme';
 // Coming from "Continue with Apple", Apple has already checked the email, so the
 // code and password steps are skipped.
 
-const EDGE = colors.edge;
 const ERROR = '#B4432F';
 
 function ageFrom(day: number, month: number, year: number) {
@@ -123,6 +122,7 @@ function CountryPicker({ visible, onPick, onClose }: { visible: boolean; onPick:
 }
 
 export default function SignUp() {
+  const { isDark } = useTheme();
   const params = useLocalSearchParams<{ apple?: string; name?: string; email?: string }>();
   const viaApple = params.apple === '1';
   const flow = viaApple ? [0, 3, 4] : [0, 1, 2, 3, 4];
@@ -424,10 +424,10 @@ export default function SignUp() {
   );
 }
 
-const styles = StyleSheet.create({
+const styles = themed(() => StyleSheet.create({
   screen: { flex: 1, backgroundColor: colors.bg },
   header: { flexDirection: 'row', alignItems: 'center', gap: space.lg, paddingHorizontal: space.xl, paddingTop: space.sm },
-  backBtn: { width: 44, height: 44, borderRadius: 22, borderWidth: 1, borderColor: EDGE, alignItems: 'center', justifyContent: 'center' },
+  backBtn: { width: 44, height: 44, borderRadius: 22, borderWidth: 1, borderColor: colors.edge, alignItems: 'center', justifyContent: 'center' },
   backIcon: { color: colors.ink, fontSize: 22, lineHeight: 26, fontFamily: fonts.sansMedium },
   bar: { flex: 1, height: 3, borderRadius: 2, backgroundColor: colors.track, overflow: 'hidden' },
   barFill: { height: 3, borderRadius: 2, backgroundColor: colors.olive },
@@ -437,7 +437,7 @@ const styles = StyleSheet.create({
   titleItalic: { fontFamily: fonts.serifItalic },
   help: { color: colors.muted, fontSize: 15, lineHeight: 21, marginBottom: space.lg, fontFamily: fonts.sans },
   label: { color: colors.ink, fontSize: 16, fontFamily: fonts.sansSemi, marginTop: space.sm, marginBottom: space.xs },
-  field: { backgroundColor: colors.card, borderWidth: 1, borderColor: EDGE, borderRadius: radius.md, paddingHorizontal: space.md, paddingTop: space.sm, paddingBottom: 6 },
+  field: { backgroundColor: colors.card, borderWidth: 1, borderColor: colors.edge, borderRadius: radius.md, paddingHorizontal: space.md, paddingTop: space.sm, paddingBottom: 6 },
   fieldTop: { flexDirection: 'row', justifyContent: 'space-between' },
   fieldLabel: { color: colors.muted, fontSize: 13, fontFamily: fonts.sans },
   fieldInput: { color: colors.ink, fontSize: 18, paddingVertical: 4, fontFamily: fonts.sans },
@@ -447,7 +447,7 @@ const styles = StyleSheet.create({
   countryBtn: {
     backgroundColor: colors.card,
     borderWidth: 1,
-    borderColor: EDGE,
+    borderColor: colors.edge,
     borderRadius: radius.md,
     paddingHorizontal: space.md,
     paddingTop: space.sm,
@@ -456,7 +456,7 @@ const styles = StyleSheet.create({
     minWidth: 104,
   },
   countryBtnText: { color: colors.ink, fontSize: 18, paddingVertical: 4, fontFamily: fonts.sans },
-  appleNote: { backgroundColor: colors.card, borderWidth: 1, borderColor: EDGE, borderRadius: radius.md, padding: space.md, marginBottom: space.lg },
+  appleNote: { backgroundColor: colors.card, borderWidth: 1, borderColor: colors.edge, borderRadius: radius.md, padding: space.md, marginBottom: space.lg },
   appleNoteText: { color: colors.ink, fontSize: 15, fontFamily: fonts.sans },
   link: { color: colors.link, fontSize: 15, fontFamily: fonts.sansSemi },
   testNote: { color: colors.muted, fontSize: 13, marginTop: space.xl, fontFamily: fonts.sans },
@@ -481,7 +481,7 @@ const styles = StyleSheet.create({
   nextOff: { backgroundColor: colors.off },
   nextText: { color: colors.onBrand, fontSize: 15, fontFamily: fonts.sansSemi },
   nextTextOff: { color: colors.offText },
-  skip: { height: 54, borderRadius: radius.pill, borderWidth: 1, borderColor: EDGE, alignItems: 'center', justifyContent: 'center' },
+  skip: { height: 54, borderRadius: radius.pill, borderWidth: 1, borderColor: colors.edge, alignItems: 'center', justifyContent: 'center' },
   skipText: { color: colors.ink, fontSize: 15, fontFamily: fonts.sansSemi },
   sheet: { flex: 1, backgroundColor: colors.bg },
   sheetHead: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: space.xl, paddingTop: space.lg, paddingBottom: space.md },
@@ -501,4 +501,4 @@ const styles = StyleSheet.create({
   countryFlag: { fontSize: 22 },
   countryName: { flex: 1, fontSize: 16, color: colors.ink, fontFamily: fonts.sans },
   countryDial: { fontSize: 15, color: colors.muted, fontFamily: fonts.sansMedium },
-});
+}));

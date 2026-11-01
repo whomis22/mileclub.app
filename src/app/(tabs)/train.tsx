@@ -6,9 +6,10 @@ import { Avatar, Button, Label, Screen, Title } from '@/components/ui';
 import { COACHES } from '@/data/coaches';
 import { ROLES, euro, split } from '@/data/roles';
 import { useStore } from '@/state/store';
-import { colors, radius, space } from '@/theme';
+import { colors, radius, space, themed, useTheme } from '@/theme';
 
 export default function Train() {
+  useTheme();
   const { profile, sessions, statusOf, incoming } = useStore();
   if (!profile) return <Redirect href="/welcome" />;
   const isCoach = profile.role === 'coach';
@@ -103,7 +104,7 @@ export default function Train() {
   );
 }
 
-const styles = StyleSheet.create({
+const styles = themed(() => StyleSheet.create({
   dash: { backgroundColor: colors.inkBg, borderRadius: radius.lg, padding: space.lg },
   dashKicker: { color: colors.peach, fontSize: 12, fontWeight: '900', letterSpacing: 1 },
   dashRow: { flexDirection: 'row', marginTop: space.md },
@@ -123,4 +124,4 @@ const styles = StyleSheet.create({
   coachName: { fontSize: 16, fontWeight: '900', color: colors.ink, marginTop: space.sm },
   coachHead: { fontSize: 12, color: colors.muted, lineHeight: 16, minHeight: 32 },
   coachRating: { fontSize: 12, fontWeight: '800', color: colors.purple },
-});
+}));

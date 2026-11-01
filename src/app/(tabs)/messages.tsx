@@ -6,9 +6,10 @@ import { Avatar, Logo, MenuButton, Screen } from '@/components/ui';
 import { THREADS } from '@/data/messages';
 import { findPerson } from '@/data/people';
 import { useStore } from '@/state/store';
-import { colors, fonts, radius, space } from '@/theme';
+import { colors, fonts, radius, space, themed, useTheme } from '@/theme';
 
 export default function Messages() {
+  useTheme();
   const { blocked } = useStore();
   const [query, setQuery] = useState('');
   const list = THREADS.filter((t) => !t.personId || !blocked.includes(t.personId)).filter((t) =>
@@ -64,7 +65,7 @@ export default function Messages() {
   );
 }
 
-const styles = StyleSheet.create({
+const styles = themed(() => StyleSheet.create({
   head: { flexDirection: 'row', alignItems: 'center', gap: space.md },
   title: { fontFamily: fonts.serif, fontSize: 38, color: colors.ink },
   search: { marginTop: space.lg, height: 44, borderRadius: radius.pill, backgroundColor: colors.sand, paddingHorizontal: space.lg, justifyContent: 'center' },
@@ -79,4 +80,4 @@ const styles = StyleSheet.create({
   right: { alignItems: 'flex-end', gap: 6, alignSelf: 'flex-start', paddingTop: 4 },
   time: { fontFamily: fonts.sans, fontSize: 11, color: colors.muted },
   dot: { width: 10, height: 10, borderRadius: 5, backgroundColor: colors.olive },
-});
+}));

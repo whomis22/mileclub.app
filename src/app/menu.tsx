@@ -4,10 +4,11 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Avatar } from '@/components/ui';
 import { useStore } from '@/state/store';
-import { colors, fonts, radius, restartApp, saveThemePref, space, isDark } from '@/theme';
+import { colors, fonts, radius, space, themed, useTheme } from '@/theme';
 
 // Side menu: every page plus settings. Opens from the menu button at the top left.
 export default function Menu() {
+  const { isDark, setMode } = useTheme();
   const insets = useSafeAreaInsets();
   const { profile, reset } = useStore();
 
@@ -32,11 +33,7 @@ export default function Menu() {
     { label: 'Help', onPress: () => soon('Help') },
   ];
 
-  function setDark(on: boolean) {
-    saveThemePref(on ? 'dark' : 'light');
-    // Colours are set when the app starts, so restart it to switch.
-    restartApp();
-  }
+  const setDark = (on: boolean) => setMode(on ? 'dark' : 'light');
 
   function soon(what: string) {
     Alert.alert(what, 'This page is coming soon.');
@@ -102,7 +99,7 @@ export default function Menu() {
   );
 }
 
-const styles = StyleSheet.create({
+const styles = themed(() => StyleSheet.create({
   root: { flex: 1, flexDirection: 'row', backgroundColor: colors.overlay },
   panel: { width: '80%', maxWidth: 320, backgroundColor: colors.bg, borderTopRightRadius: 32, borderBottomRightRadius: 32, paddingHorizontal: space.lg },
   me: { flexDirection: 'row', alignItems: 'center', gap: space.md, paddingBottom: space.lg, paddingHorizontal: space.xs },
@@ -115,4 +112,4 @@ const styles = StyleSheet.create({
   small: { fontFamily: fonts.sans, fontSize: 14, color: colors.ink },
   divider: { height: 1, backgroundColor: colors.line, marginVertical: space.md, marginHorizontal: space.md },
   section: { fontFamily: fonts.sansSemi, fontSize: 10, letterSpacing: 2, color: colors.muted, paddingHorizontal: space.md, marginBottom: space.xs },
-});
+}));

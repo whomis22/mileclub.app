@@ -7,7 +7,7 @@ import { Alert, Platform, Pressable, StyleSheet, Text, View } from 'react-native
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { Logo } from '@/components/ui';
-import { colors, fonts, isDark, radius, space } from '@/theme';
+import { colors, fonts, radius, space, themed, useTheme } from '@/theme';
 
 // Welcome: logo and Log in at the top, a fanned stack of run photo cards,
 // "Find your running crew." and the Join button at the bottom.
@@ -18,6 +18,7 @@ const CARDS = [
 ] as const;
 
 export default function Welcome() {
+  const { isDark } = useTheme();
   const logIn = () => router.push('/onboarding');
   const signUp = () => router.push('/signup');
   const [appleReady, setAppleReady] = useState(false);
@@ -110,7 +111,7 @@ export default function Welcome() {
   );
 }
 
-const styles = StyleSheet.create({
+const styles = themed(() => StyleSheet.create({
   screen: { flex: 1, backgroundColor: colors.bg },
   top: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 28, paddingTop: space.md },
   login: { fontFamily: fonts.sansSemi, fontSize: 14, color: colors.ink },
@@ -131,4 +132,4 @@ const styles = StyleSheet.create({
   coach: { fontFamily: fonts.sans, fontSize: 13, color: colors.muted, textAlign: 'center' },
   coachLink: { fontFamily: fonts.sansSemi, color: colors.link },
   terms: { fontFamily: fonts.sans, fontSize: 11, color: colors.muted, textAlign: 'center', lineHeight: 15 },
-});
+}));

@@ -6,9 +6,10 @@ import { findPerson } from '@/data/people';
 import { euro, split } from '@/data/roles';
 import { friendlyDate } from '@/lib/format';
 import { useStore, type IncomingRequest } from '@/state/store';
-import { colors, space } from '@/theme';
+import { colors, space, themed, useTheme } from '@/theme';
 
 export default function Requests() {
+  useTheme();
   const { incoming, sessions, respond } = useStore();
   const pending = incoming.filter((r) => r.status === 'pending');
   const done = incoming.filter((r) => r.status !== 'pending');
@@ -71,11 +72,11 @@ export default function Requests() {
   );
 }
 
-const styles = StyleSheet.create({
+const styles = themed(() => StyleSheet.create({
   row: { flexDirection: 'row', alignItems: 'center', gap: space.md },
   name: { fontSize: 17, fontWeight: '800', color: colors.ink },
   meta: { fontSize: 13, color: colors.muted, marginTop: 1 },
   note: { fontSize: 15, color: colors.ink, fontStyle: 'italic', marginTop: space.md },
   pay: { fontSize: 13, fontWeight: '700', color: colors.link, marginTop: space.md },
   btns: { flexDirection: 'row', gap: space.sm, marginTop: space.md },
-});
+}));

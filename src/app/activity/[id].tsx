@@ -7,9 +7,10 @@ import { PEOPLE, findPerson } from '@/data/people';
 import { rankPeople } from '@/lib/matching';
 import { friendlyDate } from '@/lib/format';
 import { useStore } from '@/state/store';
-import { colors, space } from '@/theme';
+import { colors, space, themed, useTheme } from '@/theme';
 
 export default function ActivityDetail() {
+  useTheme();
   const { id } = useLocalSearchParams<{ id: string }>();
   const { activities, profile, toggleJoin, runStatus, runIncoming, respondRun } = useStore();
   const a = activities.find((x) => x.id === id);
@@ -174,7 +175,7 @@ export default function ActivityDetail() {
   );
 }
 
-const styles = StyleSheet.create({
+const styles = themed(() => StyleSheet.create({
   emoji: { fontSize: 48 },
   when: { fontSize: 13, fontWeight: '800', color: colors.link, letterSpacing: 0.8, marginTop: space.sm },
   title: { fontSize: 30, fontWeight: '900', color: colors.ink, letterSpacing: -0.5, marginTop: 4 },
@@ -194,4 +195,4 @@ const styles = StyleSheet.create({
   declineText: { color: colors.ink, fontSize: 16, fontWeight: '700' },
   safety: { fontSize: 13, color: colors.muted, textAlign: 'center', marginTop: space.lg, lineHeight: 18 },
   report: { fontSize: 14, fontWeight: '700', color: colors.danger, textAlign: 'center', marginTop: space.lg },
-});
+}));

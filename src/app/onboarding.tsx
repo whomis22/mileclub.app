@@ -17,7 +17,7 @@ import {
 import type { Profile } from '@/data/types';
 import { ROLES, type Role } from '@/data/roles';
 import { useStore } from '@/state/store';
-import { colors, fonts, isDark, palettes, radius, restartApp, saveThemePref, space, type ThemePref } from '@/theme';
+import { colors, getThemeMode, setThemeMode, fonts, palettes, radius, space, themed, type ThemePref, useTheme } from '@/theme';
 
 type Draft = Partial<Profile> & { activities: Profile['activities']; goals: Profile['goals']; availability: Profile['availability'] };
 
@@ -65,10 +65,11 @@ function LookPreview({ mode, selected, onPress }: { mode: ThemePref; selected: b
 }
 
 export default function Onboarding() {
+  useTheme();
   const { saveProfile } = useStore();
   const [step, setStep] = useState(0);
   const [agreed, setAgreed] = useState(false);
-  const [look, setLook] = useState<ThemePref>(isDark ? 'dark' : 'light');
+  const [look, setLook] = useState<ThemePref>(getThemeMode());
   const params = useLocalSearchParams<{ firstName?: string; age?: string; photoUri?: string }>();
   const [d, setD] = useState<Draft>({
     activities: [],
@@ -105,11 +106,8 @@ export default function Onboarding() {
   function next() {
     if (step < STEPS.length - 1) return setStep(step + 1);
     saveProfile({ ...(d as Profile), firstName: d.firstName!.trim() });
-    const changeLook = (look === 'dark') !== isDark;
-    saveThemePref(look);
+    setThemeMode(look);
     router.replace('/now');
-    // Colours are set when the app starts, so restart it once the profile is saved.
-    if (changeLook) setTimeout(() => restartApp(), 400);
   }
 
   return (
@@ -338,7 +336,7 @@ export default function Onboarding() {
   );
 }
 
-const styles = StyleSheet.create({
+const styles = themed(() => StyleSheet.create({
   screen: { flex: 1, backgroundColor: colors.bg },
   header: { flexDirection: 'row', alignItems: 'center', gap: space.lg, paddingHorizontal: space.xl, paddingTop: space.sm },
   backBtn: { width: 44, height: 44, borderRadius: 22, borderWidth: 1, borderColor: colors.edge, alignItems: 'center', justifyContent: 'center' },
@@ -391,4 +389,4 @@ const styles = StyleSheet.create({
   phoneNavDot: { width: 5, height: 5, borderRadius: 3, backgroundColor: '#D9DDC4' },
   lookTick: { width: 26, height: 26, borderRadius: 13, borderWidth: 1.5, borderColor: colors.dashed, alignItems: 'center', justifyContent: 'center' },
   footer: { padding: space.xl, paddingTop: space.sm },
-});
+}));

@@ -3,7 +3,7 @@ import { Animated, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Logo } from '@/components/ui';
-import { colors, fonts } from '@/theme';
+import { colors, fonts, themed } from '@/theme';
 
 // Opening screen shown while the app starts: logo in the middle,
 // "Mile Club" at the bottom, then it fades away.
@@ -38,9 +38,9 @@ export function LaunchScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const styles = themed(() => StyleSheet.create({
   screen: { backgroundColor: colors.bg, zIndex: 100 },
   center: { flex: 1, alignItems: 'center', justifyContent: 'center' },
   bottom: { alignItems: 'center' },
   name: { color: colors.link, fontSize: 20, fontFamily: fonts.sansSemi },
-});
+}));

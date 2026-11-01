@@ -7,9 +7,10 @@ import { Avatar, Logo } from '@/components/ui';
 import { findThread, type ChatMessage } from '@/data/messages';
 import { findPerson } from '@/data/people';
 import { useGroupSettings } from '@/lib/group-settings';
-import { colors, fonts, radius, space } from '@/theme';
+import { colors, fonts, radius, space, themed, useTheme } from '@/theme';
 
 export default function Chat() {
+  useTheme();
   const { id } = useLocalSearchParams<{ id: string }>();
   const thread = findThread(id);
   const settings = useGroupSettings();
@@ -103,7 +104,7 @@ export default function Chat() {
   );
 }
 
-const styles = StyleSheet.create({
+const styles = themed(() => StyleSheet.create({
   screen: { flex: 1, backgroundColor: colors.bg },
   head: { flexDirection: 'row', alignItems: 'center', gap: space.md, paddingHorizontal: space.lg, paddingVertical: space.md, borderBottomWidth: 1, borderBottomColor: colors.line },
   back: { width: 44, height: 44, borderRadius: 22, borderWidth: 1, borderColor: colors.line, alignItems: 'center', justifyContent: 'center' },
@@ -130,4 +131,4 @@ const styles = StyleSheet.create({
   sendText: { color: colors.onBrand, fontSize: 22, fontFamily: fonts.sansBold },
   locked: { margin: space.md, minHeight: 50, borderRadius: 25, backgroundColor: colors.sand, alignItems: 'center', justifyContent: 'center', paddingHorizontal: space.lg },
   lockedText: { fontFamily: fonts.sans, fontSize: 13, color: colors.muted, textAlign: 'center' },
-});
+}));

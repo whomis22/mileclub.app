@@ -1,12 +1,13 @@
 import { useEffect, useImperativeHandle, useRef, useState, type Ref } from 'react';
 import { Image } from 'expo-image';
+import { router } from 'expo-router';
 import { Animated, Dimensions, PanResponder, Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { activityInfo, distanceKm, type ActivityId, type Neighborhood } from '@/data/options';
 import type { Activity } from '@/data/types';
 import { formatKm } from '@/lib/matching';
 import { startsAt, startsIn } from '@/lib/time';
-import { colors, fonts } from '@/theme';
+import { colors, fonts, themed } from '@/theme';
 
 
 const W = Dimensions.get('window').width;
@@ -30,6 +31,7 @@ export function SwipeDeck({
   const [pos] = useState(() => new Animated.ValueXY());
   const top = items[0];
   const latest = useRef({ top, onJoin, onSkip });
+  const lastDrag = useRef(0); // when a drag last ended, so it isn't also read as a tap
   useEffect(() => {
     latest.current = { top, onJoin, onSkip };
   });
@@ -52,8 +54,11 @@ export function SwipeDeck({
     };
     const responder = PanResponder.create({
       onMoveShouldSetPanResponder: (_, g) => Math.abs(g.dx) > 6,
+      // Take over from the tap-to-open card as soon as the finger moves sideways.
+      onMoveShouldSetPanResponderCapture: (_, g) => Math.abs(g.dx) > 6 && Math.abs(g.dx) > Math.abs(g.dy),
       onPanResponderMove: Animated.event([null, { dx: pos.x, dy: pos.y }], { useNativeDriver: false }),
       onPanResponderRelease: (_, g) => {
+        lastDrag.current = Date.now();
         if (g.dx > THRESHOLD) fly('right');
         else if (g.dx < -THRESHOLD) fly('left');
         else Animated.spring(pos, { toValue: { x: 0, y: 0 }, friction: 5, useNativeDriver: false }).start();
@@ -97,7 +102,14 @@ export function SwipeDeck({
           key={top.id}
           {...pan.handlers}
           style={[styles.cardWrap, { transform: [{ translateX: pos.x }, { translateY: pos.y }, { rotate }] }]}>
-          <DeckCard a={top} home={home} onJoin={() => pan.fly('right')} />
+          <DeckCard
+            a={top}
+            home={home}
+            onJoin={() => pan.fly('right')}
+            onOpen={() => {
+              if (Date.now() - lastDrag.current > 400) router.push(`/activity/${top.id}`);
+            }}
+          />
           {/* While dragging, the card tints olive (join) or dark (skip) and shows a big label. */}
           <Animated.View pointerEvents="none" style={[styles.tint, { backgroundColor: deckColors.olive, opacity: Animated.multiply(inOpacity, 0.45) }]} />
           <Animated.View pointerEvents="none" style={[styles.tint, { backgroundColor: '#000', opacity: Animated.multiply(skipOpacity, 0.45) }]} />
@@ -117,7 +129,17 @@ const PEEK = 22;
 const SERIF = fonts.serif;
 
 // Rich Olive / Warm Cream / Soft Peach
-export const deckColors = { olive: colors.olive, cream: colors.bg, peach: colors.peachDeep } as const;
+export const deckColors = {
+  get olive() {
+    return colors.olive;
+  },
+  get cream() {
+    return colors.bg;
+  },
+  get peach() {
+    return colors.peachDeep;
+  },
+};
 
 // Remote photos per sport. If one doesn't load, the olive card underneath still looks finished.
 const PHOTOS: Partial<Record<ActivityId, string[]>> = {
@@ -143,7 +165,7 @@ function photoFor(a: Activity) {
 const DAYS = ['SUNDAY', 'MONDAY', 'TUESDAY', 'WEDNESDAY', 'THURSDAY', 'FRIDAY', 'SATURDAY'];
 const MONTHS = ['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC'];
 
-function DeckCard({ a, home, onJoin }: { a: Activity; home: Neighborhood; onJoin?: () => void }) {
+function DeckCard({ a, home, onJoin, onOpen }: { a: Activity; home: Neighborhood; onJoin?: () => void; onOpen?: () => void }) {
   const info = activityInfo(a.type);
   const d = startsAt(a);
   const place = a.location.split(/[,(]/)[0].trim();
@@ -154,7 +176,8 @@ function DeckCard({ a, home, onJoin }: { a: Activity; home: Neighborhood; onJoin
       ? 'TONIGHT'
       : DAYS[d.getDay()];
   return (
-    <View style={styles.card}>
+    // Tapping the card (not dragging it) opens the run's details.
+    <Pressable style={styles.card} onPress={onOpen} disabled={!onOpen} accessibilityLabel={`${a.title}, see details`}>
       <Image source={{ uri: photoFor(a) }} style={StyleSheet.absoluteFill} contentFit="cover" transition={250} />
       {/* soft shade so the white text always reads */}
       <View style={[styles.shade, { top: 0, height: 90, opacity: 0.35 }]} />
@@ -191,17 +214,17 @@ function DeckCard({ a, home, onJoin }: { a: Activity; home: Neighborhood; onJoin
           <Pressable style={styles.joinPill} onPress={onJoin} disabled={!onJoin}>
             <Text style={styles.joinText}>Join {info.id === 'running' ? 'run' : 'session'}</Text>
           </Pressable>
-          <Pressable style={styles.joinArrow} onPress={onJoin} disabled={!onJoin}>
+          <Pressable style={styles.joinArrow} onPress={onOpen} disabled={!onOpen} accessibilityLabel="See details">
             <Text style={styles.arrowText}>↗</Text>
           </Pressable>
           <Text style={styles.spots}>{left} {left === 1 ? 'spot' : 'spots'} left</Text>
         </View>
       </View>
-    </View>
+    </Pressable>
   );
 }
 
-const styles = StyleSheet.create({
+const styles = themed(() => StyleSheet.create({
   deck: { flex: 1, marginTop: PEEK * 2 + 8 },
   cardWrap: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 },
   card: {
@@ -235,4 +258,4 @@ const styles = StyleSheet.create({
   tint: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, borderRadius: 30 },
   stampSkip: { right: 24, borderColor: '#A1402A', transform: [{ rotate: '12deg' }] },
   stampText: { fontSize: 26, fontWeight: '900', letterSpacing: 2 },
-});
+}));
