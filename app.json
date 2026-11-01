@@ -13,7 +13,7 @@
     },
     "android": {
       "adaptiveIcon": {
-        "backgroundColor": "#1B1035",
+        "backgroundColor": "#F7F1E6",
         "foregroundImage": "./assets/images/icon.png"
       },
       "predictiveBackGestureEnabled": false
@@ -27,9 +27,9 @@
       [
         "expo-splash-screen",
         {
-          "backgroundColor": "#1B1035",
+          "backgroundColor": "#F7F1E6",
           "image": "./assets/images/logo-mark.png",
-          "imageWidth": 120
+          "imageWidth": 140
         }
       ],
       "expo-sqlite",

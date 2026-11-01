@@ -1,11 +1,11 @@
 import { router } from 'expo-router';
 import { Alert, StyleSheet, Text, View } from 'react-native';
 
-import { Avatar, Badge, Body, Button, Card, Chip, Chips, Label, Screen } from '@/components/ui';
+import { Avatar, Badge, Body, Button, Card, Chip, Chips, Label, MenuButton, Screen } from '@/components/ui';
 import { activityInfo } from '@/data/options';
 import { ROLES } from '@/data/roles';
 import { useStore } from '@/state/store';
-import { colors, space } from '@/theme';
+import { colors, fonts, space } from '@/theme';
 
 export default function ProfileTab() {
   const { profile, activities, reset, setRole } = useStore();
@@ -16,31 +16,38 @@ export default function ProfileTab() {
 
   return (
     <Screen>
+      <MenuButton onPress={() => router.push('/menu')} />
       <View style={styles.head}>
-        <Avatar name={profile.firstName} uri={profile.photoUri} size={88} />
+        <View style={styles.ring}>
+          <Avatar name={profile.firstName} uri={profile.photoUri} size={88} />
+        </View>
         <Text style={styles.name}>{profile.firstName}</Text>
         <Text style={styles.meta}>
           {profile.age ? `${profile.age} · ` : ''}{profile.neighborhood}
         </Text>
         <View style={{ marginTop: space.sm }}>
-          <Badge label={`${ROLES[role].emoji} ${role === 'coach' ? ROLES.coach.name.toUpperCase() : `${ROLES.member.name.toUpperCase()} MEMBER`}`} />
+          <Badge label={role === 'coach' ? ROLES.coach.name : `${ROLES.member.name} member`} />
         </View>
       </View>
 
       <View style={styles.stats}>
-        <Card style={styles.stat}>
+        <View style={styles.stat}>
           <Text style={styles.statNum}>{going}</Text>
-          <Text style={styles.statLabel}>Upcoming</Text>
-        </Card>
-        <Card style={styles.stat}>
+          <Text style={styles.statLabel}>UPCOMING</Text>
+        </View>
+        <View style={[styles.stat, styles.statMid]}>
           <Text style={styles.statNum}>{hosting}</Text>
-          <Text style={styles.statLabel}>Hosting</Text>
-        </Card>
+          <Text style={styles.statLabel}>HOSTING</Text>
+        </View>
+        <View style={styles.stat}>
+          <Text style={styles.statNum}>{profile.activities.length}</Text>
+          <Text style={styles.statLabel}>SPORTS</Text>
+        </View>
       </View>
 
       {role === 'coach' ? (
         <Card style={styles.coachCard}>
-          <Text style={styles.coachTitle}>{ROLES.coach.emoji} You’re a {ROLES.coach.name}</Text>
+          <Text style={styles.coachTitle}>You’re a {ROLES.coach.name}</Text>
           <Body muted>Host paid sessions. You keep 80%, Mile Club keeps 20%.</Body>
           <View style={{ flexDirection: 'row', gap: space.sm, marginTop: space.md }}>
             <Button title="Host a session" variant="secondary" style={{ flex: 1 }} onPress={() => router.push('/host-session')} />
@@ -64,7 +71,7 @@ export default function ProfileTab() {
       <Label>Activities</Label>
       <Chips>
         {profile.activities.map((a) => (
-          <Chip key={a} label={`${activityInfo(a).emoji} ${activityInfo(a).label}`} />
+          <Chip key={a} label={activityInfo(a).label} />
         ))}
       </Chips>
       <Label>Level</Label>
@@ -113,13 +120,15 @@ export default function ProfileTab() {
 }
 
 const styles = StyleSheet.create({
-  head: { alignItems: 'center', marginTop: space.lg },
-  name: { fontSize: 30, fontWeight: '900', color: colors.ink, marginTop: space.md },
-  meta: { fontSize: 15, color: colors.muted, marginTop: 2 },
-  stats: { flexDirection: 'row', gap: space.md, marginTop: space.xl },
+  head: { alignItems: 'center', marginTop: space.sm },
+  ring: { borderWidth: 3, borderColor: colors.olive, borderRadius: 50, padding: 3 },
+  name: { fontSize: 36, fontFamily: fonts.serif, color: colors.ink, marginTop: space.md },
+  meta: { fontSize: 13, fontFamily: fonts.sans, color: colors.muted, marginTop: 2 },
+  stats: { flexDirection: 'row', marginTop: space.xl, borderTopWidth: 1, borderBottomWidth: 1, borderColor: colors.line, paddingVertical: space.md },
   stat: { flex: 1, alignItems: 'center' },
-  statNum: { fontSize: 28, fontWeight: '900', color: colors.accent },
+  statMid: { borderLeftWidth: 1, borderRightWidth: 1, borderColor: colors.line },
+  statNum: { fontSize: 30, fontFamily: fonts.serif, color: colors.ink },
   coachCard: { marginTop: space.lg },
-  coachTitle: { fontSize: 18, fontWeight: '900', color: colors.ink, marginBottom: 4 },
-  statLabel: { fontSize: 13, fontWeight: '700', color: colors.muted },
+  coachTitle: { fontSize: 24, fontFamily: fonts.serif, color: colors.ink, marginBottom: 4 },
+  statLabel: { fontSize: 10, letterSpacing: 1.5, fontFamily: fonts.sansMedium, color: colors.muted, marginTop: 2 },
 });

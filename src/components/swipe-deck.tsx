@@ -1,11 +1,12 @@
 import { useEffect, useImperativeHandle, useRef, useState, type Ref } from 'react';
 import { Image } from 'expo-image';
-import { Animated, Dimensions, PanResponder, Platform, Pressable, StyleSheet, Text, View } from 'react-native';
+import { Animated, Dimensions, PanResponder, Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { activityInfo, distanceKm, type ActivityId, type Neighborhood } from '@/data/options';
 import type { Activity } from '@/data/types';
 import { formatKm } from '@/lib/matching';
 import { startsAt, startsIn } from '@/lib/time';
+import { colors, fonts } from '@/theme';
 
 
 const W = Dimensions.get('window').width;
@@ -110,10 +111,10 @@ export function SwipeDeck({
 }
 
 const PEEK = 22;
-const SERIF = Platform.select({ ios: 'Georgia', android: 'serif', default: 'serif' });
+const SERIF = fonts.serif;
 
 // Rich Olive / Warm Cream / Soft Peach
-export const deckColors = { olive: '#4B5A2A', cream: '#F5F0E6', peach: '#F4B795' } as const;
+export const deckColors = { olive: colors.olive, cream: colors.bg, peach: colors.peachDeep } as const;
 
 // Remote photos per sport. If one doesn't load, the olive card underneath still looks finished.
 const PHOTOS: Partial<Record<ActivityId, string[]>> = {
@@ -210,13 +211,13 @@ const styles = StyleSheet.create({
   club: { color: '#fff', fontFamily: SERIF, fontSize: 20, letterSpacing: 2, marginTop: 4 },
   bottom: { position: 'absolute', left: 0, right: 0, bottom: 0, padding: 20 },
   placeRow: { flexDirection: 'row', alignItems: 'center', gap: 10 },
-  place: { color: '#fff', fontFamily: SERIF, fontStyle: 'italic', fontSize: 34, flexShrink: 1 },
+  place: { color: '#fff', fontFamily: fonts.serifItalic, fontSize: 34, flexShrink: 1 },
   tag: { borderWidth: 1, borderColor: '#ffffffcc', borderRadius: 999, paddingVertical: 3, paddingHorizontal: 10 },
   tagText: { color: '#fff', fontSize: 11, fontWeight: '600' },
   rule: { height: 1, backgroundColor: '#ffffff66', marginVertical: 10 },
   whenRow: { flexDirection: 'row', alignItems: 'flex-end', gap: 12 },
   small: { color: '#fff', fontSize: 10, fontWeight: '600', letterSpacing: 1, marginTop: 2, opacity: 0.92 },
-  day: { color: '#fff', fontSize: 30, fontWeight: '500', letterSpacing: 0.5, fontFamily: SERIF },
+  day: { color: '#fff', fontSize: 30, letterSpacing: 0.5, fontFamily: SERIF },
   joinRow: { flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 18 },
   joinPill: { backgroundColor: '#fff', borderRadius: 999, paddingVertical: 10, paddingHorizontal: 20 },
   joinText: { color: deckColors.olive, fontWeight: '700', fontSize: 14 },

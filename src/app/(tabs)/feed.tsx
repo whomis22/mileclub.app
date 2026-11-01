@@ -1,147 +1,147 @@
+import { Image } from 'expo-image';
 import { Redirect, router } from 'expo-router';
+import { useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
-import { RouteMap } from '@/components/route-map';
-import { Avatar, Card, Screen } from '@/components/ui';
+import { Avatar, MenuButton, Screen } from '@/components/ui';
 import { FEED } from '@/data/feed';
-import { activityInfo } from '@/data/options';
 import { findPerson } from '@/data/people';
 import { hoursAgoLabel } from '@/lib/time';
 import { useStore } from '@/state/store';
-import { colors, radius, space } from '@/theme';
+import { colors, fonts, radius, space } from '@/theme';
+
+const PHOTOS = [
+  require('../../../assets/images/photos/river.png'),
+  require('../../../assets/images/photos/park.png'),
+  require('../../../assets/images/photos/dusk.png'),
+  require('../../../assets/images/photos/lake.png'),
+];
+
+const FILTERS = ['For you', 'Following', 'Nearby', 'Coaches'] as const;
 
 function duration(min: number) {
   const h = Math.floor(min / 60);
   return h ? `${h}h ${min % 60}m` : `${min}m`;
 }
 
-export default function Feed() {
-  const { profile, activities, kudos, toggleKudos, blocked } = useStore();
+export default function Explore() {
+  const { profile, kudos, toggleKudos, blocked } = useStore();
+  const [filter, setFilter] = useState<(typeof FILTERS)[number]>('For you');
+  const [following, setFollowing] = useState<string[]>([]);
   if (!profile) return <Redirect href="/welcome" />;
 
-  const upcoming = activities.filter((a) => a.participants.includes('me')).length;
-  const posts = FEED.filter((p) => !blocked.includes(p.personId));
-  const crewKm = posts.reduce((s, p) => s + (p.distanceKm ?? 0), 0);
+  let posts = FEED.filter((p) => !blocked.includes(p.personId));
+  if (filter === 'Following') posts = posts.filter((p) => following.includes(p.personId));
+  if (filter === 'Nearby') posts = posts.filter((p) => findPerson(p.personId)?.neighborhood === profile.neighborhood);
+  if (filter === 'Coaches') posts = [];
 
   return (
     <Screen>
       <View style={styles.top}>
-        <Text style={styles.brand}>mile club</Text>
+        <MenuButton onPress={() => router.push('/menu')} />
+        <Text style={styles.title}>Explore</Text>
         <Pressable style={styles.people} onPress={() => router.push('/people')}>
-          <Text style={styles.peopleText}>👋 People near you</Text>
+          <Text style={styles.peopleText}>People near you</Text>
         </Pressable>
       </View>
 
-      <View style={styles.week}>
-        <Text style={styles.weekKicker}>THIS WEEK NEAR YOU</Text>
-        <View style={styles.weekRow}>
-          <WeekStat value={`${Math.round(crewKm)}`} unit="km" label="by your crew" />
-          <WeekStat value={`${posts.reduce((s, p) => s + p.withCount + 1, 0)}`} label="people moved" />
-          <WeekStat value={`${upcoming}`} label="your plans" />
-        </View>
-        <Pressable style={styles.weekCta} onPress={() => router.push('/now')}>
-          <Text style={styles.weekCtaText}>⚡ Find a session starting soon →</Text>
-        </Pressable>
+      <View style={styles.tabs}>
+        {FILTERS.map((f) => (
+          <Pressable key={f} onPress={() => (f === 'Coaches' ? router.push('/train') : setFilter(f))}>
+            <Text style={[styles.tab, filter === f && styles.tabOn]}>{f}</Text>
+          </Pressable>
+        ))}
       </View>
 
-      {posts.map((post) => {
+      {posts.length === 0 ? (
+        <Text style={styles.empty}>
+          {filter === 'Following' ? 'Follow people to see their runs here.' : 'Nothing here yet.'}
+        </Text>
+      ) : null}
+
+      {posts.map((post, i) => {
         const person = findPerson(post.personId);
         if (!person) return null;
-        const info = activityInfo(post.type);
         const liked = kudos.includes(post.id);
+        const follows = following.includes(person.id);
         return (
-          <Card key={post.id} style={{ padding: 0, overflow: 'hidden' }}>
-            <Pressable style={styles.head} onPress={() => router.push(`/person/${person.id}`)}>
-              <Avatar name={person.firstName} color={person.color} size={42} />
-              <View style={{ flex: 1 }}>
-                <Text style={styles.name}>
-                  {person.firstName}
-                  {person.isCaptain ? <Text style={styles.captain}>  ★ TOP HOST</Text> : null}
-                </Text>
+          <View key={post.id} style={styles.post}>
+            <View style={styles.head}>
+              <Pressable onPress={() => router.push(`/person/${person.id}`)}>
+                <Avatar name={person.firstName} color={person.color} size={38} />
+              </Pressable>
+              <Pressable style={{ flex: 1 }} onPress={() => router.push(`/person/${person.id}`)}>
+                <Text style={styles.name}>{person.firstName}</Text>
                 <Text style={styles.meta}>
-                  {info.emoji} {hoursAgoLabel(post.hoursAgo)} · {post.place}
-                  {post.withCount ? ` · with ${post.withCount} others` : ''}
-                </Text>
-              </View>
-            </Pressable>
-            <View style={{ paddingHorizontal: space.lg }}>
-              <Text style={styles.title}>{post.title}</Text>
-              {post.note ? <Text style={styles.note}>{post.note}</Text> : null}
-              <View style={styles.stats}>
-                {post.distanceKm ? <PostStat label="Distance" value={`${post.distanceKm.toFixed(1)} km`} /> : null}
-                {post.pace ? <PostStat label={post.type === 'cycling' ? 'Speed' : 'Pace'} value={post.pace} /> : null}
-                <PostStat label="Time" value={duration(post.minutes)} />
-              </View>
-            </View>
-            {post.route >= 0 ? (
-              <View style={{ paddingHorizontal: space.lg }}>
-                <RouteMap route={post.route} />
-              </View>
-            ) : (
-              <View style={[styles.noMap, { marginHorizontal: space.lg }]}>
-                <Text style={{ fontSize: 44 }}>{info.emoji}</Text>
-              </View>
-            )}
-            <View style={styles.foot}>
-              <Pressable onPress={() => toggleKudos(post.id)} style={[styles.kudos, liked && styles.kudosOn]}>
-                <Text style={[styles.kudosText, liked && { color: '#fff' }]}>
-                  🙌 {post.kudos + (liked ? 1 : 0)} high fives
+                  {post.withCount ? `Ran with ${post.withCount} others · ` : ''}
+                  {hoursAgoLabel(post.hoursAgo)}
                 </Text>
               </Pressable>
+              <Pressable
+                onPress={() => setFollowing((l) => (follows ? l.filter((x) => x !== person.id) : [...l, person.id]))}
+                style={[styles.follow, follows && styles.following]}>
+                <Text style={styles.followText}>{follows ? 'Following' : 'Follow'}</Text>
+              </Pressable>
             </View>
-          </Card>
+
+            <View style={styles.photo}>
+              <Image source={PHOTOS[i % PHOTOS.length]} style={StyleSheet.absoluteFill} contentFit="cover" />
+              <View style={styles.overlay}>
+                <Text style={styles.postTitle} numberOfLines={2}>
+                  {post.title}
+                </Text>
+                <Text style={styles.stats}>
+                  {post.distanceKm ? `${post.distanceKm.toFixed(1)} KM\n` : ''}
+                  {post.pace ? `${post.pace.toUpperCase()}\n` : ''}
+                  {duration(post.minutes).toUpperCase()}
+                </Text>
+              </View>
+            </View>
+
+            <View style={styles.actions}>
+              <Pressable onPress={() => toggleKudos(post.id)} style={styles.action} accessibilityLabel="Like">
+                <Text style={[styles.heart, liked && { color: colors.peachDeep }]}>{liked ? '♥' : '♡'}</Text>
+                <Text style={styles.count}>{post.kudos + (liked ? 1 : 0)}</Text>
+              </Pressable>
+              <Text style={styles.place}>{post.place}</Text>
+            </View>
+            {post.note ? (
+              <Text style={styles.caption}>
+                <Text style={{ fontFamily: fonts.sansSemi }}>{person.firstName} </Text>
+                {post.note}
+              </Text>
+            ) : null}
+          </View>
         );
       })}
     </Screen>
   );
 }
 
-function WeekStat({ value, unit, label }: { value: string; unit?: string; label: string }) {
-  return (
-    <View style={{ flex: 1 }}>
-      <Text style={styles.weekValue}>
-        {value}
-        {unit ? <Text style={styles.weekUnit}> {unit}</Text> : null}
-      </Text>
-      <Text style={styles.weekLabel}>{label}</Text>
-    </View>
-  );
-}
-
-function PostStat({ label, value }: { label: string; value: string }) {
-  return (
-    <View style={{ marginRight: space.xl }}>
-      <Text style={styles.statLabel}>{label}</Text>
-      <Text style={styles.statValue}>{value}</Text>
-    </View>
-  );
-}
-
 const styles = StyleSheet.create({
-  top: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: space.md },
-  brand: { fontSize: 26, fontWeight: '900', color: colors.ink, letterSpacing: -0.5 },
-  people: { backgroundColor: colors.card, borderRadius: radius.pill, borderWidth: 1.5, borderColor: colors.line, paddingVertical: 8, paddingHorizontal: 12 },
-  peopleText: { fontWeight: '800', color: colors.ink, fontSize: 13 },
-  week: { backgroundColor: colors.ink, borderRadius: radius.lg, padding: space.lg, marginBottom: space.lg },
-  weekKicker: { color: colors.peach, fontSize: 12, fontWeight: '900', letterSpacing: 1 },
-  weekRow: { flexDirection: 'row', marginTop: space.md },
-  weekValue: { color: '#fff', fontSize: 28, fontWeight: '900' },
-  weekUnit: { fontSize: 15, fontWeight: '800' },
-  weekLabel: { color: '#fff', opacity: 0.7, fontSize: 12, fontWeight: '700' },
-  weekCta: { marginTop: space.lg, backgroundColor: colors.accent, borderRadius: radius.pill, paddingVertical: 12, alignItems: 'center' },
-  weekCtaText: { color: '#fff', fontWeight: '900', fontSize: 15 },
-  head: { flexDirection: 'row', alignItems: 'center', gap: space.md, padding: space.lg, paddingBottom: space.sm },
-  name: { fontSize: 16, fontWeight: '800', color: colors.ink },
-  captain: { fontSize: 11, fontWeight: '900', color: colors.purple, letterSpacing: 0.5 },
-  meta: { fontSize: 13, color: colors.muted, marginTop: 1 },
-  title: { fontSize: 20, fontWeight: '900', color: colors.ink, letterSpacing: -0.3 },
-  note: { fontSize: 15, color: colors.ink, marginTop: 4, lineHeight: 21 },
-  stats: { flexDirection: 'row', marginVertical: space.md },
-  statLabel: { fontSize: 12, color: colors.muted, fontWeight: '700' },
-  statValue: { fontSize: 20, fontWeight: '900', color: colors.ink, marginTop: 1 },
-  noMap: { height: 90, borderRadius: 16, backgroundColor: colors.accentSoft, alignItems: 'center', justifyContent: 'center' },
-  foot: { padding: space.lg, paddingTop: space.md, flexDirection: 'row' },
-  kudos: { borderRadius: radius.pill, borderWidth: 1.5, borderColor: colors.line, paddingVertical: 8, paddingHorizontal: 14 },
-  kudosOn: { backgroundColor: colors.accent, borderColor: colors.accent },
-  kudosText: { fontWeight: '800', color: colors.ink, fontSize: 14 },
+  top: { flexDirection: 'row', alignItems: 'center', gap: space.md },
+  title: { flex: 1, fontFamily: fonts.serif, fontSize: 38, color: colors.ink },
+  people: { borderRadius: radius.pill, borderWidth: 1, borderColor: colors.line, paddingVertical: 8, paddingHorizontal: 12 },
+  peopleText: { fontFamily: fonts.sansMedium, color: colors.ink, fontSize: 12 },
+  tabs: { flexDirection: 'row', gap: 22, marginTop: space.lg, marginBottom: space.lg },
+  tab: { fontFamily: fonts.sans, fontSize: 14, color: colors.muted, paddingBottom: 6 },
+  tabOn: { fontFamily: fonts.sansSemi, color: colors.ink, borderBottomWidth: 1.5, borderBottomColor: colors.ink },
+  empty: { fontFamily: fonts.sans, color: colors.muted, textAlign: 'center', marginTop: space.xl },
+  post: { marginBottom: space.xxl },
+  head: { flexDirection: 'row', alignItems: 'center', gap: space.md, marginBottom: space.md },
+  name: { fontFamily: fonts.sansSemi, fontSize: 14, color: colors.ink },
+  meta: { fontFamily: fonts.sans, fontSize: 12, color: colors.muted, marginTop: 1 },
+  follow: { borderRadius: radius.pill, backgroundColor: colors.peach, paddingVertical: 7, paddingHorizontal: 14 },
+  following: { backgroundColor: colors.sand },
+  followText: { fontFamily: fonts.sansSemi, fontSize: 12, color: colors.ink },
+  photo: { height: 330, borderRadius: 28, overflow: 'hidden', backgroundColor: colors.oliveDark },
+  overlay: { position: 'absolute', left: 16, right: 16, bottom: 16, flexDirection: 'row', alignItems: 'flex-end', justifyContent: 'space-between', gap: space.md },
+  postTitle: { flex: 1, fontFamily: fonts.serifItalic, fontSize: 30, lineHeight: 32, color: colors.bg },
+  stats: { fontFamily: fonts.sansMedium, fontSize: 10, letterSpacing: 1.2, lineHeight: 15, color: colors.bg, textAlign: 'right' },
+  actions: { flexDirection: 'row', alignItems: 'center', gap: space.lg, marginTop: space.md },
+  action: { flexDirection: 'row', alignItems: 'center', gap: 6 },
+  heart: { fontSize: 22, color: colors.ink },
+  count: { fontFamily: fonts.sansSemi, fontSize: 13, color: colors.ink },
+  place: { flex: 1, textAlign: 'right', fontFamily: fonts.sans, fontSize: 12, color: colors.muted },
+  caption: { fontFamily: fonts.sans, fontSize: 14, lineHeight: 20, color: colors.ink, marginTop: space.sm },
 });

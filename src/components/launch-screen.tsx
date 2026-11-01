@@ -1,9 +1,9 @@
-import { Image } from 'expo-image';
 import { useEffect, useState } from 'react';
 import { Animated, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { colors } from '@/theme';
+import { Logo } from '@/components/ui';
+import { colors, fonts } from '@/theme';
 
 // Opening screen shown while the app starts: logo in the middle,
 // "Mile Club" at the bottom, then it fades away.
@@ -29,12 +29,7 @@ export function LaunchScreen() {
   return (
     <Animated.View style={[StyleSheet.absoluteFill, styles.screen, { opacity }]}>
       <View style={styles.center}>
-        <Image
-          source={require('../../assets/images/logo-mark.png')}
-          style={styles.logo}
-          contentFit="contain"
-          accessibilityLabel="Mile Club"
-        />
+        <Logo size={96} />
       </View>
       <View style={[styles.bottom, { paddingBottom: insets.bottom + 28 }]}>
         <Text style={styles.name}>Mile Club</Text>
@@ -44,9 +39,8 @@ export function LaunchScreen() {
 }
 
 const styles = StyleSheet.create({
-  screen: { backgroundColor: colors.ink, zIndex: 100 },
+  screen: { backgroundColor: colors.bg, zIndex: 100 },
   center: { flex: 1, alignItems: 'center', justifyContent: 'center' },
-  logo: { width: 120, height: 57 },
   bottom: { alignItems: 'center' },
-  name: { color: colors.accent, fontSize: 20, fontWeight: '700', letterSpacing: 0.3 },
+  name: { color: colors.olive, fontSize: 20, fontFamily: fonts.sansSemi },
 });

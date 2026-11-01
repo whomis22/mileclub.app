@@ -3,7 +3,7 @@ import { useState } from 'react';
 import { ScrollView, View } from 'react-native';
 
 import { ActivityCard } from '@/components/activity-card';
-import { Body, Button, Chip, Screen, Title } from '@/components/ui';
+import { Body, Button, Chip, MenuButton, Screen, Title } from '@/components/ui';
 import { ACTIVITIES, type ActivityId } from '@/data/options';
 import { activityFit } from '@/lib/matching';
 import { useStore } from '@/state/store';
@@ -26,8 +26,10 @@ export default function Activities() {
 
   return (
     <Screen>
-      <Title sub="Join something this week, or start your own.">Find an activity</Title>
-      <Button title="+ CREATE AN ACTIVITY" variant="secondary" onPress={() => router.push('/create-activity')} />
+      <MenuButton onPress={() => router.push('/menu')} />
+      <View style={{ height: space.lg }} />
+      <Title sub="Join something this week, or start your own.">My runs</Title>
+      <Button title="+ Start a run" onPress={() => router.push('/create-activity')} />
       <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginVertical: space.lg }}>
         <View style={{ flexDirection: 'row', gap: space.sm }}>
           <Chip label="For you" selected={filter === 'all'} onPress={() => setFilter('all')} />

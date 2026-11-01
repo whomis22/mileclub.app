@@ -1,3 +1,7 @@
+import { InstrumentSerif_400Regular, InstrumentSerif_400Regular_Italic } from '@expo-google-fonts/instrument-serif';
+import { Inter_400Regular, Inter_500Medium, Inter_600SemiBold, Inter_700Bold } from '@expo-google-fonts/inter';
+import { Outfit_800ExtraBold } from '@expo-google-fonts/outfit';
+import { useFonts } from 'expo-font';
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 
@@ -6,6 +10,17 @@ import { StoreProvider } from '@/state/store';
 import { colors } from '@/theme';
 
 export default function RootLayout() {
+  const [fontsLoaded, fontError] = useFonts({
+    InstrumentSerif_400Regular,
+    InstrumentSerif_400Regular_Italic,
+    Inter_400Regular,
+    Inter_500Medium,
+    Inter_600SemiBold,
+    Inter_700Bold,
+    Outfit_800ExtraBold,
+  });
+  if (!fontsLoaded && !fontError) return null;
+
   return (
     <StoreProvider>
       <StatusBar style="dark" />
@@ -16,6 +31,7 @@ export default function RootLayout() {
           headerTintColor: colors.ink,
           headerStyle: { backgroundColor: colors.bg },
           headerShadowVisible: false,
+          headerTitleStyle: { fontFamily: 'InstrumentSerif_400Regular', fontSize: 22 },
           headerBackTitle: 'Back',
         }}>
         <Stack.Screen name="activity/[id]" options={{ headerShown: true, title: '' }} />
@@ -27,6 +43,8 @@ export default function RootLayout() {
         <Stack.Screen name="earnings" options={{ headerShown: true, title: 'Earnings' }} />
         <Stack.Screen name="host-session" options={{ headerShown: true, title: 'Host a session', presentation: 'modal' }} />
         <Stack.Screen name="create-activity" options={{ headerShown: true, title: 'New activity', presentation: 'modal' }} />
+        <Stack.Screen name="menu" options={{ presentation: 'transparentModal', animation: 'fade', contentStyle: { backgroundColor: 'transparent' } }} />
+        <Stack.Screen name="group-settings" options={{ headerShown: true, title: 'Group settings' }} />
       </Stack>
       <LaunchScreen />
     </StoreProvider>

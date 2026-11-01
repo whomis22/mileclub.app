@@ -1,17 +1,18 @@
 import { Redirect, router } from 'expo-router';
 import { useRef, useState } from 'react';
-import { Platform, Pressable, StyleSheet, Text, View } from 'react-native';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { SwipeDeck, deckColors, type SwipeDeckHandle } from '@/components/swipe-deck';
-import { Avatar } from '@/components/ui';
+import { Avatar, MenuButton } from '@/components/ui';
 import type { Activity } from '@/data/types';
 import { startsAt } from '@/lib/time';
 import { useStore } from '@/state/store';
+import { colors, fonts } from '@/theme';
 
 const WINDOW_HOURS = 36;
-const SERIF = Platform.select({ ios: 'Georgia', android: 'serif', default: 'serif' });
-const ink = '#2B2E1F';
+const SERIF = fonts.serif;
+const ink = colors.ink;
 
 export default function Now() {
   const { profile, activities, skipped, join, skip, clearSkipped } = useStore();
@@ -38,13 +39,15 @@ export default function Now() {
     <SafeAreaView style={styles.screen} edges={['top']}>
       <View style={styles.wrap}>
         <View style={styles.header}>
-          <Avatar name={profile.firstName} uri={profile.photoUri} color={deckColors.olive} size={38} />
+          <MenuButton onPress={() => router.push('/menu')} />
+          <Avatar name={profile.firstName} uri={profile.photoUri} size={38} />
           <View style={{ flex: 1 }}>
             <Text style={styles.hello}>Welcome back</Text>
             <Text style={styles.name}>{profile.firstName}</Text>
           </View>
-          <Pressable style={styles.bell} onPress={() => router.push('/activities')}>
-            <Text style={{ color: '#fff', fontSize: 15 }}>🔔</Text>
+          <Pressable style={styles.bell} onPress={() => router.push('/messages')} accessibilityLabel="Messages">
+            <View style={styles.bubble} />
+            <View style={styles.badge} />
           </Pressable>
         </View>
         <Text style={styles.title}>Your week at{'\n'}Mile Club</Text>
@@ -97,18 +100,20 @@ const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: deckColors.cream },
   wrap: { flex: 1, paddingHorizontal: 22, paddingTop: 8, paddingBottom: 12 },
   header: { flexDirection: 'row', alignItems: 'center', gap: 10 },
-  hello: { fontSize: 11, color: '#7A7766' },
-  name: { fontSize: 15, color: ink, fontFamily: SERIF },
-  bell: { width: 38, height: 38, borderRadius: 19, backgroundColor: ink, alignItems: 'center', justifyContent: 'center' },
-  title: { fontFamily: SERIF, fontSize: 32, lineHeight: 38, color: ink, marginTop: 16 },
+  hello: { fontSize: 11, color: colors.muted, fontFamily: fonts.sans },
+  name: { fontSize: 18, color: ink, fontFamily: SERIF },
+  bell: { width: 44, height: 44, borderRadius: 22, backgroundColor: colors.olive, alignItems: 'center', justifyContent: 'center' },
+  bubble: { width: 18, height: 14, borderRadius: 6, borderBottomLeftRadius: 2, backgroundColor: colors.bg },
+  badge: { position: 'absolute', top: 9, right: 9, width: 9, height: 9, borderRadius: 5, backgroundColor: colors.peachDeep, borderWidth: 1.5, borderColor: colors.olive },
+  title: { fontFamily: SERIF, fontSize: 38, lineHeight: 40, color: ink, marginTop: 18 },
   toast: { backgroundColor: deckColors.peach, borderRadius: 16, padding: 12, marginTop: 12 },
-  toastText: { color: ink, fontWeight: '700', fontSize: 13 },
-  hint: { textAlign: 'center', color: '#8A8577', fontSize: 12, marginTop: 14 },
+  toastText: { color: ink, fontFamily: fonts.sansSemi, fontSize: 13 },
+  hint: { textAlign: 'center', color: colors.muted, fontFamily: fonts.sans, fontSize: 12, marginTop: 14 },
   empty: { flex: 1, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 12, gap: 10 },
   emptyTitle: { fontFamily: SERIF, fontSize: 26, color: ink },
-  emptySub: { fontSize: 14, color: '#7A7766', textAlign: 'center', lineHeight: 20 },
+  emptySub: { fontSize: 14, color: colors.muted, fontFamily: fonts.sans, textAlign: 'center', lineHeight: 20 },
   primary: { backgroundColor: deckColors.olive, borderRadius: 999, paddingVertical: 14, alignSelf: 'stretch', alignItems: 'center', marginTop: 10 },
-  primaryText: { color: '#fff', fontWeight: '800', fontSize: 15 },
+  primaryText: { color: colors.bg, fontFamily: fonts.sansSemi, fontSize: 15 },
   secondary: { borderRadius: 999, paddingVertical: 12, alignSelf: 'stretch', alignItems: 'center', borderWidth: 1.5, borderColor: deckColors.olive },
-  secondaryText: { color: deckColors.olive, fontWeight: '800', fontSize: 15 },
+  secondaryText: { color: deckColors.olive, fontFamily: fonts.sansSemi, fontSize: 15 },
 });

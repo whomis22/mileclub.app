@@ -66,7 +66,7 @@ export default function Onboarding() {
   function next() {
     if (step < STEPS.length - 1) return setStep(step + 1);
     saveProfile({ ...(d as Profile), firstName: d.firstName!.trim() });
-    router.replace('/feed');
+    router.replace('/now');
   }
 
   return (
