@@ -65,9 +65,14 @@ export default function Chat() {
           <Text style={styles.sub}>{isGroup ? 'Everyone who joins Mile Club' : 'Active now'}</Text>
         </View>
         {follows ? (
-          <Pressable onPress={() => router.push(`/call/${person!.id}` as Href)} style={styles.call} accessibilityLabel={`Call ${thread.name}`}>
-            <Text style={styles.callText}>📞</Text>
-          </Pressable>
+          <>
+            <Pressable onPress={() => router.push(`/call/${person!.id}?video=1` as Href)} style={styles.call} accessibilityLabel={`Video call ${thread.name}`}>
+              <Text style={styles.callText}>🎥</Text>
+            </Pressable>
+            <Pressable onPress={() => router.push(`/call/${person!.id}` as Href)} style={styles.call} accessibilityLabel={`Call ${thread.name}`}>
+              <Text style={styles.callText}>📞</Text>
+            </Pressable>
+          </>
         ) : null}
         {isGroup ? (
           <Pressable onPress={() => router.push('/group-settings')} style={styles.info} accessibilityLabel="Group settings">

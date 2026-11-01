@@ -34,7 +34,15 @@
       ],
       "expo-sqlite",
       "expo-apple-authentication",
-      "expo-localization"
+      "expo-localization",
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "Mile Club uses your camera for video calls and photo posts.",
+          "microphonePermission": "Mile Club uses your microphone for calls.",
+          "recordAudioAndroid": true
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true,

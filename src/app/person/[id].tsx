@@ -69,13 +69,17 @@ export default function PersonDetail() {
               <Text style={styles.actionIcon}>📞</Text>
               <Text style={styles.actionText}>Call</Text>
             </Pressable>
+            <Pressable style={styles.action} onPress={() => router.push(`/call/${p.id}?video=1` as Href)}>
+              <Text style={styles.actionIcon}>🎥</Text>
+              <Text style={styles.actionText}>Video</Text>
+            </Pressable>
             <Pressable style={styles.action} onPress={shareLocation}>
               <Text style={styles.actionIcon}>📍</Text>
-              <Text style={styles.actionText}>Share location</Text>
+              <Text style={styles.actionText}>Location</Text>
             </Pressable>
           </View>
         ) : (
-          <Text style={styles.hint}>Follow {p.firstName} to message, call and share your location.</Text>
+          <Text style={styles.hint}>Follow {p.firstName} to message, call, video call and share your location.</Text>
         )}
         <View style={styles.together}>
           <Text style={styles.togetherText}>
@@ -144,7 +148,7 @@ const styles = themed(() => StyleSheet.create({
   badges: { flexDirection: 'row', gap: space.sm, marginTop: space.md },
   captain: { fontSize: 13, color: colors.muted, marginTop: space.sm },
   actions: { flexDirection: 'row', gap: space.sm, marginTop: space.md },
-  action: { alignItems: 'center', gap: 4, minWidth: 92, paddingVertical: 10, paddingHorizontal: 8, borderRadius: radius.md, backgroundColor: colors.card, borderWidth: 1, borderColor: colors.line },
+  action: { alignItems: 'center', gap: 4, minWidth: 72, paddingVertical: 10, paddingHorizontal: 8, borderRadius: radius.md, backgroundColor: colors.card, borderWidth: 1, borderColor: colors.line },
   actionIcon: { fontSize: 20 },
   actionText: { fontFamily: fonts.sansSemi, fontSize: 12, color: colors.ink },
   hint: { fontFamily: fonts.sans, fontSize: 13, color: colors.muted, marginTop: space.sm, textAlign: 'center' },
