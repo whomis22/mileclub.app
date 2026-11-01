@@ -84,6 +84,7 @@ function readPref(): ThemePref {
 export const themePref: ThemePref = readPref();
 export const isDark = themePref === 'dark';
 export const colors = isDark ? dark : light;
+export const palettes = { light, dark };
 
 export function saveThemePref(pref: ThemePref) {
   try {

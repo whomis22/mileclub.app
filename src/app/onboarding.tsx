@@ -1,7 +1,8 @@
 import * as ImagePicker from 'expo-image-picker';
 import { router, useLocalSearchParams } from 'expo-router';
+import * as Updates from 'expo-updates';
 import { useState } from 'react';
-import { KeyboardAvoidingView, Platform, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
+import { DevSettings, KeyboardAvoidingView, Platform, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { Avatar, Body, Button, Chip, Chips, Label } from '@/components/ui';
@@ -17,7 +18,7 @@ import {
 import type { Profile } from '@/data/types';
 import { ROLES, type Role } from '@/data/roles';
 import { useStore } from '@/state/store';
-import { colors, fonts, radius, space } from '@/theme';
+import { colors, fonts, isDark, palettes, radius, saveThemePref, space, type ThemePref } from '@/theme';
 
 type Draft = Partial<Profile> & { activities: Profile['activities']; goals: Profile['goals']; availability: Profile['availability'] };
 
@@ -25,12 +26,50 @@ function toggle<T>(list: T[], item: T) {
   return list.includes(item) ? list.filter((x) => x !== item) : [...list, item];
 }
 
-const STEPS = ['Join as', 'You', 'Where', 'Move', 'Goals', 'When', 'Vibe', 'Safety'] as const;
+const STEPS = ['Join as', 'You', 'Where', 'Move', 'Goals', 'When', 'Vibe', 'Look', 'Safety'] as const;
+
+// A small drawing of the Home screen in light or dark, for the "Light or dark?" step.
+function LookPreview({ mode, selected, onPress }: { mode: ThemePref; selected: boolean; onPress: () => void }) {
+  const p = palettes[mode];
+  return (
+    <Pressable
+      onPress={onPress}
+      style={styles.lookCol}
+      accessibilityRole="radio"
+      accessibilityState={{ selected }}
+      accessibilityLabel={mode === 'dark' ? 'Dark mode' : 'Light mode'}>
+      <Text style={[styles.lookLabel, selected && { color: colors.link }]}>{mode === 'dark' ? 'Dark mode' : 'Light mode'}</Text>
+      <View style={[styles.phone, { backgroundColor: p.bg, borderColor: selected ? colors.olive : colors.edge }, selected && { borderWidth: 3 }]}>
+        <View style={styles.phoneTop}>
+          <View style={[styles.phoneDot, { borderColor: p.edge }]} />
+          <View style={[styles.phoneAvatar, { backgroundColor: p.peach }]} />
+          <View style={{ gap: 3 }}>
+            <View style={[styles.phoneLine, { width: 28, backgroundColor: p.muted }]} />
+            <View style={[styles.phoneLine, { width: 20, backgroundColor: p.ink }]} />
+          </View>
+        </View>
+        <Text style={[styles.phoneTitle, { color: p.ink }]}>Your week at{'\n'}Mile Club</Text>
+        <View style={styles.phoneCard}>
+          <Text style={styles.phoneCardText}>Riverside</Text>
+          <View style={styles.phoneJoin} />
+        </View>
+        <View style={styles.phoneNav}>
+          <View style={styles.phoneNavOn} />
+          {[0, 1, 2, 3].map((i) => (
+            <View key={i} style={styles.phoneNavDot} />
+          ))}
+        </View>
+      </View>
+      <View style={[styles.lookTick, selected && styles.tickOn]}>{selected ? <Text style={styles.tickMark}>✓</Text> : null}</View>
+    </Pressable>
+  );
+}
 
 export default function Onboarding() {
   const { saveProfile } = useStore();
   const [step, setStep] = useState(0);
   const [agreed, setAgreed] = useState(false);
+  const [look, setLook] = useState<ThemePref>(isDark ? 'dark' : 'light');
   const params = useLocalSearchParams<{ firstName?: string; age?: string; photoUri?: string }>();
   const [d, setD] = useState<Draft>({
     activities: [],
@@ -50,6 +89,7 @@ export default function Onboarding() {
     d.goals.length > 0,
     d.availability.length > 0,
     !!d.groupSize && !!d.social,
+    true,
     agreed,
   ][step];
 
@@ -66,7 +106,11 @@ export default function Onboarding() {
   function next() {
     if (step < STEPS.length - 1) return setStep(step + 1);
     saveProfile({ ...(d as Profile), firstName: d.firstName!.trim() });
+    const changeLook = (look === 'dark') !== isDark;
+    saveThemePref(look);
     router.replace('/now');
+    // Colours are set when the app starts, so restart it once the profile is saved.
+    if (changeLook) setTimeout(() => Updates.reloadAsync().catch(() => DevSettings.reload()), 400);
   }
 
   return (
@@ -251,6 +295,17 @@ export default function Onboarding() {
 
           {step === 7 && (
             <>
+              <Text style={styles.q}>Light or dark?</Text>
+              <Body muted>Pick how Mile Club looks. You can switch any time in the side menu.</Body>
+              <View style={styles.lookRow}>
+                <LookPreview mode="light" selected={look === 'light'} onPress={() => setLook('light')} />
+                <LookPreview mode="dark" selected={look === 'dark'} onPress={() => setLook('dark')} />
+              </View>
+            </>
+          )}
+
+          {step === 8 && (
+            <>
               <Text style={styles.q}>Staying safe</Text>
               <Body muted>
                 You’ll be meeting people in real life. Meet in public places, tell a friend where you’re going, and
@@ -320,5 +375,21 @@ const styles = StyleSheet.create({
   tick: { width: 26, height: 26, borderRadius: 13, borderWidth: 1.5, borderColor: colors.dashed, alignItems: 'center', justifyContent: 'center' },
   tickOn: { backgroundColor: colors.peach, borderColor: colors.peach },
   tickMark: { color: colors.ink, fontSize: 13, fontWeight: '900' },
+  lookRow: { flexDirection: 'row', gap: space.lg, marginTop: space.xl, justifyContent: 'center' },
+  lookCol: { flex: 1, alignItems: 'center', gap: space.sm },
+  lookLabel: { fontFamily: fonts.sansSemi, fontSize: 15, color: colors.ink },
+  phone: { width: '100%', maxWidth: 160, aspectRatio: 0.52, borderRadius: 24, borderWidth: 1.5, padding: 10, overflow: 'hidden' },
+  phoneTop: { flexDirection: 'row', alignItems: 'center', gap: 5 },
+  phoneDot: { width: 14, height: 14, borderRadius: 7, borderWidth: 1 },
+  phoneAvatar: { width: 14, height: 14, borderRadius: 7 },
+  phoneLine: { height: 3, borderRadius: 2 },
+  phoneTitle: { fontFamily: fonts.serif, fontSize: 15, lineHeight: 16, marginTop: 10 },
+  phoneCard: { flex: 1, marginTop: 8, borderRadius: 14, backgroundColor: '#2F3D29', padding: 8, justifyContent: 'flex-end' },
+  phoneCardText: { fontFamily: fonts.serifItalic, fontSize: 14, color: '#F7F1E6' },
+  phoneJoin: { width: 34, height: 10, borderRadius: 5, backgroundColor: '#F7F1E6', marginTop: 5 },
+  phoneNav: { height: 18, borderRadius: 9, backgroundColor: '#556B2F', marginTop: 8, flexDirection: 'row', alignItems: 'center', paddingHorizontal: 3, gap: 5 },
+  phoneNavOn: { width: 26, height: 12, borderRadius: 6, backgroundColor: '#F7F1E6' },
+  phoneNavDot: { width: 5, height: 5, borderRadius: 3, backgroundColor: '#D9DDC4' },
+  lookTick: { width: 26, height: 26, borderRadius: 13, borderWidth: 1.5, borderColor: colors.dashed, alignItems: 'center', justifyContent: 'center' },
   footer: { padding: space.xl, paddingTop: space.sm },
 });
