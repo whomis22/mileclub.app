@@ -1,6 +1,6 @@
 import { Image } from 'expo-image';
 import * as ImagePicker from 'expo-image-picker';
-import { router } from 'expo-router';
+import { router, useLocalSearchParams } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { useMemo, useState } from 'react';
 import {
@@ -22,10 +22,11 @@ import { colors, radius, space } from '@/theme';
 // account details -> verification code -> password -> photo -> username,
 // then on to the Mile Club profile questions.
 // There is no server yet, so nothing is really sent: any 6-digit code works.
+// Coming from "Continue with Apple", Apple has already checked the email, so the
+// code and password steps are skipped.
 
 const DIM = '#B9B0CC';
 const EDGE = '#3A2D5C';
-const STEPS = 5;
 
 function ageFrom(day: number, month: number, year: number) {
   const birth = new Date(year, month - 1, day);
@@ -66,10 +67,15 @@ function Field({ label, counter, error, ...props }: TextInputProps & { label: st
 }
 
 export default function SignUp() {
-  const [step, setStep] = useState(0);
-  const [name, setName] = useState('');
+  const params = useLocalSearchParams<{ apple?: string; name?: string; email?: string }>();
+  const viaApple = params.apple === '1';
+  const flow = viaApple ? [0, 3, 4] : [0, 1, 2, 3, 4];
+  const [pos, setPos] = useState(0);
+  const step = flow[pos];
+  const isLast = pos === flow.length - 1;
+  const [name, setName] = useState(params.name ?? '');
   const [usePhone, setUsePhone] = useState(false);
-  const [contact, setContact] = useState('');
+  const [contact, setContact] = useState(params.email ?? '');
   const [dd, setDd] = useState('');
   const [mm, setMm] = useState('');
   const [yyyy, setYyyy] = useState('');
@@ -87,7 +93,9 @@ export default function SignUp() {
   const [username, setUsername] = useState('');
 
   const age = dd && mm && yyyy.length === 4 ? ageFrom(Number(dd), Number(mm), Number(yyyy)) : null;
-  const contactOk = usePhone
+  const contactOk = viaApple
+    ? true
+    : usePhone
     ? contact.replace(/[^0-9]/g, '').length >= 8
     : /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(contact.trim());
   const tooYoung = age !== null && age < 18;
@@ -102,13 +110,13 @@ export default function SignUp() {
   ][step];
 
   function back() {
-    if (step === 0) return router.back();
-    setStep(step - 1);
+    if (pos === 0) return router.back();
+    setPos(pos - 1);
   }
 
   function next() {
     if (!canNext) return;
-    if (step < STEPS - 1) return setStep(step + 1);
+    if (!isLast) return setPos(pos + 1);
     router.replace({
       pathname: '/onboarding',
       params: { firstName: name.trim().split(' ')[0], age: String(age), ...(photoUri ? { photoUri } : {}) },
@@ -126,14 +134,14 @@ export default function SignUp() {
   }
 
   const skippable = step === 3 || step === 4;
-  const nextLabel = step === 0 ? 'Next' : step === STEPS - 1 ? 'Done' : 'Next';
+  const nextLabel = isLast ? 'Done' : 'Next';
 
   return (
     <SafeAreaView style={styles.screen} edges={['top', 'bottom']}>
       <StatusBar style="light" />
       <View style={styles.header}>
         <Pressable onPress={back} hitSlop={12} style={styles.headerSide}>
-          <Text style={styles.headerIcon}>{step === 0 ? '✕' : '←'}</Text>
+          <Text style={styles.headerIcon}>{pos === 0 ? '✕' : '←'}</Text>
         </Pressable>
         <Image source={require('../../assets/images/logo-mark.png')} style={styles.headerLogo} contentFit="contain" />
         <View style={styles.headerSide} />
@@ -145,23 +153,31 @@ export default function SignUp() {
             <>
               <Text style={styles.title}>Create your account</Text>
               <Field label="Name" value={name} onChangeText={(t) => setName(t.slice(0, 50))} counter={`${name.length} / 50`} autoCapitalize="words" autoFocus />
-              <Field
-                label={usePhone ? 'Phone' : 'Email'}
-                value={contact}
-                onChangeText={setContact}
-                keyboardType={usePhone ? 'phone-pad' : 'email-address'}
-                autoCapitalize="none"
-                autoCorrect={false}
-                error={contact.length > 4 && !contactOk ? (usePhone ? 'Please enter a valid phone number.' : 'Please enter a valid email.') : undefined}
-              />
-              <Pressable
-                onPress={() => {
-                  setUsePhone(!usePhone);
-                  setContact('');
-                }}
-                style={{ marginTop: -space.sm, marginBottom: space.lg }}>
-                <Text style={styles.link}>{usePhone ? 'Use email instead' : 'Use phone instead'}</Text>
-              </Pressable>
+              {viaApple ? (
+                <View style={styles.appleNote}>
+                  <Text style={styles.appleNoteText}> Signed in with Apple{contact ? ` · ${contact}` : ''}</Text>
+                </View>
+              ) : (
+                <>
+                  <Field
+                    label={usePhone ? 'Phone' : 'Email'}
+                    value={contact}
+                    onChangeText={setContact}
+                    keyboardType={usePhone ? 'phone-pad' : 'email-address'}
+                    autoCapitalize="none"
+                    autoCorrect={false}
+                    error={contact.length > 4 && !contactOk ? (usePhone ? 'Please enter a valid phone number.' : 'Please enter a valid email.') : undefined}
+                  />
+                  <Pressable
+                    onPress={() => {
+                      setUsePhone(!usePhone);
+                      setContact('');
+                    }}
+                    style={{ marginTop: -space.sm, marginBottom: space.lg }}>
+                    <Text style={styles.link}>{usePhone ? 'Use email instead' : 'Use phone instead'}</Text>
+                  </Pressable>
+                </>
+              )}
               <Text style={styles.label}>Date of birth</Text>
               <Text style={styles.help}>
                 This won’t be shown publicly. Confirm your own age, even if this account is for a club or a coach.
@@ -248,7 +264,7 @@ export default function SignUp() {
                 onPress={() => {
                   if (step === 3) setPhotoUri(undefined);
                   if (step === 4) setUsername('');
-                  if (step < STEPS - 1) setStep(step + 1);
+                  if (!isLast) setPos(pos + 1);
                   else next();
                 }}
                 style={({ pressed }) => [styles.skip, pressed && { opacity: 0.7 }]}>
@@ -285,6 +301,8 @@ const styles = StyleSheet.create({
   fieldInput: { color: '#FFFFFF', fontSize: 18, paddingVertical: 4 },
   error: { color: '#FF6B6B', fontSize: 13, marginTop: 4 },
   dobRow: { flexDirection: 'row', gap: space.md },
+  appleNote: { borderWidth: 1, borderColor: EDGE, borderRadius: 6, padding: space.md, marginBottom: space.lg },
+  appleNoteText: { color: '#FFFFFF', fontSize: 15 },
   link: { color: colors.accent, fontSize: 15, fontWeight: '600' },
   testNote: { color: '#6E6585', fontSize: 13, marginTop: space.xl },
   photo: {

@@ -8,7 +8,8 @@
     "scheme": "mileclub",
     "userInterfaceStyle": "light",
     "ios": {
-      "icon": "./assets/images/icon.png"
+      "icon": "./assets/images/icon.png",
+      "usesAppleSignIn": true
     },
     "android": {
       "adaptiveIcon": {
@@ -31,7 +32,8 @@
           "imageWidth": 120
         }
       ],
-      "expo-sqlite"
+      "expo-sqlite",
+      "expo-apple-authentication"
     ],
     "experiments": {
       "typedRoutes": true,

@@ -1,6 +1,8 @@
+import * as AppleAuthentication from 'expo-apple-authentication';
 import { Image } from 'expo-image';
 import { router } from 'expo-router';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { useEffect, useState } from 'react';
+import { Alert, Platform, Pressable, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
 
@@ -32,6 +34,34 @@ function PillButton({ title, icon, onPress, filled }: {
 export default function Welcome() {
   const start = () => router.push('/onboarding');
   const signUp = () => router.push('/signup');
+  const [appleReady, setAppleReady] = useState(false);
+
+  useEffect(() => {
+    if (Platform.OS !== 'ios') return;
+    AppleAuthentication.isAvailableAsync().then(setAppleReady).catch(() => setAppleReady(false));
+  }, []);
+
+  // Sign in with Apple: Apple confirms who the person is and (the first time
+  // only) shares their name and email. We then skip straight to the rest of
+  // sign-up. There's no server yet, so the Apple sign-in isn't stored anywhere.
+  async function continueWithApple() {
+    try {
+      const credential = await AppleAuthentication.signInAsync({
+        requestedScopes: [
+          AppleAuthentication.AppleAuthenticationScope.FULL_NAME,
+          AppleAuthentication.AppleAuthenticationScope.EMAIL,
+        ],
+      });
+      const fullName = [credential.fullName?.givenName, credential.fullName?.familyName].filter(Boolean).join(' ');
+      router.push({
+        pathname: '/signup',
+        params: { apple: '1', name: fullName, email: credential.email ?? '' },
+      });
+    } catch (e) {
+      if ((e as { code?: string }).code === 'ERR_REQUEST_CANCELED') return;
+      Alert.alert('Apple sign-in didn’t work', 'Please try again, or tap Get started to sign up with email.');
+    }
+  }
 
   return (
     <SafeAreaView style={styles.screen}>
@@ -49,6 +79,15 @@ export default function Welcome() {
         <Text style={styles.hero}>
           Find people to run with <Text style={styles.heroAccent}>near you.</Text>
         </Text>
+        {appleReady ? (
+          <AppleAuthentication.AppleAuthenticationButton
+            buttonType={AppleAuthentication.AppleAuthenticationButtonType.CONTINUE}
+            buttonStyle={AppleAuthentication.AppleAuthenticationButtonStyle.WHITE}
+            cornerRadius={26}
+            style={styles.appleButton}
+            onPress={continueWithApple}
+          />
+        ) : null}
         <PillButton title="Get started" onPress={signUp} filled />
         <Text style={styles.terms}>
           By signing up, you agree to our <Text style={styles.link}>Terms</Text>,{' '}
@@ -86,6 +125,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     gap: space.sm,
   },
+  appleButton: { width: '100%', height: 52 },
   pillOutline: { backgroundColor: '#FFFFFF' },
   pillFilled: { backgroundColor: colors.accent },
   pillIcon: { fontSize: 18, fontWeight: '800', color: colors.ink },
