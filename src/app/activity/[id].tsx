@@ -1,4 +1,4 @@
-import { router, useLocalSearchParams } from 'expo-router';
+import { router, useLocalSearchParams, type Href } from 'expo-router';
 import { Alert, Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { Avatar, Badge, Body, Button, Card, Label, Screen } from '@/components/ui';
@@ -23,6 +23,7 @@ export default function ActivityDetail() {
   const full = a.participants.length >= a.groupSize;
   const status = runStatus(a.id);
   const asking = isHost ? runIncoming.filter((r) => r.activityId === a.id && r.status === 'pending') : [];
+  const accepted = isHost ? runIncoming.filter((r) => r.activityId === a.id && r.status === 'accepted') : [];
 
   return (
     <Screen edges={['bottom']}>
@@ -109,6 +110,27 @@ export default function ActivityDetail() {
           })}
         </>
       )}
+      {isHost && accepted.length > 0 && (
+        <>
+          <Label>Accepted · {accepted.length}</Label>
+          {accepted.map((r) => {
+            const p = findPerson(r.personId);
+            if (!p) return null;
+            return (
+              <Card key={r.id} style={styles.hostCard} onPress={() => router.push(`/person/${p.id}`)}>
+                <Avatar name={p.firstName} color={p.color} />
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.hostName}>{p.firstName}</Text>
+                  <Text style={styles.hostMeta}>You accepted {p.firstName}</Text>
+                </View>
+                <Pressable onPress={() => router.push(`/chat/${p.id}` as Href)} style={styles.msgBtn} accessibilityLabel={`Message ${p.firstName}`}>
+                  <Text style={styles.msgBtnText}>💬 Message</Text>
+                </Pressable>
+              </Card>
+            );
+          })}
+        </>
+      )}
       {isHost ? (
         <>
           <Label>People who’d be a great fit</Label>
@@ -149,6 +171,11 @@ export default function ActivityDetail() {
             <Card style={styles.statusCard}>
               <Text style={styles.statusTitle}>You’re in</Text>
               <Text style={styles.hostMeta}>{host?.firstName ?? 'The host'} accepted you. See you at {a.location}.</Text>
+              {host ? (
+                <Pressable onPress={() => router.push(`/chat/${host.id}` as Href)} style={[styles.msgBtn, { alignSelf: 'flex-start', marginTop: space.sm }]}>
+                  <Text style={styles.msgBtnText}>💬 Message {host.firstName}</Text>
+                </Pressable>
+              ) : null}
             </Card>
           )}
           {status !== 'declined' && (
@@ -187,6 +214,8 @@ const styles = themed(() => StyleSheet.create({
   person: { alignItems: 'center', width: 56 },
   personName: { fontSize: 12, fontWeight: '600', color: colors.ink, marginTop: 4 },
   fit: { fontSize: 18, fontWeight: '900', color: colors.link },
+  msgBtn: { borderRadius: 999, backgroundColor: colors.olive, paddingVertical: 8, paddingHorizontal: 14 },
+  msgBtnText: { color: colors.onBrand, fontSize: 13, fontWeight: '700' },
   statusCard: { marginBottom: space.md, gap: 4 },
   statusTitle: { fontSize: 16, fontWeight: '700', color: colors.ink },
   accept: { width: 40, height: 40, borderRadius: 20, backgroundColor: colors.olive, alignItems: 'center', justifyContent: 'center' },
