@@ -1,15 +1,17 @@
 import { Redirect, router } from 'expo-router';
 import { useRef, useState } from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Platform, Pressable, StyleSheet, Text, View } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { SwipeDeck, type SwipeDeckHandle } from '@/components/swipe-deck';
-import { Button, Screen } from '@/components/ui';
+import { SwipeDeck, deckColors, type SwipeDeckHandle } from '@/components/swipe-deck';
+import { Avatar } from '@/components/ui';
 import type { Activity } from '@/data/types';
 import { startsAt } from '@/lib/time';
 import { useStore } from '@/state/store';
-import { colors, radius, space } from '@/theme';
 
 const WINDOW_HOURS = 36;
+const SERIF = Platform.select({ ios: 'Georgia', android: 'serif', default: 'serif' });
+const ink = '#2B2E1F';
 
 export default function Now() {
   const { profile, activities, skipped, join, skip, clearSkipped } = useStore();
@@ -33,16 +35,24 @@ export default function Now() {
     .sort((a, b) => startsAt(a).getTime() - startsAt(b).getTime());
 
   return (
-    <Screen scroll={false}>
+    <SafeAreaView style={styles.screen} edges={['top']}>
       <View style={styles.wrap}>
-        <Text style={styles.kicker}>HAPPENING SOON NEAR {profile.neighborhood.toUpperCase()}</Text>
-        <Text style={styles.title}>Last-minute crew</Text>
-        <Text style={styles.sub}>Swipe right to join, left to skip.</Text>
+        <View style={styles.header}>
+          <Avatar name={profile.firstName} uri={profile.photoUri} color={deckColors.olive} size={38} />
+          <View style={{ flex: 1 }}>
+            <Text style={styles.hello}>Welcome back</Text>
+            <Text style={styles.name}>{profile.firstName}</Text>
+          </View>
+          <Pressable style={styles.bell} onPress={() => router.push('/activities')}>
+            <Text style={{ color: '#fff', fontSize: 15 }}>🔔</Text>
+          </Pressable>
+        </View>
+        <Text style={styles.title}>Your week at{'\n'}Mile Club</Text>
 
         {joinedMsg && (
           <Pressable style={styles.toast} onPress={() => router.push(`/activity/${joinedMsg.id}`)}>
             <Text style={styles.toastText}>
-              🎉 You’re in for {joinedMsg.title} at {joinedMsg.time}. Tap for details.
+              You’re in for {joinedMsg.title} at {joinedMsg.time}. Tap for details.
             </Text>
           </Pressable>
         )}
@@ -62,45 +72,43 @@ export default function Now() {
                 setJoinedMsg(null);
               }}
             />
-            <View style={styles.actions}>
-              <Pressable style={[styles.round, styles.skipBtn]} onPress={() => deck.current?.swipe('left')}>
-                <Text style={[styles.roundIcon, { color: colors.muted }]}>✕</Text>
-              </Pressable>
-              <Pressable style={[styles.round, styles.joinBtn]} onPress={() => deck.current?.swipe('right')}>
-                <Text style={[styles.roundIcon, { color: '#fff' }]}>✓</Text>
-              </Pressable>
-            </View>
+            <Text style={styles.hint}>Swipe right to join · left to explore more</Text>
           </>
         ) : (
           <View style={styles.empty}>
-            <Text style={{ fontSize: 56 }}>🌙</Text>
             <Text style={styles.emptyTitle}>You’re all caught up</Text>
-            <Text style={styles.sub}>Nothing else is starting in the next day or so. Check back later, or start your own.</Text>
-            <View style={{ gap: space.sm, alignSelf: 'stretch', marginTop: space.lg }}>
-              <Button title="+ START SOMETHING NOW" variant="secondary" onPress={() => router.push('/create-activity')} />
-              {skipped.length > 0 && <Button title="See skipped again" variant="ghost" onPress={clearSkipped} />}
-            </View>
+            <Text style={styles.emptySub}>Nothing else starts in the next day or so. Check back later, or start your own.</Text>
+            <Pressable style={styles.primary} onPress={() => router.push('/create-activity')}>
+              <Text style={styles.primaryText}>Start something now</Text>
+            </Pressable>
+            {skipped.length > 0 && (
+              <Pressable style={styles.secondary} onPress={clearSkipped}>
+                <Text style={styles.secondaryText}>See skipped again</Text>
+              </Pressable>
+            )}
           </View>
         )}
       </View>
-    </Screen>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  wrap: { flex: 1, paddingHorizontal: space.xl, paddingTop: space.lg, paddingBottom: space.lg },
-  kicker: { fontSize: 12, fontWeight: '900', color: colors.accent, letterSpacing: 1 },
-  title: { fontSize: 32, fontWeight: '900', color: colors.ink, letterSpacing: -0.5, marginTop: 2 },
-  sub: { fontSize: 15, color: colors.muted, marginTop: 2, textAlign: 'left' },
-  toast: {
-    backgroundColor: colors.greenSoft, borderRadius: radius.md, padding: space.md, marginTop: space.md,
-  },
-  toastText: { color: colors.green, fontWeight: '800', fontSize: 14 },
-  actions: { flexDirection: 'row', justifyContent: 'center', gap: space.xxl, marginTop: space.lg },
-  round: { width: 68, height: 68, borderRadius: 34, alignItems: 'center', justifyContent: 'center' },
-  skipBtn: { backgroundColor: colors.card, borderWidth: 1.5, borderColor: colors.line },
-  joinBtn: { backgroundColor: colors.accent },
-  roundIcon: { fontSize: 30, fontWeight: '900' },
-  empty: { flex: 1, alignItems: 'center', justifyContent: 'center', paddingHorizontal: space.lg },
-  emptyTitle: { fontSize: 24, fontWeight: '900', color: colors.ink, marginTop: space.md },
+  screen: { flex: 1, backgroundColor: deckColors.cream },
+  wrap: { flex: 1, paddingHorizontal: 22, paddingTop: 8, paddingBottom: 12 },
+  header: { flexDirection: 'row', alignItems: 'center', gap: 10 },
+  hello: { fontSize: 11, color: '#7A7766' },
+  name: { fontSize: 15, color: ink, fontFamily: SERIF },
+  bell: { width: 38, height: 38, borderRadius: 19, backgroundColor: ink, alignItems: 'center', justifyContent: 'center' },
+  title: { fontFamily: SERIF, fontSize: 32, lineHeight: 38, color: ink, marginTop: 16 },
+  toast: { backgroundColor: deckColors.peach, borderRadius: 16, padding: 12, marginTop: 12 },
+  toastText: { color: ink, fontWeight: '700', fontSize: 13 },
+  hint: { textAlign: 'center', color: '#8A8577', fontSize: 12, marginTop: 14 },
+  empty: { flex: 1, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 12, gap: 10 },
+  emptyTitle: { fontFamily: SERIF, fontSize: 26, color: ink },
+  emptySub: { fontSize: 14, color: '#7A7766', textAlign: 'center', lineHeight: 20 },
+  primary: { backgroundColor: deckColors.olive, borderRadius: 999, paddingVertical: 14, alignSelf: 'stretch', alignItems: 'center', marginTop: 10 },
+  primaryText: { color: '#fff', fontWeight: '800', fontSize: 15 },
+  secondary: { borderRadius: 999, paddingVertical: 12, alignSelf: 'stretch', alignItems: 'center', borderWidth: 1.5, borderColor: deckColors.olive },
+  secondaryText: { color: deckColors.olive, fontWeight: '800', fontSize: 15 },
 });
