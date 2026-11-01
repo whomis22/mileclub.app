@@ -115,7 +115,7 @@ const styles = themed(() => StyleSheet.create({
   root: { flex: 1, flexDirection: 'row', backgroundColor: colors.overlay },
   panel: { width: '80%', maxWidth: 320, backgroundColor: colors.bg, borderTopRightRadius: 32, borderBottomRightRadius: 32, paddingHorizontal: space.lg },
   me: { flexDirection: 'row', alignItems: 'center', gap: space.md, paddingBottom: space.lg, paddingHorizontal: space.xs },
-  meName: { fontFamily: fonts.serif, fontSize: 24, color: colors.ink },
+  meName: { fontFamily: fonts.serif, fontSize: 19, color: colors.ink },
   meLink: { fontFamily: fonts.sansSemi, fontSize: 12, color: colors.link },
   item: { height: 46, borderRadius: radius.pill, justifyContent: 'center', paddingHorizontal: space.md },
   itemOn: { backgroundColor: colors.oliveSoft },

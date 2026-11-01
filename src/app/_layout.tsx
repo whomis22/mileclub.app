@@ -1,5 +1,5 @@
-import { InstrumentSerif_400Regular, InstrumentSerif_400Regular_Italic } from '@expo-google-fonts/instrument-serif';
-import { Inter_400Regular, Inter_500Medium, Inter_600SemiBold, Inter_700Bold } from '@expo-google-fonts/inter';
+import { Karla_400Regular, Karla_500Medium, Karla_600SemiBold, Karla_700Bold } from '@expo-google-fonts/karla';
+import { Lora_600SemiBold, Lora_600SemiBold_Italic } from '@expo-google-fonts/lora';
 import { Outfit_800ExtraBold } from '@expo-google-fonts/outfit';
 import { useFonts } from 'expo-font';
 import { Stack } from 'expo-router';
@@ -12,12 +12,12 @@ import { colors, useTheme } from '@/theme';
 export default function RootLayout() {
   const { isDark } = useTheme();
   const [fontsLoaded, fontError] = useFonts({
-    InstrumentSerif_400Regular,
-    InstrumentSerif_400Regular_Italic,
-    Inter_400Regular,
-    Inter_500Medium,
-    Inter_600SemiBold,
-    Inter_700Bold,
+    Lora_600SemiBold,
+    Lora_600SemiBold_Italic,
+    Karla_400Regular,
+    Karla_500Medium,
+    Karla_600SemiBold,
+    Karla_700Bold,
     Outfit_800ExtraBold,
   });
   if (!fontsLoaded && !fontError) return null;
@@ -32,7 +32,7 @@ export default function RootLayout() {
           headerTintColor: colors.ink,
           headerStyle: { backgroundColor: colors.bg },
           headerShadowVisible: false,
-          headerTitleStyle: { fontFamily: 'InstrumentSerif_400Regular', fontSize: 22 },
+          headerTitleStyle: { fontFamily: 'Lora_600SemiBold', fontSize: 19 },
           headerBackTitle: 'Back',
         }}>
         <Stack.Screen name="activity/[id]" options={{ headerShown: true, title: '' }} />
@@ -45,6 +45,9 @@ export default function RootLayout() {
         <Stack.Screen name="host-session" options={{ headerShown: true, title: 'Host a session', presentation: 'modal' }} />
         <Stack.Screen name="create-activity" options={{ headerShown: true, title: 'New activity', presentation: 'modal' }} />
         <Stack.Screen name="menu" options={{ presentation: 'transparentModal', animation: 'fade', contentStyle: { backgroundColor: 'transparent' } }} />
+        <Stack.Screen name="post/[id]" options={{ headerShown: true, title: 'Comments' }} />
+        <Stack.Screen name="call/[id]" options={{ presentation: 'fullScreenModal', animation: 'fade' }} />
+        <Stack.Screen name="new-post" options={{ headerShown: true, title: 'New post', presentation: 'modal' }} />
         <Stack.Screen name="group-settings" options={{ headerShown: true, title: 'Group settings' }} />
       </Stack>
       <LaunchScreen />

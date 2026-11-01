@@ -237,7 +237,7 @@ const styles = themed(() => StyleSheet.create({
   club: { color: '#fff', fontFamily: SERIF, fontSize: 20, letterSpacing: 2, marginTop: 4 },
   bottom: { position: 'absolute', left: 0, right: 0, bottom: 0, padding: 20 },
   placeRow: { flexDirection: 'row', alignItems: 'center', gap: 10 },
-  place: { color: '#fff', fontFamily: fonts.serifItalic, fontSize: 34, flexShrink: 1 },
+  place: { color: '#fff', fontFamily: fonts.serifItalic, fontSize: 27, flexShrink: 1 },
   tag: { borderWidth: 1, borderColor: '#ffffffcc', borderRadius: 999, paddingVertical: 3, paddingHorizontal: 10 },
   tagText: { color: '#fff', fontSize: 11, fontWeight: '600' },
   rule: { height: 1, backgroundColor: '#ffffff66', marginVertical: 10 },

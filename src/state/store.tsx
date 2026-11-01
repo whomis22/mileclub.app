@@ -15,6 +15,12 @@ export type IncomingRequest = { id: string; sessionId: string; personId: string;
 // Someone asking to join one of the user's own group runs.
 export type RunRequest = { id: string; activityId: string; personId: string; status: RequestStatus; at: number };
 
+// A photo the user posted on Explore (mock: the picture stays on this phone only).
+export type MyPost = { id: string; uri: string; caption: string; at: number };
+
+// A comment under any Explore post. authorId is 'me' or a sample person id.
+export type PostComment = { id: string; authorId: string; text: string; at: number };
+
 // Demo: sample coaches and hosts answer a request after this long.
 const DEMO_REPLY_MS = 20000;
 
@@ -33,6 +39,8 @@ type State = {
   runRequests: Record<string, { status: RequestStatus; at: number }>; // the user's requests, by activity id
   runIncoming: RunRequest[]; // people asking to join runs the user hosts
   following: string[]; // people and coaches the user follows (private: only the user sees this list)
+  myPosts: MyPost[]; // photos the user shared on Explore, newest first
+  comments: Record<string, PostComment[]>; // the user's comments, by post id
 };
 
 type Store = State & {
@@ -54,13 +62,17 @@ type Store = State & {
   cancelRunRequest: (activityId: string) => void;
   respondRun: (requestId: string, status: 'accepted' | 'declined') => void;
   toggleFollow: (id: string) => void;
+  addPost: (uri: string, caption: string) => void;
+  deletePost: (id: string) => void;
+  addComment: (postId: string, text: string) => void;
+  deleteComment: (postId: string, commentId: string) => void;
   cancelBooking: (sessionId: string) => void;
   block: (personId: string) => void;
   reset: () => void;
 };
 
 const KEY = 'mileclub-state-v1';
-const empty: State = { profile: null, myActivities: [], joined: [], blocked: [], skipped: [], kudos: [], mySessions: [], booked: [], requests: {}, incoming: [], runRequests: {}, runIncoming: [], following: [] };
+const empty: State = { profile: null, myActivities: [], joined: [], blocked: [], skipped: [], kudos: [], mySessions: [], booked: [], requests: {}, incoming: [], runRequests: {}, runIncoming: [], following: [], myPosts: [], comments: {} };
 
 function load(): State {
   try {
@@ -214,6 +226,19 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       })),
     toggleFollow: (id) =>
       update((s) => ({ ...s, following: s.following.includes(id) ? s.following.filter((x) => x !== id) : [...s.following, id] })),
+    addPost: (uri, caption) =>
+      update((s) => ({ ...s, myPosts: [{ id: `mp${Date.now()}`, uri, caption: caption.trim(), at: Date.now() }, ...s.myPosts] })),
+    deletePost: (id) => update((s) => ({ ...s, myPosts: s.myPosts.filter((p) => p.id !== id) })),
+    addComment: (postId, text) =>
+      update((s) => ({
+        ...s,
+        comments: {
+          ...s.comments,
+          [postId]: [...(s.comments[postId] ?? []), { id: `c${Date.now()}`, authorId: 'me', text: text.trim(), at: Date.now() }],
+        },
+      })),
+    deleteComment: (postId, cid) =>
+      update((s) => ({ ...s, comments: { ...s.comments, [postId]: (s.comments[postId] ?? []).filter((c) => c.id !== cid) } })),
     block: (personId) => update((s) => ({ ...s, blocked: [...s.blocked, personId] })),
     reset: () => update(() => empty),
   };

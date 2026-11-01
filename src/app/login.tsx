@@ -143,7 +143,7 @@ const styles = themed(() =>
     backBtn: { width: 44, height: 44, borderRadius: 22, borderWidth: 1, borderColor: colors.edge, alignItems: 'center', justifyContent: 'center' },
     backIcon: { color: colors.ink, fontSize: 24, lineHeight: 28, fontFamily: fonts.sansMedium },
     body: { paddingHorizontal: space.xl, paddingTop: space.xxl, paddingBottom: space.xxl },
-    title: { color: colors.ink, fontSize: 40, lineHeight: 42, fontFamily: fonts.serif },
+    title: { color: colors.ink, fontSize: 32, lineHeight: 42, fontFamily: fonts.serif },
     italic: { fontFamily: fonts.serifItalic },
     help: { color: colors.muted, fontSize: 15, lineHeight: 21, marginTop: space.sm, marginBottom: space.xl, fontFamily: fonts.sans },
     field: { backgroundColor: colors.card, borderWidth: 1, borderColor: colors.edge, borderRadius: radius.md, paddingHorizontal: space.md, paddingTop: space.sm, paddingBottom: 6, marginBottom: space.lg },

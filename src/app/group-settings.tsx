@@ -61,7 +61,7 @@ export default function GroupSettingsScreen() {
 const styles = themed(() => StyleSheet.create({
   top: { alignItems: 'center', gap: space.sm },
   icon: { width: 88, height: 88, borderRadius: 28, backgroundColor: colors.olive, alignItems: 'center', justifyContent: 'center' },
-  title: { fontFamily: fonts.serif, fontSize: 30, color: colors.ink, marginTop: space.xs },
+  title: { fontFamily: fonts.serif, fontSize: 24, color: colors.ink, marginTop: space.xs },
   sub: { fontFamily: fonts.sans, fontSize: 13, color: colors.muted, textAlign: 'center' },
   card: { backgroundColor: colors.card, borderRadius: radius.lg, paddingHorizontal: space.lg, marginTop: space.xl },
   row: { flexDirection: 'row', alignItems: 'center', gap: space.md, paddingVertical: space.lg },

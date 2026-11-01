@@ -111,7 +111,7 @@ export function Badge({ label, tone = 'accent' }: { label: string; tone?: 'accen
 const styles = themed(() => StyleSheet.create({
   screen: { flex: 1, backgroundColor: colors.bg },
   scroll: { padding: space.xl, paddingBottom: 48 },
-  title: { fontSize: 38, fontFamily: fonts.serif, color: colors.ink, lineHeight: 40 },
+  title: { fontSize: 30, fontFamily: fonts.serif, color: colors.ink, lineHeight: 40 },
   sub: { fontSize: 15, fontFamily: fonts.sans, color: colors.muted, marginTop: space.xs, lineHeight: 22 },
   label: {
     fontSize: 11, fontFamily: fonts.sansSemi, color: colors.muted, letterSpacing: 2, textTransform: 'uppercase',

@@ -433,7 +433,7 @@ const styles = themed(() => StyleSheet.create({
   barFill: { height: 3, borderRadius: 2, backgroundColor: colors.olive },
   body: { paddingHorizontal: space.xl, paddingTop: space.xl, paddingBottom: space.xxl },
   stepLabel: { color: colors.muted, fontSize: 10, letterSpacing: 2.5, fontFamily: fonts.sansSemi, marginBottom: space.sm },
-  title: { color: colors.ink, fontSize: 38, lineHeight: 40, fontFamily: fonts.serif, marginBottom: space.lg },
+  title: { color: colors.ink, fontSize: 30, lineHeight: 40, fontFamily: fonts.serif, marginBottom: space.lg },
   titleItalic: { fontFamily: fonts.serifItalic },
   help: { color: colors.muted, fontSize: 15, lineHeight: 21, marginBottom: space.lg, fontFamily: fonts.sans },
   label: { color: colors.ink, fontSize: 16, fontFamily: fonts.sansSemi, marginTop: space.sm, marginBottom: space.xs },
@@ -485,7 +485,7 @@ const styles = themed(() => StyleSheet.create({
   skipText: { color: colors.ink, fontSize: 15, fontFamily: fonts.sansSemi },
   sheet: { flex: 1, backgroundColor: colors.bg },
   sheetHead: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: space.xl, paddingTop: space.lg, paddingBottom: space.md },
-  sheetTitle: { fontFamily: fonts.serif, fontSize: 28, color: colors.ink },
+  sheetTitle: { fontFamily: fonts.serif, fontSize: 22, color: colors.ink },
   search: {
     marginHorizontal: space.xl,
     marginBottom: space.sm,

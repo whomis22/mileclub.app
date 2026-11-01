@@ -1,4 +1,4 @@
-import { router, useLocalSearchParams } from 'expo-router';
+import { router, useLocalSearchParams, type Href } from 'expo-router';
 import { Alert, Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { ActivityCard } from '@/components/activity-card';
@@ -8,17 +8,27 @@ import { activityInfo, distanceKm } from '@/data/options';
 import { findPerson } from '@/data/people';
 import { formatKm, matchScore } from '@/lib/matching';
 import { useStore } from '@/state/store';
-import { colors, space, themed, useTheme } from '@/theme';
+import { colors, fonts, radius, space, themed, useTheme } from '@/theme';
 
 export default function PersonDetail() {
   useTheme();
   const { id } = useLocalSearchParams<{ id: string }>();
-  const { profile, activities, block } = useStore();
+  const { profile, activities, block, following, runStatus } = useStore();
   const p = findPerson(id);
   if (!p || !profile) return null;
 
   const score = matchScore(profile, p);
   const theirs = activities.filter((a) => a.participants.includes(p.id));
+  const follows = following.includes(p.id);
+  // Runs you've been accepted into together: separate from following.
+  const together = theirs.filter((a) => runStatus(a.id) === 'accepted' || a.participants.includes('me'));
+
+  function shareLocation() {
+    Alert.alert(`Share your location with ${p!.firstName}?`, 'They will see where you are for the next hour.', [
+      { text: 'Cancel', style: 'cancel' },
+      { text: 'Share', onPress: () => Alert.alert('Location shared', `${p!.firstName} can see where you are for the next hour.`) },
+    ]);
+  }
 
   function onBlock() {
     Alert.alert(`Block ${p!.firstName}?`, "You won't see each other or each other's activities.", [
@@ -48,6 +58,31 @@ export default function PersonDetail() {
         </View>
         <View style={{ marginTop: space.md }}>
           <FollowButton id={p.id} name={p.firstName} />
+        </View>
+        {follows ? (
+          <View style={styles.actions}>
+            <Pressable style={styles.action} onPress={() => router.push(`/chat/${p.id}` as Href)}>
+              <Text style={styles.actionIcon}>💬</Text>
+              <Text style={styles.actionText}>Message</Text>
+            </Pressable>
+            <Pressable style={styles.action} onPress={() => router.push(`/call/${p.id}` as Href)}>
+              <Text style={styles.actionIcon}>📞</Text>
+              <Text style={styles.actionText}>Call</Text>
+            </Pressable>
+            <Pressable style={styles.action} onPress={shareLocation}>
+              <Text style={styles.actionIcon}>📍</Text>
+              <Text style={styles.actionText}>Share location</Text>
+            </Pressable>
+          </View>
+        ) : (
+          <Text style={styles.hint}>Follow {p.firstName} to message, call and share your location.</Text>
+        )}
+        <View style={styles.together}>
+          <Text style={styles.togetherText}>
+            {together.length
+              ? `🏃 You’re in ${together.length} ${together.length === 1 ? 'run' : 'runs'} together`
+              : 'Following doesn’t put you in their runs. Ask to join a run below.'}
+          </Text>
         </View>
         {p.isCaptain && (
           <Text style={styles.captain}>
@@ -108,6 +143,13 @@ const styles = themed(() => StyleSheet.create({
   meta: { fontSize: 15, color: colors.muted, marginTop: 2 },
   badges: { flexDirection: 'row', gap: space.sm, marginTop: space.md },
   captain: { fontSize: 13, color: colors.muted, marginTop: space.sm },
+  actions: { flexDirection: 'row', gap: space.sm, marginTop: space.md },
+  action: { alignItems: 'center', gap: 4, minWidth: 92, paddingVertical: 10, paddingHorizontal: 8, borderRadius: radius.md, backgroundColor: colors.card, borderWidth: 1, borderColor: colors.line },
+  actionIcon: { fontSize: 20 },
+  actionText: { fontFamily: fonts.sansSemi, fontSize: 12, color: colors.ink },
+  hint: { fontFamily: fonts.sans, fontSize: 13, color: colors.muted, marginTop: space.sm, textAlign: 'center' },
+  together: { marginTop: space.md, borderRadius: radius.pill, backgroundColor: colors.oliveSoft, paddingVertical: 8, paddingHorizontal: 14 },
+  togetherText: { fontFamily: fonts.sansMedium, fontSize: 12, color: colors.ink, textAlign: 'center' },
   safetyRow: { flexDirection: 'row', justifyContent: 'center', gap: space.xxl, marginTop: space.xxl },
   danger: { fontSize: 15, fontWeight: '700', color: colors.danger },
 }));

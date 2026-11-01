@@ -133,12 +133,12 @@ export function saveThemePref(pref: ThemePref) {
 }
 
 export const fonts = {
-  serif: 'InstrumentSerif_400Regular',
-  serifItalic: 'InstrumentSerif_400Regular_Italic',
-  sans: 'Inter_400Regular',
-  sansMedium: 'Inter_500Medium',
-  sansSemi: 'Inter_600SemiBold',
-  sansBold: 'Inter_700Bold',
+  serif: 'Lora_600SemiBold',
+  serifItalic: 'Lora_600SemiBold_Italic',
+  sans: 'Karla_400Regular',
+  sansMedium: 'Karla_500Medium',
+  sansSemi: 'Karla_600SemiBold',
+  sansBold: 'Karla_700Bold',
   logo: 'Outfit_800ExtraBold',
 } as const;
 

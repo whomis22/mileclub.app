@@ -67,7 +67,7 @@ export default function Messages() {
 
 const styles = themed(() => StyleSheet.create({
   head: { flexDirection: 'row', alignItems: 'center', gap: space.md },
-  title: { fontFamily: fonts.serif, fontSize: 38, color: colors.ink },
+  title: { fontFamily: fonts.serif, fontSize: 30, color: colors.ink },
   search: { marginTop: space.lg, height: 44, borderRadius: radius.pill, backgroundColor: colors.sand, paddingHorizontal: space.lg, justifyContent: 'center' },
   searchInput: { fontFamily: fonts.sans, fontSize: 15, color: colors.ink },
   section: { fontFamily: fonts.sansSemi, fontSize: 10, letterSpacing: 2, color: colors.muted, marginTop: space.xl, marginBottom: space.xs },

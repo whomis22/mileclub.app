@@ -1,9 +1,11 @@
 import { Image } from 'expo-image';
-import { Redirect, router } from 'expo-router';
+import { Redirect, router, type Href } from 'expo-router';
 import { useState } from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Alert, Pressable, StyleSheet, Text, View } from 'react-native';
 
+import { CommentPreview, useComments } from '@/components/comment-preview';
 import { Avatar, MenuButton, Screen } from '@/components/ui';
+import { agoLabel } from '@/data/comments';
 import { FEED } from '@/data/feed';
 import { findPerson } from '@/data/people';
 import { hoursAgoLabel } from '@/lib/time';
@@ -19,6 +21,16 @@ const PHOTOS = [
 
 const FILTERS = ['For you', 'Following', 'Nearby', 'Coaches'] as const;
 
+function CommentButton({ postId }: { postId: string }) {
+  const n = useComments(postId).length;
+  return (
+    <Pressable onPress={() => router.push(`/post/${postId}` as Href)} style={styles.action} accessibilityLabel="Comments">
+      <Text style={styles.bubble}>💬</Text>
+      <Text style={styles.count}>{n}</Text>
+    </Pressable>
+  );
+}
+
 function duration(min: number) {
   const h = Math.floor(min / 60);
   return h ? `${h}h ${min % 60}m` : `${min}m`;
@@ -26,7 +38,7 @@ function duration(min: number) {
 
 export default function Explore() {
   useTheme();
-  const { profile, kudos, toggleKudos, blocked, following, toggleFollow } = useStore();
+  const { profile, kudos, toggleKudos, blocked, following, toggleFollow, myPosts, deletePost } = useStore();
   const [filter, setFilter] = useState<(typeof FILTERS)[number]>('For you');
   if (!profile) return <Redirect href="/welcome" />;
 
@@ -52,6 +64,58 @@ export default function Explore() {
           </Pressable>
         ))}
       </View>
+
+      <Pressable style={styles.composer} onPress={() => router.push('/new-post' as Href)}>
+        <Avatar name={profile.firstName} uri={profile.photoUri} size={36} />
+        <Text style={styles.composerText}>Share a photo from your workout…</Text>
+        <View style={styles.composerBtn}>
+          <Text style={styles.composerBtnText}>📷 Post</Text>
+        </View>
+      </Pressable>
+
+      {filter !== 'Nearby' && filter !== 'Following'
+        ? myPosts.map((mp) => {
+            const liked = kudos.includes(mp.id);
+            return (
+              <View key={mp.id} style={styles.post}>
+                <View style={styles.head}>
+                  <Avatar name={profile.firstName} uri={profile.photoUri} size={38} />
+                  <View style={{ flex: 1 }}>
+                    <Text style={styles.name}>{profile.firstName}</Text>
+                    <Text style={styles.meta}>Your post · {agoLabel(mp.at)}</Text>
+                  </View>
+                  <Pressable
+                    onPress={() =>
+                      Alert.alert('Delete this post?', undefined, [
+                        { text: 'Cancel', style: 'cancel' },
+                        { text: 'Delete', style: 'destructive', onPress: () => deletePost(mp.id) },
+                      ])
+                    }
+                    hitSlop={10}>
+                    <Text style={styles.dots}>•••</Text>
+                  </Pressable>
+                </View>
+                <View style={styles.photo}>
+                  <Image source={{ uri: mp.uri }} style={StyleSheet.absoluteFill} contentFit="cover" />
+                </View>
+                <View style={styles.actions}>
+                  <Pressable onPress={() => toggleKudos(mp.id)} style={styles.action} accessibilityLabel="Like">
+                    <Text style={[styles.heart, liked && { color: colors.peachDeep }]}>{liked ? '♥' : '♡'}</Text>
+                    <Text style={styles.count}>{liked ? 1 : 0}</Text>
+                  </Pressable>
+                  <CommentButton postId={mp.id} />
+                </View>
+                {mp.caption ? (
+                  <Text style={styles.caption}>
+                    <Text style={{ fontFamily: fonts.sansSemi }}>{profile.firstName} </Text>
+                    {mp.caption}
+                  </Text>
+                ) : null}
+                <CommentPreview postId={mp.id} />
+              </View>
+            );
+          })
+        : null}
 
       {posts.length === 0 ? (
         <Text style={styles.empty}>
@@ -103,6 +167,7 @@ export default function Explore() {
                 <Text style={[styles.heart, liked && { color: colors.peachDeep }]}>{liked ? '♥' : '♡'}</Text>
                 <Text style={styles.count}>{post.kudos + (liked ? 1 : 0)}</Text>
               </Pressable>
+              <CommentButton postId={post.id} />
               <Text style={styles.place}>{post.place}</Text>
             </View>
             {post.note ? (
@@ -111,6 +176,7 @@ export default function Explore() {
                 {post.note}
               </Text>
             ) : null}
+            <CommentPreview postId={post.id} />
           </View>
         );
       })}
@@ -120,7 +186,7 @@ export default function Explore() {
 
 const styles = themed(() => StyleSheet.create({
   top: { flexDirection: 'row', alignItems: 'center', gap: space.md },
-  title: { flex: 1, fontFamily: fonts.serif, fontSize: 38, color: colors.ink },
+  title: { flex: 1, fontFamily: fonts.serif, fontSize: 30, color: colors.ink },
   people: { borderRadius: radius.pill, borderWidth: 1, borderColor: colors.line, paddingVertical: 8, paddingHorizontal: 12 },
   peopleText: { fontFamily: fonts.sansMedium, color: colors.ink, fontSize: 12 },
   tabs: { flexDirection: 'row', gap: 22, marginTop: space.lg, marginBottom: space.lg },
@@ -136,12 +202,18 @@ const styles = themed(() => StyleSheet.create({
   followText: { fontFamily: fonts.sansSemi, fontSize: 12, color: colors.onPeach },
   photo: { height: 330, borderRadius: 28, overflow: 'hidden', backgroundColor: colors.oliveDark },
   overlay: { position: 'absolute', left: 16, right: 16, bottom: 16, flexDirection: 'row', alignItems: 'flex-end', justifyContent: 'space-between', gap: space.md },
-  postTitle: { flex: 1, fontFamily: fonts.serifItalic, fontSize: 30, lineHeight: 32, color: colors.onBrand },
+  postTitle: { flex: 1, fontFamily: fonts.serifItalic, fontSize: 24, lineHeight: 32, color: colors.onBrand },
   stats: { fontFamily: fonts.sansMedium, fontSize: 10, letterSpacing: 1.2, lineHeight: 15, color: colors.onBrand, textAlign: 'right' },
   actions: { flexDirection: 'row', alignItems: 'center', gap: space.lg, marginTop: space.md },
   action: { flexDirection: 'row', alignItems: 'center', gap: 6 },
   heart: { fontSize: 22, color: colors.ink },
   count: { fontFamily: fonts.sansSemi, fontSize: 13, color: colors.ink },
   place: { flex: 1, textAlign: 'right', fontFamily: fonts.sans, fontSize: 12, color: colors.muted },
+  bubble: { fontSize: 18 },
+  dots: { fontFamily: fonts.sansBold, fontSize: 14, color: colors.muted, letterSpacing: 1 },
+  composer: { flexDirection: 'row', alignItems: 'center', gap: space.md, backgroundColor: colors.card, borderRadius: radius.lg, borderWidth: 1, borderColor: colors.line, padding: space.md, marginBottom: space.xl },
+  composerText: { flex: 1, fontFamily: fonts.sans, fontSize: 14, color: colors.muted },
+  composerBtn: { backgroundColor: colors.olive, borderRadius: radius.pill, paddingVertical: 8, paddingHorizontal: 14 },
+  composerBtnText: { fontFamily: fonts.sansSemi, fontSize: 13, color: colors.onBrand },
   caption: { fontFamily: fonts.sans, fontSize: 14, lineHeight: 20, color: colors.ink, marginTop: space.sm },
 }));

@@ -1,8 +1,11 @@
+import { findPerson } from './people';
+
 // Sample conversations so Messages has life before there's a server.
 // "members" is the Mile Club Members group: everyone who signs up is added to it
 // automatically (needs the server later), and by default only admins can post.
 
-export type ChatMessage = { id: string; from: 'me' | 'them' | 'admin'; text: string };
+// location: a shared-location card (mock map pin) instead of a text bubble.
+export type ChatMessage = { id: string; from: 'me' | 'them' | 'admin'; text: string; location?: boolean };
 
 export type ChatThread = {
   id: string;
@@ -65,6 +68,10 @@ export const THREADS: ChatThread[] = [
   },
 ];
 
-export function findThread(id: string) {
-  return THREADS.find((t) => t.id === id);
+// Sample threads, or a fresh empty chat with any member (opened from their profile).
+export function findThread(id: string): ChatThread | undefined {
+  const t = THREADS.find((x) => x.id === id);
+  if (t) return t;
+  const p = findPerson(id);
+  return p ? { id, kind: 'private', personId: id, name: p.firstName, time: '', unread: false, messages: [] } : undefined;
 }
