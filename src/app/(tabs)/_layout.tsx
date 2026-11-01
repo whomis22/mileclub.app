@@ -3,6 +3,7 @@ import { Tabs } from 'expo-router/js-tabs';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { useStore } from '@/state/store';
 import { colors, fonts, themed, useTheme } from '@/theme';
 
 type TabBarProps = {
@@ -11,19 +12,24 @@ type TabBarProps = {
   navigation?: unknown;
 };
 
-const TAB_ORDER = ['now', 'feed', 'activities', 'messages', 'profile'];
+// Members and coaches get different tab bars. Coaches open on their Studio and
+// still have a Join tab to swipe into other people's runs.
+const MEMBER_TABS = ['now', 'feed', 'activities', 'messages', 'profile'];
+const COACH_TABS = ['studio', 'feed', 'now', 'messages', 'profile'];
+const COACH_TITLES: Record<string, string> = { now: 'Join' };
 
 // Floating olive pill at the bottom. The open tab is a cream pill with its name.
-function PillTabBar({ state, descriptors }: TabBarProps) {
+function PillTabBar({ state, descriptors, isCoach }: TabBarProps & { isCoach: boolean }) {
   const insets = useSafeAreaInsets();
-  const routes = state.routes.filter((r) => TAB_ORDER.includes(r.name));
+  const order = isCoach ? COACH_TABS : MEMBER_TABS;
+  const routes = order.map((name) => state.routes.find((r) => r.name === name)).filter((r): r is { key: string; name: string } => !!r);
   const current = state.routes[state.index]?.name;
   return (
     <View style={[styles.wrap, { paddingBottom: Math.max(insets.bottom, 12) }]}>
       <View style={styles.bar}>
         {routes.map((r) => {
           const focused = r.name === current;
-          const title = descriptors[r.key]?.options.title ?? r.name;
+          const title = (isCoach && COACH_TITLES[r.name]) || descriptors[r.key]?.options.title || r.name;
           return (
             <Pressable
               key={r.key}
@@ -47,11 +53,14 @@ function PillTabBar({ state, descriptors }: TabBarProps) {
 
 export default function TabsLayout() {
   useTheme();
+  const { profile } = useStore();
+  const isCoach = profile?.role === 'coach';
   return (
     <Tabs
-      tabBar={(props) => <PillTabBar {...(props as unknown as TabBarProps)} />}
+      tabBar={(props) => <PillTabBar {...(props as unknown as TabBarProps)} isCoach={isCoach} />}
       screenOptions={{ headerShown: false, sceneStyle: { backgroundColor: colors.bg } }}>
       <Tabs.Screen name="now" options={{ title: 'Home' }} />
+      <Tabs.Screen name="studio" options={{ title: 'Studio' }} />
       <Tabs.Screen name="feed" options={{ title: 'Explore' }} />
       <Tabs.Screen name="activities" options={{ title: 'Runs' }} />
       <Tabs.Screen name="messages" options={{ title: 'Messages' }} />

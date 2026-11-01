@@ -1,4 +1,4 @@
-import { router } from 'expo-router';
+import { router, type Href } from 'expo-router';
 import { Alert, Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { Avatar, Badge, Body, Button, Card, Chip, Chips, Label, MenuButton, Screen } from '@/components/ui';
@@ -90,7 +90,10 @@ export default function ProfileTab() {
             Become a {ROLES.coach.name}: host paid training sessions and keep 80% of what you earn.
           </Body>
           <View style={{ height: space.md }} />
-          <Button title={`Become a ${ROLES.coach.name}`} variant="secondary" onPress={() => setRole('coach')} />
+          <Button title={`Become a ${ROLES.coach.name}`} variant="secondary" onPress={() => {
+            setRole('coach');
+            router.navigate('/studio' as Href);
+          }} />
         </Card>
       )}
 
@@ -122,7 +125,10 @@ export default function ProfileTab() {
 
       <View style={{ height: space.xxl }} />
       {role === 'coach' && (
-        <Button title={`Switch back to a ${ROLES.member.one} account`} variant="ghost" style={{ marginBottom: space.md }} onPress={() => setRole('member')} />
+        <Button title={`Switch back to a ${ROLES.member.one} account`} variant="ghost" style={{ marginBottom: space.md }} onPress={() => {
+          setRole('member');
+          router.navigate('/now');
+        }} />
       )}
       <Button
         title="Start over"

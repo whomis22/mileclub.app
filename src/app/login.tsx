@@ -5,6 +5,7 @@ import { Alert, KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleShee
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { Logo } from '@/components/ui';
+import { homeFor } from '@/lib/home';
 import { useStore } from '@/state/store';
 import { colors, fonts, radius, space, themed, useTheme } from '@/theme';
 
@@ -38,7 +39,7 @@ export default function LogIn() {
       });
     }
     router.dismissAll();
-    router.replace('/now');
+    router.replace(homeFor(profile ?? { role: 'member' } as never));
   }
 
   function forgot() {

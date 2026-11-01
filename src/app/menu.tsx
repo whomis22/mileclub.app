@@ -17,14 +17,26 @@ export default function Menu() {
     setTimeout(() => router.push(href), 50);
   };
 
-  const pages: { label: string; href: Href }[] = [
-    { label: 'Home', href: '/now' },
-    { label: 'Explore', href: '/feed' },
-    { label: 'Messages', href: '/messages' },
-    { label: 'My runs', href: '/activities' },
-    { label: 'Coaches', href: '/train' },
-    { label: 'People near you', href: '/people' },
-  ];
+  const isCoach = profile?.role === 'coach';
+  const pages: { label: string; href: Href }[] = isCoach
+    ? [
+        { label: 'Studio', href: '/studio' as Href },
+        { label: 'Host a session', href: '/host-session' },
+        { label: 'Booking requests', href: '/requests' },
+        { label: 'Earnings', href: '/earnings' },
+        { label: 'Join a run', href: '/now' },
+        { label: 'Explore', href: '/feed' },
+        { label: 'Messages', href: '/messages' },
+        { label: 'My runs', href: '/activities' },
+      ]
+    : [
+        { label: 'Home', href: '/now' },
+        { label: 'Explore', href: '/feed' },
+        { label: 'Messages', href: '/messages' },
+        { label: 'My runs', href: '/activities' },
+        { label: 'Coaches', href: '/train' },
+        { label: 'People near you', href: '/people' },
+      ];
   const settings: { label: string; onPress: () => void }[] = [
     { label: 'Account', onPress: () => go('/profile') },
     { label: 'Notifications', onPress: () => soon('Notifications') },

@@ -16,6 +16,7 @@ import {
 } from '@/data/options';
 import type { Profile } from '@/data/types';
 import { ROLES, type Role } from '@/data/roles';
+import { homeFor } from '@/lib/home';
 import { useStore } from '@/state/store';
 import { colors, getThemeMode, setThemeMode, fonts, palettes, radius, space, themed, type ThemePref, useTheme } from '@/theme';
 
@@ -107,7 +108,7 @@ export default function Onboarding() {
     if (step < STEPS.length - 1) return setStep(step + 1);
     saveProfile({ ...(d as Profile), firstName: d.firstName!.trim() });
     setThemeMode(look);
-    router.replace('/now');
+    router.replace(homeFor(d as Profile));
   }
 
   return (
