@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <link rel="icon" href="icon.png">
 <title>Mile Club</title>
-<script>(function(){var r=document.documentElement;r.setAttribute("data-palette","black");r.setAttribute("data-dark","charcoal");try{if(localStorage.getItem("mc-mode")==="dark")r.setAttribute("data-mode","dark");var d=localStorage.getItem("mc-dark");if(d)r.setAttribute("data-dark",d);}catch(e){}})();</script>
+<script>(function(){var r=document.documentElement;r.setAttribute("data-palette","black");r.setAttribute("data-dark","night");try{if(localStorage.getItem("mc-mode")==="dark")r.setAttribute("data-mode","dark");var d=localStorage.getItem("mc-dark");if(d)r.setAttribute("data-dark",d);}catch(e){}})();</script>
 <meta name="claude:viewport-fit-sides" content="cover">
 <meta name="description" content="Mile Club matches you with people who run at your pace. Swipe to join a run happening soon, meet up, and run together.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -90,6 +90,11 @@
   --cream: #17120F; --cream-2: #211A16; --field: #241C18; --card: #1E1814; --line: #352A24; --ink: #F3EAE2; --olive-ink: #FFF6EE; --muted: #B3A397;
   --olive: #F4B595; --on-olive: #17120F; --peach-soft: #33251D; --mark-m: #8FA65E;
   --band: #F4B595; --on-band: #2B1A10; --band-chip: #F8CBB0; --band-btn: #17120F; --on-band-btn: #FFFFFF; --c3a: #3A2D25; --c3b: #1E1713; color-scheme: dark;
+}
+:root[data-palette="black"][data-mode="dark"][data-dark="night"] {
+  --cream: #15170F; --cream-2: #1D2016; --field: #20241A; --card: #1B1E14; --line: #30351F; --ink: #F7F1E6; --olive-ink: #F7F1E6; --muted: #B7B2A4;
+  --olive: #6B8239; --on-olive: #F7F1E6; --peach-soft: #2E261D; --mark-m: #8FA65E;
+  --band: #556B2F; --on-band: #F7F1E6; --band-chip: #627838; --band-btn: #F4B595; --on-band-btn: #15170F; --c3a: #2C3320; --c3b: #15170F; color-scheme: dark;
 }
 :root[data-mode="dark"] .run { box-shadow: 0 24px 50px -24px rgba(0,0,0,.8); }
 :root[data-mode="dark"] .r3 { outline: 1px solid rgba(255,255,255,.08); }
@@ -217,7 +222,7 @@ fieldset { border: 0; padding: 0; margin: 0; }
 .mode .moon { fill: currentColor; stroke: none; }
 .mode .sun, :root[data-mode="dark"] .mode .moon { display: none; }
 :root[data-mode="dark"] .mode .sun { display: block; }
-.picker.darks { bottom: calc(72px + env(safe-area-inset-bottom, 0px)); display: none; }
+.picker.darks { max-width: calc(100vw - 24px); bottom: calc(72px + env(safe-area-inset-bottom, 0px)); display: none; }
 :root[data-mode="dark"] .picker.darks { display: flex; }
 .picker .sw { width: 26px; height: 26px; border-radius: 50%; border: 1px solid rgba(0,0,0,.15); }
 .picker { position: fixed; z-index: 40; left: 50%; transform: translateX(-50%); bottom: calc(14px + env(safe-area-inset-bottom, 0px)); display: flex; align-items: center; gap: 6px; padding: 8px; background: #FFFFFF; border: 1px solid #E5E2DA; border-radius: 999px; box-shadow: 0 14px 34px -14px rgba(0,0,0,.35); max-width: calc(100vw - 24px); overflow-x: auto; }
@@ -390,7 +395,8 @@ footer .wrap { display: flex; flex-wrap: wrap; gap: 16px; justify-content: space
 
 <div class="picker darks" role="group" aria-label="Dark mode options (preview only)">
   <b>Dark style</b>
-  <button type="button" data-d="charcoal" aria-pressed="true"><span class="sw" style="background:linear-gradient(135deg,#121212 55%,#556B2F 55%)"></span><span>A Charcoal</span></button>
+  <button type="button" data-d="night" aria-pressed="true"><span class="sw" style="background:linear-gradient(135deg,#15170F 55%,#F4B595 55%)"></span><span>E Olive night (app)</span></button>
+  <button type="button" data-d="charcoal" aria-pressed="false"><span class="sw" style="background:linear-gradient(135deg,#121212 55%,#556B2F 55%)"></span><span>A Charcoal</span></button>
   <button type="button" data-d="olive" aria-pressed="false"><span class="sw" style="background:linear-gradient(135deg,#141A0E 55%,#B5C98A 55%)"></span><span>B Deep Olive</span></button>
   <button type="button" data-d="midnight" aria-pressed="false"><span class="sw" style="background:linear-gradient(135deg,#0E1116 55%,#F4B595 55%)"></span><span>C Midnight</span></button>
   <button type="button" data-d="espresso" aria-pressed="false"><span class="sw" style="background:linear-gradient(135deg,#17120F 55%,#F4B595 55%)"></span><span>D Espresso</span></button>
