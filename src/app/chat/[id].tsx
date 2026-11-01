@@ -1,7 +1,7 @@
 import { Stack, router, useLocalSearchParams, type Href } from 'expo-router';
 import { useState } from 'react';
-import { Alert, KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { Alert, KeyboardAvoidingView, Modal, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { LocationCard } from '@/components/location-card';
 import { Avatar, Logo } from '@/components/ui';
@@ -19,7 +19,9 @@ export default function Chat() {
   const [messages, setMessages] = useState<ChatMessage[]>(thread?.messages ?? []);
   const [draft, setDraft] = useState('');
   const [liked, setLiked] = useState<string[]>([]);
-  const { profile, following } = useStore();
+  const { profile, following, toggleFollow, block } = useStore();
+  const [menuOpen, setMenuOpen] = useState(false);
+  const insets = useSafeAreaInsets();
   if (!thread) return null;
 
   const isGroup = thread.kind === 'group';
@@ -28,6 +30,37 @@ export default function Chat() {
   const canSend = !isGroup || !settings.adminsOnly;
   // Calls and location sharing are only for people you follow.
   const follows = !!person && following.includes(person.id);
+
+  // Calls and location need you to follow them first; offer to follow right there.
+  function needsFollow(action: string, then: () => void) {
+    if (follows) return then();
+    Alert.alert(`Follow ${thread!.name} to ${action}`, 'You can call and share your location with people you follow.', [
+      { text: 'Not now', style: 'cancel' },
+      {
+        text: 'Follow',
+        onPress: () => {
+          toggleFollow(person!.id);
+          then();
+        },
+      },
+    ]);
+  }
+  const call = (video = false) => needsFollow(video ? 'video call' : 'call', () => router.push(`/call/${person!.id}${video ? '?video=1' : ''}` as Href));
+  const askLocation = () => needsFollow('share your location', shareLocation);
+
+  function onBlock() {
+    Alert.alert(`Block ${thread!.name}?`, "You won't see each other or each other's activities.", [
+      { text: 'Cancel', style: 'cancel' },
+      {
+        text: 'Block',
+        style: 'destructive',
+        onPress: () => {
+          block(person!.id);
+          router.back();
+        },
+      },
+    ]);
+  }
 
   function shareLocation() {
     Alert.alert(`Share your location with ${thread!.name}?`, 'They will see where you are for the next hour.', [
@@ -64,13 +97,13 @@ export default function Chat() {
           <Text style={styles.name}>{thread.name}</Text>
           <Text style={styles.sub}>{isGroup ? 'Everyone who joins Mile Club' : 'Active now'}</Text>
         </View>
-        {follows ? (
+        {person ? (
           <>
-            <Pressable onPress={() => router.push(`/call/${person!.id}?video=1` as Href)} style={styles.call} accessibilityLabel={`Video call ${thread.name}`}>
-              <Text style={styles.callText}>🎥</Text>
-            </Pressable>
-            <Pressable onPress={() => router.push(`/call/${person!.id}` as Href)} style={styles.call} accessibilityLabel={`Call ${thread.name}`}>
+            <Pressable onPress={() => call()} style={styles.call} accessibilityLabel={`Call ${thread.name}`}>
               <Text style={styles.callText}>📞</Text>
+            </Pressable>
+            <Pressable onPress={() => setMenuOpen(true)} style={styles.more} accessibilityLabel="More options">
+              <Text style={styles.moreText}>•••</Text>
             </Pressable>
           </>
         ) : null}
@@ -84,9 +117,7 @@ export default function Chat() {
       <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
         <ScrollView contentContainerStyle={styles.list}>
           {isGroup ? <Text style={styles.system}>You joined Mile Club Members</Text> : <Text style={styles.day}>TODAY</Text>}
-          {person && !follows ? (
-            <Text style={styles.system}>Follow {thread.name} to call and share your location.</Text>
-          ) : null}
+
           {messages.map((m) => {
             const mine = m.from === 'me';
             return (
@@ -113,8 +144,8 @@ export default function Chat() {
 
         {canSend ? (
           <View style={styles.composer}>
-            {follows ? (
-              <Pressable onPress={shareLocation} style={styles.pinBtn} accessibilityLabel="Share location">
+            {person ? (
+              <Pressable onPress={askLocation} style={styles.pinBtn} accessibilityLabel="Send location">
                 <Text style={styles.pinText}>📍</Text>
               </Pressable>
             ) : null}
@@ -137,6 +168,33 @@ export default function Chat() {
           </View>
         )}
       </KeyboardAvoidingView>
+
+      <Modal visible={menuOpen} transparent animationType="fade" onRequestClose={() => setMenuOpen(false)}>
+        <Pressable style={styles.backdrop} onPress={() => setMenuOpen(false)}>
+          <View style={[styles.menu, { top: insets.top + 64 }]}>
+            {(
+              [
+                [follows ? '✓' : '＋', follows ? `Unfollow ${thread.name}` : `Follow ${thread.name}`, () => toggleFollow(person!.id)],
+                ['📞', 'Call', () => call()],
+                ['🎥', 'Video call', () => call(true)],
+                ['📍', 'Send location', askLocation],
+                ['⛔', `Block ${thread.name}`, onBlock],
+              ] as [string, string, () => void][]
+            ).map(([icon, label, fn], i) => (
+              <Pressable
+                key={label}
+                style={({ pressed }) => [styles.menuRow, i > 0 && styles.menuLine, pressed && { backgroundColor: colors.sand }]}
+                onPress={() => {
+                  setMenuOpen(false);
+                  setTimeout(fn, 250);
+                }}>
+                <Text style={styles.menuIcon}>{icon}</Text>
+                <Text style={[styles.menuText, label.startsWith('Block') && { color: colors.danger }]}>{label}</Text>
+              </Pressable>
+            ))}
+          </View>
+        </Pressable>
+      </Modal>
     </SafeAreaView>
   );
 }
@@ -151,6 +209,14 @@ const styles = themed(() => StyleSheet.create({
   sub: { fontFamily: fonts.sansMedium, fontSize: 12, color: colors.link },
   call: { width: 40, height: 40, borderRadius: 20, backgroundColor: colors.oliveSoft, alignItems: 'center', justifyContent: 'center' },
   callText: { fontSize: 18 },
+  more: { width: 40, height: 40, borderRadius: 20, borderWidth: 1, borderColor: colors.line, alignItems: 'center', justifyContent: 'center' },
+  moreText: { fontFamily: fonts.sansBold, fontSize: 13, letterSpacing: 1, color: colors.ink },
+  backdrop: { flex: 1, backgroundColor: 'rgba(0,0,0,0.25)' },
+  menu: { position: 'absolute', top: 100, right: 16, width: 240, borderRadius: 18, backgroundColor: colors.card, borderWidth: 1, borderColor: colors.line, overflow: 'hidden', shadowColor: '#000', shadowOpacity: 0.18, shadowRadius: 20, shadowOffset: { width: 0, height: 8 }, elevation: 8 },
+  menuRow: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 14, paddingHorizontal: 16 },
+  menuLine: { borderTopWidth: 1, borderTopColor: colors.line },
+  menuIcon: { fontSize: 18, width: 24, textAlign: 'center', color: colors.ink },
+  menuText: { fontFamily: fonts.sansMedium, fontSize: 15, color: colors.ink },
   pinBtn: { width: 46, height: 46, borderRadius: 23, borderWidth: 1, borderColor: colors.line, alignItems: 'center', justifyContent: 'center' },
   pinText: { fontSize: 20 },
   info: { width: 36, height: 36, borderRadius: 18, borderWidth: 1.5, borderColor: colors.ink, alignItems: 'center', justifyContent: 'center' },
