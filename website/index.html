@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <link rel="icon" href="icon.png">
 <title>Mile Club</title>
-<script>document.documentElement.setAttribute("data-palette","black");</script>
+<script>(function(){var r=document.documentElement;r.setAttribute("data-palette","black");r.setAttribute("data-dark","charcoal");try{if(localStorage.getItem("mc-mode")==="dark")r.setAttribute("data-mode","dark");var d=localStorage.getItem("mc-dark");if(d)r.setAttribute("data-dark",d);}catch(e){}})();</script>
 <meta name="claude:viewport-fit-sides" content="cover">
 <meta name="description" content="Mile Club matches you with people who run at your pace. Swipe to join a run happening soon, meet up, and run together.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -70,6 +70,29 @@
   --band: #F7DC7A; --on-band: #2F3B19; --band-chip: #FFF6D2; --band-btn: #2F3B19; --on-band-btn: #FFFFFF;
   --c1a: #F7DC7A; --c1b: #E2B63A; --c2a: #F4B595; --c2b: #D98B66; --c3a: #556B2F; --c3b: #2F3B19;
 }
+/* Dark mode options (switch in the header) */
+:root[data-palette="black"][data-mode="dark"][data-dark="charcoal"] {
+  --cream: #121212; --cream-2: #1B1B1B; --field: #1E1E1E; --card: #1A1A1A; --line: #2C2C2C; --ink: #F2F0EA; --olive-ink: #FFFFFF; --muted: #A3A39A;
+  --olive: #F2F0EA; --on-olive: #121212; --peach-soft: #2A2420; --mark-m: #8FA65E;
+  --band: #556B2F; --on-band: #FFFFFF; --band-chip: #66793F; --band-btn: #F4B595; --on-band-btn: #121212; --c3a: #343434; --c3b: #1C1C1C; color-scheme: dark;
+}
+:root[data-palette="black"][data-mode="dark"][data-dark="olive"] {
+  --cream: #141A0E; --cream-2: #1C2414; --field: #1F2817; --card: #1A2112; --line: #2E3922; --ink: #EEF0E4; --olive-ink: #F6F7EE; --muted: #A9B096;
+  --olive: #B5C98A; --on-olive: #141A0E; --peach-soft: #2E2A1E; --mark-m: #A9BF78;
+  --band: #F4B595; --on-band: #2B1A10; --band-chip: #F8CBB0; --band-btn: #141A0E; --on-band-btn: #FFFFFF; --c3a: #3A4A1F; --c3b: #232D13; color-scheme: dark;
+}
+:root[data-palette="black"][data-mode="dark"][data-dark="midnight"] {
+  --cream: #0E1116; --cream-2: #161A21; --field: #181C24; --card: #151920; --line: #262C36; --ink: #ECEEF2; --olive-ink: #FFFFFF; --muted: #9AA1AD;
+  --olive: #F4B595; --on-olive: #0E1116; --peach-soft: #2A211D; --mark-m: #8FA65E;
+  --band: #556B2F; --on-band: #FFFFFF; --band-chip: #64793C; --band-btn: #F4B595; --on-band-btn: #0E1116; --c3a: #2A3140; --c3b: #12161C; color-scheme: dark;
+}
+:root[data-palette="black"][data-mode="dark"][data-dark="espresso"] {
+  --cream: #17120F; --cream-2: #211A16; --field: #241C18; --card: #1E1814; --line: #352A24; --ink: #F3EAE2; --olive-ink: #FFF6EE; --muted: #B3A397;
+  --olive: #F4B595; --on-olive: #17120F; --peach-soft: #33251D; --mark-m: #8FA65E;
+  --band: #F4B595; --on-band: #2B1A10; --band-chip: #F8CBB0; --band-btn: #17120F; --on-band-btn: #FFFFFF; --c3a: #3A2D25; --c3b: #1E1713; color-scheme: dark;
+}
+:root[data-mode="dark"] .run { box-shadow: 0 24px 50px -24px rgba(0,0,0,.8); }
+:root[data-mode="dark"] .r3 { outline: 1px solid rgba(255,255,255,.08); }
 * { box-sizing: border-box; }
 html { scroll-behavior: smooth; }
 @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } *, *::before, *::after { animation: none !important; transition: none !important; } }
@@ -189,6 +212,14 @@ fieldset { border: 0; padding: 0; margin: 0; }
 .sent { display: none; padding: 16px; border-radius: 14px; background: var(--peach-soft); color: var(--olive-ink); font-weight: 500; }
 .sent.show { display: block; }
 
+.mode { flex: none; width: 42px; height: 42px; border-radius: 50%; border: 1.5px solid var(--line); background: var(--card); color: var(--ink); display: grid; place-items: center; cursor: pointer; }
+.mode svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; }
+.mode .moon { fill: currentColor; stroke: none; }
+.mode .sun, :root[data-mode="dark"] .mode .moon { display: none; }
+:root[data-mode="dark"] .mode .sun { display: block; }
+.picker.darks { bottom: calc(72px + env(safe-area-inset-bottom, 0px)); display: none; }
+:root[data-mode="dark"] .picker.darks { display: flex; }
+.picker .sw { width: 26px; height: 26px; border-radius: 50%; border: 1px solid rgba(0,0,0,.15); }
 .picker { position: fixed; z-index: 40; left: 50%; transform: translateX(-50%); bottom: calc(14px + env(safe-area-inset-bottom, 0px)); display: flex; align-items: center; gap: 6px; padding: 8px; background: #FFFFFF; border: 1px solid #E5E2DA; border-radius: 999px; box-shadow: 0 14px 34px -14px rgba(0,0,0,.35); max-width: calc(100vw - 24px); overflow-x: auto; }
 .picker b { font: 600 .8rem var(--body); color: #444; padding: 0 8px 0 10px; white-space: nowrap; }
 .picker button { flex: none; display: flex; align-items: center; gap: 8px; border: 0; background: transparent; padding: 6px 12px 6px 6px; border-radius: 999px; font: 600 .82rem var(--body); color: #333; cursor: pointer; white-space: nowrap; }
@@ -226,6 +257,10 @@ footer .wrap { display: flex; flex-wrap: wrap; gap: 16px; justify-content: space
       <a href="#how">How it works</a>
       <a href="#coaches">For coaches</a>
       <a href="#contact">Contact</a>
+      <button class="mode" id="mode" type="button" aria-label="Switch to dark mode" aria-pressed="false">
+        <svg class="moon" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5z"/></svg>
+        <svg class="sun" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>
+      </button>
       <a class="btn btn-olive" href="#download">Get the app</a>
     </nav>
   </div>
@@ -353,7 +388,14 @@ footer .wrap { display: flex; flex-wrap: wrap; gap: 16px; justify-content: space
 </footer>
 
 
-<div class="picker" role="group" aria-label="Font options (preview only)">
+<div class="picker darks" role="group" aria-label="Dark mode options (preview only)">
+  <b>Dark style</b>
+  <button type="button" data-d="charcoal" aria-pressed="true"><span class="sw" style="background:linear-gradient(135deg,#121212 55%,#556B2F 55%)"></span><span>A Charcoal</span></button>
+  <button type="button" data-d="olive" aria-pressed="false"><span class="sw" style="background:linear-gradient(135deg,#141A0E 55%,#B5C98A 55%)"></span><span>B Deep Olive</span></button>
+  <button type="button" data-d="midnight" aria-pressed="false"><span class="sw" style="background:linear-gradient(135deg,#0E1116 55%,#F4B595 55%)"></span><span>C Midnight</span></button>
+  <button type="button" data-d="espresso" aria-pressed="false"><span class="sw" style="background:linear-gradient(135deg,#17120F 55%,#F4B595 55%)"></span><span>D Espresso</span></button>
+</div>
+<div class="picker fonts" role="group" aria-label="Font options (preview only)">
   <b>Fonts</b>
   <button type="button" data-f="" aria-pressed="true"><span class="fa" style="font-family:Outfit">Aa</span><span>1 Outfit</span></button>
   <button type="button" data-f="archivo" aria-pressed="false"><span class="fa" style="font-family:Archivo">Aa</span><span>2 Archivo</span></button>
@@ -399,7 +441,7 @@ document.getElementById('contact-form').addEventListener('submit', function (e) 
 })();
 
 (function () {
-  var btns = document.querySelectorAll('.picker button');
+  var btns = document.querySelectorAll('.picker.fonts button');
   function set(f) {
     if (f) document.documentElement.setAttribute('data-font', f); else document.documentElement.removeAttribute('data-font');
     btns.forEach(function (b) { b.setAttribute('aria-pressed', String(b.dataset.f === f)); });
@@ -407,6 +449,29 @@ document.getElementById('contact-form').addEventListener('submit', function (e) 
   }
   btns.forEach(function (b) { b.addEventListener('click', function () { set(b.dataset.f); }); });
   try { var saved = localStorage.getItem('mc-font'); if (saved) set(saved); } catch (e) {}
+})();
+
+(function () {
+  var r = document.documentElement, btn = document.getElementById('mode');
+  var dbtns = document.querySelectorAll('.picker.darks button');
+  function sync() {
+    var dark = r.getAttribute('data-mode') === 'dark';
+    btn.setAttribute('aria-pressed', String(dark));
+    btn.setAttribute('aria-label', dark ? 'Switch to light mode' : 'Switch to dark mode');
+    dbtns.forEach(function (b) { b.setAttribute('aria-pressed', String(b.dataset.d === r.getAttribute('data-dark'))); });
+  }
+  btn.addEventListener('click', function () {
+    var dark = r.getAttribute('data-mode') !== 'dark';
+    if (dark) r.setAttribute('data-mode', 'dark'); else r.removeAttribute('data-mode');
+    try { localStorage.setItem('mc-mode', dark ? 'dark' : 'light'); } catch (e) {}
+    sync();
+  });
+  dbtns.forEach(function (b) { b.addEventListener('click', function () {
+    r.setAttribute('data-dark', b.dataset.d);
+    try { localStorage.setItem('mc-dark', b.dataset.d); } catch (e) {}
+    sync();
+  }); });
+  sync();
 })();
 </script>
 </body>
