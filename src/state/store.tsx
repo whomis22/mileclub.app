@@ -70,6 +70,7 @@ type Store = State & {
   toggleFollow: (id: string) => void;
   setAdmin: (on: boolean) => void;
   logCall: (c: Omit<CallLog, 'id' | 'at'>) => void;
+  deleteCall: (id: string) => void;
   addPost: (uri: string | undefined, caption: string) => void;
   deletePost: (id: string) => void;
   addComment: (postId: string, text: string) => void;
@@ -235,6 +236,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     toggleFollow: (id) =>
       update((s) => ({ ...s, following: s.following.includes(id) ? s.following.filter((x) => x !== id) : [...s.following, id] })),
     setAdmin: (on) => update((s) => ({ ...s, admin: on })),
+    deleteCall: (id) => update((s) => ({ ...s, calls: (s.calls ?? []).filter((c) => c.id !== id) })),
     logCall: (c) => update((s) => ({ ...s, calls: [...(s.calls ?? []), { ...c, id: `call${Date.now()}`, at: Date.now() }] })),
     addPost: (uri, caption) =>
       update((s) => ({ ...s, myPosts: [{ id: `mp${Date.now()}`, uri, caption: caption.trim(), at: Date.now() }, ...s.myPosts] })),

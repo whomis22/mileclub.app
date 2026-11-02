@@ -26,7 +26,7 @@ import * as Location from "expo-location";
 
 import { callRule } from "@/lib/calls";
 import { useGroupSettings } from "@/lib/group-settings";
-import { useStore, type CallLog } from "@/state/store";
+import { useStore } from "@/state/store";
 import { colors, fonts, radius, space, themed, useTheme } from "@/theme";
 
 export default function Chat() {
@@ -39,7 +39,14 @@ export default function Chat() {
   );
   const [draft, setDraft] = useState("");
   const [liked, setLiked] = useState<string[]>([]);
-  const { profile, following, toggleFollow, block, admin, calls } = useStore();
+  // Hold a message: react, reply, pin, report or delete (like WhatsApp).
+  const [selected, setSelected] = useState<ChatMessage | null>(null);
+  const [reactions, setReactions] = useState<Record<string, string>>({});
+  const [replyTo, setReplyTo] = useState<ChatMessage | null>(null);
+  const [pinned, setPinned] = useState<string | null>(null);
+  const [hidden, setHidden] = useState<string[]>([]);
+  const { profile, following, toggleFollow, block, admin, calls, deleteCall } =
+    useStore();
   const [menuOpen, setMenuOpen] = useState(false);
   const insets = useSafeAreaInsets();
   if (!thread) return null;
@@ -172,26 +179,113 @@ export default function Chat() {
   function send() {
     const text = draft.trim();
     if (!text) return;
-    setMessages((m) => [...m, { id: `${Date.now()}`, from: "me", text }]);
+    setMessages((m) => [
+      ...m,
+      {
+        id: `${Date.now()}`,
+        from: "me",
+        text,
+        ...(replyTo
+          ? {
+              reply: `${replyTo.from === "me" ? "You" : thread!.name}: ${replyTo.text}`,
+            }
+          : {}),
+      },
+    ]);
     setDraft("");
+    setReplyTo(null);
   }
 
   // Messages and calls in time order (sample messages first, they have no time).
-  type Item =
-    | { kind: "msg"; at: number; m: ChatMessage }
-    | { kind: "call"; at: number; c: CallLog };
-  const timeline: Item[] = [
+  const timeline: ChatMessage[] = [
     ...messages.map((m) => ({
-      kind: "msg" as const,
-      at: /^\d+$/.test(m.id) ? Number(m.id) : 0,
-      m,
+      ...m,
+      at: m.at ?? (/^\d+$/.test(m.id) ? Number(m.id) : 0),
     })),
     ...(person
       ? calls
           .filter((c) => c.personId === person.id)
-          .map((c) => ({ kind: "call" as const, at: c.at, c }))
+          .map(
+            (c): ChatMessage => ({
+              id: c.id,
+              from: "me",
+              text: c.video ? "Video call" : "Voice call",
+              call: { video: c.video, secs: c.secs, answered: c.answered },
+              at: c.at,
+            }),
+          )
       : []),
-  ].sort((a, b) => a.at - b.at);
+  ]
+    .filter((m) => !hidden.includes(m.id))
+    .sort((x, y) => (x.at ?? 0) - (y.at ?? 0));
+  const pinnedMsg = timeline.find((m) => m.id === pinned);
+
+  function remove(m: ChatMessage) {
+    if (calls.some((c) => c.id === m.id)) deleteCall(m.id);
+    else setHidden((h) => [...h, m.id]);
+    if (pinned === m.id) setPinned(null);
+  }
+
+  function callBubble(m: ChatMessage) {
+    const c = m.call!;
+    const mine = m.from === "me";
+    const dur =
+      c.secs < 60 ? `${c.secs} sec` : `${Math.round(c.secs / 60)} min`;
+    return (
+      <View
+        style={[
+          styles.bubble,
+          styles.callBubble,
+          mine ? styles.mine : styles.theirs,
+        ]}
+      >
+        <View
+          style={[
+            styles.callIcon,
+            mine
+              ? { backgroundColor: "rgba(0,0,0,0.22)" }
+              : { backgroundColor: colors.card },
+          ]}
+        >
+          <Text style={[styles.callGlyph, mine && { color: colors.onBrand }]}>
+            {c.video ? "🎥" : mine ? "📞↗" : "📞↙"}
+          </Text>
+        </View>
+        <View style={{ flex: 1 }}>
+          <Text style={[styles.callTitle, mine && { color: colors.onBrand }]}>
+            {c.answered
+              ? c.video
+                ? "Video call"
+                : "Voice call"
+              : mine
+                ? "Cancelled call"
+                : "Missed call"}
+          </Text>
+          <Text
+            style={[
+              styles.callSub,
+              mine && { color: colors.onBrand, opacity: 0.75 },
+            ]}
+          >
+            {c.answered ? dur : "Tap to call back"}
+          </Text>
+        </View>
+        {m.at ? (
+          <Text
+            style={[
+              styles.callTime,
+              mine && { color: colors.onBrand, opacity: 0.75 },
+            ]}
+          >
+            {new Date(m.at).toLocaleTimeString([], {
+              hour: "2-digit",
+              minute: "2-digit",
+            })}
+          </Text>
+        ) : null}
+      </View>
+    );
+  }
 
   function renderMsg(m: ChatMessage) {
     const mine = m.from === "me";
@@ -216,16 +310,54 @@ export default function Chat() {
               ].lng
             }
           />
+        ) : m.call ? (
+          <Pressable
+            onPress={() => call(m.call!.video)}
+            onLongPress={() => setSelected(m)}
+            delayLongPress={300}
+          >
+            {callBubble(m)}
+          </Pressable>
         ) : (
-          <View style={[styles.bubble, mine ? styles.mine : styles.theirs]}>
+          <Pressable
+            onLongPress={() => setSelected(m)}
+            delayLongPress={300}
+            style={[styles.bubble, mine ? styles.mine : styles.theirs]}
+          >
             {m.from === "admin" ? (
               <Text style={styles.admin}>Mile Club · Admin</Text>
+            ) : null}
+            {m.reply ? (
+              <View
+                style={[
+                  styles.quote,
+                  mine && { borderLeftColor: colors.onBrand },
+                ]}
+              >
+                <Text
+                  style={[styles.quoteText, mine && { color: colors.onBrand }]}
+                  numberOfLines={2}
+                >
+                  {m.reply}
+                </Text>
+              </View>
             ) : null}
             <Text style={[styles.text, mine && { color: colors.onBrand }]}>
               {m.text}
             </Text>
-          </View>
+          </Pressable>
         )}
+        {reactions[m.id] ? (
+          <Pressable
+            onPress={() => setReactions((r) => ({ ...r, [m.id]: "" }))}
+            style={[
+              styles.reaction,
+              mine ? { marginRight: 10 } : { marginLeft: 10 },
+            ]}
+          >
+            <Text style={{ fontSize: 15 }}>{reactions[m.id]}</Text>
+          </Pressable>
+        ) : null}
         {isGroup && settings.reactions ? (
           <Pressable
             onPress={() =>
@@ -302,6 +434,20 @@ export default function Chat() {
         ) : null}
       </View>
 
+      {pinnedMsg ? (
+        <Pressable
+          style={styles.pinBar}
+          onPress={() => setPinned(null)}
+          accessibilityLabel="Unpin"
+        >
+          <Text>📌</Text>
+          <Text style={styles.pinBarText} numberOfLines={1}>
+            {pinnedMsg.text}
+          </Text>
+          <Text style={{ color: colors.muted }}>✕</Text>
+        </Pressable>
+      ) : null}
+
       <KeyboardAvoidingView
         style={{ flex: 1 }}
         behavior={Platform.OS === "ios" ? "padding" : undefined}
@@ -313,74 +459,55 @@ export default function Chat() {
             <Text style={styles.day}>TODAY</Text>
           )}
 
-          {timeline.map((item) =>
-            item.kind === "msg" ? (
-              renderMsg(item.m)
-            ) : (
-              <Pressable
-                key={item.c.id}
-                style={{ alignItems: "flex-end" }}
-                onPress={() => call(item.c.video)}
-              >
-                <View style={[styles.bubble, styles.callBubble]}>
-                  <View style={styles.callIcon}>
-                    <Text style={{ fontSize: 16 }}>
-                      {item.c.video ? "🎥" : "📞"}
-                    </Text>
-                  </View>
-                  <View>
-                    <Text style={styles.callTitle}>
-                      {item.c.answered
-                        ? item.c.video
-                          ? "Video call"
-                          : "Voice call"
-                        : "Cancelled call"}
-                    </Text>
-                    <Text style={styles.callSub}>
-                      {item.c.answered
-                        ? `${Math.floor(item.c.secs / 60)}:${String(item.c.secs % 60).padStart(2, "0")} · `
-                        : ""}
-                      {new Date(item.c.at).toLocaleTimeString([], {
-                        hour: "2-digit",
-                        minute: "2-digit",
-                      })}{" "}
-                      · Tap to call back
-                    </Text>
-                  </View>
-                </View>
-              </Pressable>
-            ),
-          )}
+          {timeline.map((m) => renderMsg(m))}
         </ScrollView>
 
         {canSend ? (
-          <View style={styles.composer}>
-            {person ? (
-              <Pressable
-                onPress={askLocation}
-                style={styles.pinBtn}
-                accessibilityLabel="Send location"
-              >
-                <Text style={styles.pinText}>📍</Text>
-              </Pressable>
+          <>
+            {replyTo ? (
+              <View style={styles.replyBar}>
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.replyWho}>
+                    Replying to{" "}
+                    {replyTo.from === "me" ? "yourself" : thread.name}
+                  </Text>
+                  <Text style={styles.replyText} numberOfLines={1}>
+                    {replyTo.text}
+                  </Text>
+                </View>
+                <Pressable onPress={() => setReplyTo(null)} hitSlop={10}>
+                  <Text style={{ color: colors.muted }}>✕</Text>
+                </Pressable>
+              </View>
             ) : null}
-            <TextInput
-              value={draft}
-              onChangeText={setDraft}
-              placeholder={`Message ${thread.name}`}
-              placeholderTextColor={colors.muted}
-              style={styles.input}
-              onSubmitEditing={send}
-              returnKeyType="send"
-            />
-            <Pressable
-              onPress={send}
-              style={styles.send}
-              accessibilityLabel="Send"
-            >
-              <Text style={styles.sendText}>↑</Text>
-            </Pressable>
-          </View>
+            <View style={styles.composer}>
+              {person ? (
+                <Pressable
+                  onPress={askLocation}
+                  style={styles.pinBtn}
+                  accessibilityLabel="Send location"
+                >
+                  <Text style={styles.pinText}>📍</Text>
+                </Pressable>
+              ) : null}
+              <TextInput
+                value={draft}
+                onChangeText={setDraft}
+                placeholder={`Message ${thread.name}`}
+                placeholderTextColor={colors.muted}
+                style={styles.input}
+                onSubmitEditing={send}
+                returnKeyType="send"
+              />
+              <Pressable
+                onPress={send}
+                style={styles.send}
+                accessibilityLabel="Send"
+              >
+                <Text style={styles.sendText}>↑</Text>
+              </Pressable>
+            </View>
+          </>
         ) : (
           <View style={styles.locked}>
             <Text style={styles.lockedText}>
@@ -428,6 +555,108 @@ export default function Chat() {
                   style={[
                     styles.menuText,
                     label.startsWith("Block") && { color: colors.danger },
+                  ]}
+                >
+                  {label}
+                </Text>
+              </Pressable>
+            ))}
+          </View>
+        </Pressable>
+      </Modal>
+      <Modal
+        visible={!!selected}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setSelected(null)}
+      >
+        <Pressable
+          style={styles.holdBackdrop}
+          onPress={() => setSelected(null)}
+        >
+          <View style={styles.emojiRow}>
+            {["👍", "❤️", "😂", "😮", "😢", "🙏", "🔥"].map((e) => (
+              <Pressable
+                key={e}
+                onPress={() => {
+                  setReactions((r) => ({
+                    ...r,
+                    [selected!.id]: r[selected!.id] === e ? "" : e,
+                  }));
+                  setSelected(null);
+                }}
+                hitSlop={4}
+              >
+                <Text style={styles.emoji}>{e}</Text>
+              </Pressable>
+            ))}
+          </View>
+          {selected ? (
+            <View
+              style={[
+                styles.holdPreview,
+                selected.from === "me" && { alignSelf: "flex-end" },
+              ]}
+            >
+              {selected.call ? (
+                callBubble(selected)
+              ) : (
+                <Text style={styles.text}>{selected.text}</Text>
+              )}
+            </View>
+          ) : null}
+          <View
+            style={[
+              styles.holdMenu,
+              selected?.from === "me" && { alignSelf: "flex-end" },
+            ]}
+          >
+            {(
+              [
+                ["↩︎", "Reply", () => setReplyTo(selected)],
+                [
+                  "📌",
+                  pinned === selected?.id ? "Unpin" : "Pin",
+                  () =>
+                    setPinned(pinned === selected?.id ? null : selected!.id),
+                ],
+                [
+                  "⚠️",
+                  "Report",
+                  () =>
+                    Alert.alert(
+                      "Report sent",
+                      "Thanks. Our team will take a look.",
+                    ),
+                ],
+                ["🗑", "Delete", () => remove(selected!)],
+              ] as [string, string, () => void][]
+            ).map(([icon, label, fn], i) => (
+              <Pressable
+                key={label}
+                style={[
+                  styles.holdRow,
+                  i > 0 && { borderTopWidth: 1, borderTopColor: colors.line },
+                ]}
+                onPress={() => {
+                  setSelected(null);
+                  fn();
+                }}
+              >
+                <Text
+                  style={{
+                    fontSize: 18,
+                    width: 24,
+                    textAlign: "center",
+                    color: colors.ink,
+                  }}
+                >
+                  {icon}
+                </Text>
+                <Text
+                  style={[
+                    styles.holdText,
+                    label === "Delete" && { color: colors.danger },
                   ]}
                 >
                   {label}
@@ -640,25 +869,116 @@ const styles = themed(() =>
     callBubble: {
       flexDirection: "row",
       alignItems: "center",
-      gap: 10,
-      backgroundColor: colors.sand,
-      borderBottomRightRadius: 6,
+      gap: 12,
+      minWidth: 230,
+      paddingVertical: 12,
     },
     callIcon: {
-      width: 32,
-      height: 32,
-      borderRadius: 16,
-      backgroundColor: colors.oliveSoft,
+      width: 44,
+      height: 44,
+      borderRadius: 22,
       alignItems: "center",
       justifyContent: "center",
     },
-    callTitle: { fontFamily: fonts.sansSemi, fontSize: 15, color: colors.ink },
+    callGlyph: { fontSize: 15, color: colors.ink },
+    callTitle: { fontFamily: fonts.sansSemi, fontSize: 16, color: colors.ink },
     callSub: {
       fontFamily: fonts.sans,
-      fontSize: 12,
+      fontSize: 14,
       color: colors.muted,
-      marginTop: 1,
+      marginTop: 2,
     },
+    callTime: {
+      alignSelf: "flex-end",
+      fontFamily: fonts.sans,
+      fontSize: 11,
+      color: colors.muted,
+    },
+    quote: {
+      borderLeftWidth: 3,
+      borderLeftColor: colors.olive,
+      paddingLeft: 8,
+      marginBottom: 6,
+      opacity: 0.85,
+    },
+    quoteText: { fontFamily: fonts.sans, fontSize: 13, color: colors.ink },
+    reaction: {
+      marginTop: -8,
+      backgroundColor: colors.card,
+      borderRadius: 14,
+      borderWidth: 1,
+      borderColor: colors.line,
+      paddingHorizontal: 6,
+      paddingVertical: 2,
+    },
+    pinBar: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 8,
+      paddingHorizontal: space.lg,
+      paddingVertical: 10,
+      borderBottomWidth: 1,
+      borderBottomColor: colors.line,
+      backgroundColor: colors.card,
+    },
+    pinBarText: {
+      flex: 1,
+      fontFamily: fonts.sans,
+      fontSize: 13,
+      color: colors.ink,
+    },
+    replyBar: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 10,
+      marginHorizontal: space.md,
+      marginTop: space.sm,
+      padding: 10,
+      borderRadius: 14,
+      backgroundColor: colors.sand,
+      borderLeftWidth: 3,
+      borderLeftColor: colors.olive,
+    },
+    replyWho: { fontFamily: fonts.sansSemi, fontSize: 12, color: colors.link },
+    replyText: { fontFamily: fonts.sans, fontSize: 13, color: colors.ink },
+    holdBackdrop: {
+      flex: 1,
+      backgroundColor: "rgba(0,0,0,0.55)",
+      justifyContent: "center",
+      padding: 20,
+      gap: 12,
+    },
+    emojiRow: {
+      flexDirection: "row",
+      justifyContent: "space-between",
+      alignSelf: "stretch",
+      backgroundColor: colors.card,
+      borderRadius: 34,
+      paddingVertical: 10,
+      paddingHorizontal: 14,
+    },
+    emoji: { fontSize: 30 },
+    holdPreview: {
+      alignSelf: "flex-start",
+      maxWidth: "85%",
+      backgroundColor: colors.card,
+      borderRadius: 18,
+      padding: 12,
+    },
+    holdMenu: {
+      width: 240,
+      backgroundColor: colors.card,
+      borderRadius: 18,
+      overflow: "hidden",
+    },
+    holdRow: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 14,
+      paddingVertical: 14,
+      paddingHorizontal: 18,
+    },
+    holdText: { fontFamily: fonts.sansMedium, fontSize: 16, color: colors.ink },
     locked: {
       margin: space.md,
       minHeight: 50,

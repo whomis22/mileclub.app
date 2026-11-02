@@ -138,23 +138,26 @@ export default function Now() {
       <View style={styles.wrap}>
         <View style={styles.header}>
           <MenuButton onPress={() => router.push('/menu')} />
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ flex: 1 }} contentContainerStyle={styles.pills}>
-            <Pressable style={[styles.pill, styles.slidersPill, nFilters > 0 && styles.pillOn]} onPress={() => setPicker('all')} accessibilityLabel="All filters">
-              <Sliders color={nFilters > 0 ? colors.onBrand : colors.ink} />
-              {nFilters > 0 ? <Text style={[styles.pillText, { color: colors.onBrand }]}>{nFilters}</Text> : null}
-            </Pressable>
-            {pills.map((p) => (
-              <Pressable key={p.id} style={styles.pill} onPress={() => setPicker(p.id)} accessibilityLabel={`Choose ${p.id}`}>
-                <Text style={styles.pillText}>{p.label} ▾</Text>
-              </Pressable>
-            ))}
-          </ScrollView>
+          <Text style={styles.title} numberOfLines={1} adjustsFontSizeToFit>
+            Your week
+          </Text>
           <Pressable style={styles.bell} onPress={() => router.push('/messages')} accessibilityLabel="Messages">
             <View style={styles.bubble} />
             <View style={styles.badge} />
           </Pressable>
         </View>
-        <Text style={styles.title}>Your week at{'\n'}Mile Club</Text>
+        {/* Filters, like Hinge: a scrollable row of pills under the header */}
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.pillScroll} contentContainerStyle={styles.pills}>
+          <Pressable style={[styles.pill, styles.slidersPill, nFilters > 0 && styles.pillOn]} onPress={() => setPicker('all')} accessibilityLabel="All filters">
+            <Sliders color={nFilters > 0 ? colors.onBrand : colors.ink} />
+            {nFilters > 0 ? <Text style={[styles.pillText, { color: colors.onBrand }]}>{nFilters}</Text> : null}
+          </Pressable>
+          {pills.map((p) => (
+            <Pressable key={p.id} style={styles.pill} onPress={() => setPicker(p.id)} accessibilityLabel={`Choose ${p.id}`}>
+              <Text style={styles.pillText}>{p.label} ▾</Text>
+            </Pressable>
+          ))}
+        </ScrollView>
         {filtered && noMatch ? (
           <View style={styles.note}>
             <Text style={styles.noteText}>Nothing matches yet, so here’s everyone who’s available.</Text>
@@ -307,7 +310,8 @@ const styles = themed(() => StyleSheet.create({
   screen: { flex: 1, backgroundColor: deckColors.cream },
   wrap: { flex: 1, paddingHorizontal: 22, paddingTop: 8, paddingBottom: 12 },
   header: { flexDirection: 'row', alignItems: 'center', gap: 10 },
-  pills: { gap: 8, paddingRight: 4, alignItems: 'center' },
+  pillScroll: { marginHorizontal: -22, marginTop: 14, flexGrow: 0 },
+  pills: { gap: 8, paddingHorizontal: 22, alignItems: 'center' },
   pill: { borderRadius: 999, borderWidth: 1, borderColor: colors.edge, paddingVertical: 9, paddingHorizontal: 12, backgroundColor: colors.card },
   slidersPill: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingVertical: 11 },
   pillOn: { backgroundColor: colors.olive, borderColor: colors.olive },
@@ -336,7 +340,7 @@ const styles = themed(() => StyleSheet.create({
   bell: { width: 44, height: 44, borderRadius: 22, backgroundColor: colors.olive, alignItems: 'center', justifyContent: 'center' },
   bubble: { width: 18, height: 14, borderRadius: 6, borderBottomLeftRadius: 2, backgroundColor: colors.onBrand },
   badge: { position: 'absolute', top: 9, right: 9, width: 9, height: 9, borderRadius: 5, backgroundColor: colors.peachDeep, borderWidth: 1.5, borderColor: colors.olive },
-  title: { fontFamily: SERIF, fontSize: 38, lineHeight: 40, color: colors.ink, marginTop: 18 },
+  title: { flex: 1, fontFamily: SERIF, fontSize: 28, color: colors.ink },
   toast: { backgroundColor: deckColors.peach, borderRadius: 16, padding: 12, marginTop: 12 },
   toastText: { color: colors.onPeach, fontFamily: fonts.sansSemi, fontSize: 13 },
   hint: { textAlign: 'center', color: colors.muted, fontFamily: fonts.sans, fontSize: 12, marginTop: 8 },

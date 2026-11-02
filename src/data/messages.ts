@@ -5,7 +5,11 @@ import { findPerson } from './people';
 // automatically (needs the server later), and by default only admins can post.
 
 // location: a shared-location card (mock map pin) instead of a text bubble.
-export type ChatMessage = { id: string; from: 'me' | 'them' | 'admin'; text: string; location?: boolean; lat?: number; lng?: number };
+export type ChatMessage = { id: string; from: 'me' | 'them' | 'admin'; text: string; location?: boolean; lat?: number; lng?: number;
+  call?: { video: boolean; secs: number; answered: boolean }; // a call, shown as a call bubble
+  at?: number; // when it was sent (sample messages have none)
+  reply?: string; // the message this one replies to
+};
 
 export type ChatThread = {
   id: string;
@@ -42,6 +46,7 @@ export const THREADS: ChatThread[] = [
       { id: 'f1', from: 'them', text: 'Are you coming to the riverside run on Saturday?' },
       { id: 'f2', from: 'me', text: 'Yes! Just joined. Is it really chatty pace?' },
       { id: 'f3', from: 'them', text: 'Promise. Coffee after?' },
+      { id: 'f3c', from: 'them', text: 'Voice call', call: { video: false, secs: 27, answered: true } },
       { id: 'f4', from: 'them', text: 'See you at the bridge at 8?' },
       { id: 'f5', from: 'them', text: 'Meeting point', location: true, lat: 52.3878, lng: 4.8751 },
     ],
