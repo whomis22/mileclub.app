@@ -1,0 +1,80 @@
+{
+  "expo": {
+    "name": "Mile Club",
+    "slug": "mile-club",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/images/icon.png",
+    "scheme": "mileclub",
+    "userInterfaceStyle": "light",
+    "ios": {
+      "icon": "./assets/images/icon.png",
+      "usesAppleSignIn": true
+    },
+    "android": {
+      "adaptiveIcon": {
+        "backgroundColor": "#F7F1E6",
+        "foregroundImage": "./assets/images/icon.png"
+      },
+      "predictiveBackGestureEnabled": false
+    },
+    "web": {
+      "output": "server",
+      "favicon": "./assets/images/favicon.png"
+    },
+    "plugins": [
+      "expo-router",
+      [
+        "expo-splash-screen",
+        {
+          "backgroundColor": "#F7F1E6",
+          "image": "./assets/images/logo-mark.png",
+          "imageWidth": 140
+        }
+      ],
+      "expo-sqlite",
+      "expo-apple-authentication",
+      "expo-localization",
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "Mile Club uses your camera for video calls and photo posts.",
+          "microphonePermission": "Mile Club uses your microphone for calls.",
+          "recordAudioAndroid": true
+        }
+      ],
+      [
+        "expo-location",
+        {
+          "locationWhenInUsePermission": "Mile Club uses your location when you share it in a chat and to give you directions."
+        }
+      ],
+      "expo-audio"
+    ],
+    "experiments": {
+      "typedRoutes": true,
+      "reactCompiler": true
+    },
+    "extra": {
+      "router": {
+        "asyncRoutes": {
+          "web": true
+        }
+      },
+      "eas": {
+        "projectId": "b85234b4-b788-4cd1-90d2-2a9300b0b702"
+      }
+    },
+    "owner": "whomis22",
+    "runtimeVersion": {
+      "policy": "sdkVersion"
+    },
+    "updates": {
+      "url": "https://u.expo.dev/b85234b4-b788-4cd1-90d2-2a9300b0b702"
+    },
+    "platforms": [
+      "ios",
+      "android"
+    ]
+  }
+}
