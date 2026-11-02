@@ -5,20 +5,22 @@ import { Avatar, Badge, Card, Screen, Title } from '@/components/ui';
 import { activityInfo } from '@/data/options';
 import { PEOPLE } from '@/data/people';
 import { formatKm, rankPeople } from '@/lib/matching';
+import { fitsMeet } from '@/lib/meet';
 import { useStore } from '@/state/store';
-import { colors, space } from '@/theme';
+import { colors, space, themed, useTheme } from '@/theme';
 
 export default function Discover() {
+  useTheme();
   const { profile, blocked } = useStore();
   if (!profile) return <Redirect href="/welcome" />;
 
   const matches = rankPeople(
     profile,
-    PEOPLE.filter((p) => !blocked.includes(p.id)),
+    PEOPLE.filter((p) => !blocked.includes(p.id) && fitsMeet(profile, p)),
   );
 
   return (
-    <Screen>
+    <Screen edges={['bottom']}>
       <Title sub={`${matches.length} people near ${profile.neighborhood} who move like you`}>
         Hi {profile.firstName} 👋
       </Title>
@@ -29,7 +31,7 @@ export default function Discover() {
             <View style={{ flex: 1 }}>
               <View style={styles.nameRow}>
                 <Text style={styles.name}>{person.firstName}</Text>
-                {person.isCaptain && <Badge label="CAPTAIN" tone="green" />}
+                {person.isCaptain && <Badge label="TOP HOST" tone="green" />}
               </View>
               <Text style={styles.meta}>
                 {person.level} · {formatKm(km)}
@@ -53,13 +55,13 @@ export default function Discover() {
   );
 }
 
-const styles = StyleSheet.create({
+const styles = themed(() => StyleSheet.create({
   row: { flexDirection: 'row', alignItems: 'center', gap: space.md },
   nameRow: { flexDirection: 'row', alignItems: 'center', gap: space.sm },
   name: { fontSize: 20, fontWeight: '800', color: colors.ink },
   meta: { fontSize: 14, color: colors.muted, marginTop: 2 },
   score: { alignItems: 'center' },
-  scoreNum: { fontSize: 24, fontWeight: '900', color: colors.accent },
+  scoreNum: { fontSize: 24, fontWeight: '900', color: colors.link },
   scoreLabel: { fontSize: 11, fontWeight: '700', color: colors.muted, textTransform: 'uppercase' },
   detail: { fontSize: 14, color: colors.ink, marginTop: space.md },
-});
+}));

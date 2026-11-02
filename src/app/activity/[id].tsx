@@ -1,4 +1,4 @@
-import { router, useLocalSearchParams } from 'expo-router';
+import { router, useLocalSearchParams, type Href } from 'expo-router';
 import { Alert, Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { Avatar, Badge, Body, Button, Card, Label, Screen } from '@/components/ui';
@@ -7,11 +7,12 @@ import { PEOPLE, findPerson } from '@/data/people';
 import { rankPeople } from '@/lib/matching';
 import { friendlyDate } from '@/lib/format';
 import { useStore } from '@/state/store';
-import { colors, space } from '@/theme';
+import { colors, space, themed, useTheme } from '@/theme';
 
 export default function ActivityDetail() {
+  useTheme();
   const { id } = useLocalSearchParams<{ id: string }>();
-  const { activities, profile, toggleJoin } = useStore();
+  const { activities, profile, toggleJoin, runStatus, runIncoming, respondRun } = useStore();
   const a = activities.find((x) => x.id === id);
   if (!a || !profile) return <Screen edges={[]}><Body>This activity is no longer available.</Body></Screen>;
 
@@ -20,6 +21,9 @@ export default function ActivityDetail() {
   const joined = a.participants.includes('me');
   const isHost = a.hostId === 'me';
   const full = a.participants.length >= a.groupSize;
+  const status = runStatus(a.id);
+  const asking = isHost ? runIncoming.filter((r) => r.activityId === a.id && r.status === 'pending') : [];
+  const accepted = isHost ? runIncoming.filter((r) => r.activityId === a.id && r.status === 'accepted') : [];
 
   return (
     <Screen edges={['bottom']}>
@@ -38,7 +42,7 @@ export default function ActivityDetail() {
 
       <Label>Where</Label>
       <Body>📍 {a.location}</Body>
-      <Body muted>{a.neighborhood}, Amsterdam</Body>
+      <Body muted>{a.neighborhood}</Body>
       {a.partner && <Body muted>🤝 {a.partner}</Body>}
 
       <Label>About</Label>
@@ -52,7 +56,7 @@ export default function ActivityDetail() {
             <Text style={styles.hostName}>{host.firstName}</Text>
             <Text style={styles.hostMeta}>
               {host.isCaptain
-                ? `Captain · ${host.sessionsHosted} sessions hosted · ★ ${host.rating}`
+                ? `Top host · ${host.sessionsHosted} sessions hosted · ★ ${host.rating}`
                 : 'Community member'}
             </Text>
           </View>
@@ -82,6 +86,51 @@ export default function ActivityDetail() {
       </View>
 
       <View style={{ height: space.xl }} />
+      {isHost && asking.length > 0 && (
+        <>
+          <Label>Asking to join · {asking.length}</Label>
+          {asking.map((r) => {
+            const p = findPerson(r.personId);
+            if (!p) return null;
+            return (
+              <Card key={r.id} style={styles.hostCard}>
+                <Avatar name={p.firstName} color={p.color} />
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.hostName}>{p.firstName}</Text>
+                  <Text style={styles.hostMeta}>{p.level} · {p.neighborhood}</Text>
+                </View>
+                <Pressable onPress={() => respondRun(r.id, 'declined')} style={styles.decline} accessibilityLabel={`Decline ${p.firstName}`}>
+                  <Text style={styles.declineText}>✕</Text>
+                </Pressable>
+                <Pressable onPress={() => respondRun(r.id, 'accepted')} style={styles.accept} accessibilityLabel={`Accept ${p.firstName}`}>
+                  <Text style={styles.acceptText}>✓</Text>
+                </Pressable>
+              </Card>
+            );
+          })}
+        </>
+      )}
+      {isHost && accepted.length > 0 && (
+        <>
+          <Label>Accepted · {accepted.length}</Label>
+          {accepted.map((r) => {
+            const p = findPerson(r.personId);
+            if (!p) return null;
+            return (
+              <Card key={r.id} style={styles.hostCard} onPress={() => router.push(`/person/${p.id}`)}>
+                <Avatar name={p.firstName} color={p.color} />
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.hostName}>{p.firstName}</Text>
+                  <Text style={styles.hostMeta}>You accepted {p.firstName}</Text>
+                </View>
+                <Pressable onPress={() => router.push(`/chat/${p.id}` as Href)} style={styles.msgBtn} accessibilityLabel={`Message ${p.firstName}`}>
+                  <Text style={styles.msgBtnText}>💬 Message</Text>
+                </Pressable>
+              </Card>
+            );
+          })}
+        </>
+      )}
       {isHost ? (
         <>
           <Label>People who’d be a great fit</Label>
@@ -105,11 +154,44 @@ export default function ActivityDetail() {
           <Body muted>Invites and group chat are coming next.</Body>
         </>
       ) : (
-        <Button
-          title={joined ? "YOU'RE IN · LEAVE" : full ? 'JOIN WAITLIST' : 'JOIN'}
-          variant={joined ? 'ghost' : 'secondary'}
-          onPress={() => toggleJoin(a.id)}
-        />
+        <>
+          {status === 'pending' && (
+            <Card style={styles.statusCard}>
+              <Text style={styles.statusTitle}>Waiting for {host?.firstName ?? 'the host'} to accept</Text>
+              <Text style={styles.hostMeta}>You can take part once you’re accepted. We’ll let you know.</Text>
+              <Pressable onPress={() => router.push(`/suggest?activityId=${a.id}` as Href)}>
+                <Text style={styles.linkText}>No answer yet? See others to work out with →</Text>
+              </Pressable>
+            </Card>
+          )}
+          {status === 'declined' && (
+            <Card style={styles.statusCard}>
+              <Text style={styles.statusTitle}>Not accepted this time</Text>
+              <Text style={styles.hostMeta}>This run is full or not the right fit. There are plenty of others.</Text>
+              <Pressable onPress={() => router.push(`/suggest?activityId=${a.id}` as Href)} style={[styles.msgBtn, { alignSelf: 'flex-start', marginTop: space.sm }]}>
+                <Text style={styles.msgBtnText}>Find others to work out with</Text>
+              </Pressable>
+            </Card>
+          )}
+          {joined && (
+            <Card style={styles.statusCard}>
+              <Text style={styles.statusTitle}>You’re in</Text>
+              <Text style={styles.hostMeta}>{host?.firstName ?? 'The host'} accepted you. See you at {a.location}.</Text>
+              {host ? (
+                <Pressable onPress={() => router.push(`/chat/${host.id}` as Href)} style={[styles.msgBtn, { alignSelf: 'flex-start', marginTop: space.sm }]}>
+                  <Text style={styles.msgBtnText}>💬 Message {host.firstName}</Text>
+                </Pressable>
+              ) : null}
+            </Card>
+          )}
+          {status !== 'declined' && (
+            <Button
+              title={joined ? 'Leave this run' : status === 'pending' ? 'Cancel request' : full ? 'Ask to join the waitlist' : 'Ask to join'}
+              variant={joined || status === 'pending' ? 'ghost' : 'secondary'}
+              onPress={() => toggleJoin(a.id)}
+            />
+          )}
+        </>
       )}
       <Text style={styles.safety}>
         Meet in the public spot listed above. Trust your gut and leave if anything feels off.
@@ -126,9 +208,9 @@ export default function ActivityDetail() {
   );
 }
 
-const styles = StyleSheet.create({
+const styles = themed(() => StyleSheet.create({
   emoji: { fontSize: 48 },
-  when: { fontSize: 13, fontWeight: '800', color: colors.accent, letterSpacing: 0.8, marginTop: space.sm },
+  when: { fontSize: 13, fontWeight: '800', color: colors.link, letterSpacing: 0.8, marginTop: space.sm },
   title: { fontSize: 30, fontWeight: '900', color: colors.ink, letterSpacing: -0.5, marginTop: 4 },
   badges: { flexDirection: 'row', flexWrap: 'wrap', gap: space.sm, marginTop: space.md },
   hostCard: { flexDirection: 'row', alignItems: 'center', gap: space.md },
@@ -137,7 +219,16 @@ const styles = StyleSheet.create({
   people: { flexDirection: 'row', flexWrap: 'wrap', gap: space.lg },
   person: { alignItems: 'center', width: 56 },
   personName: { fontSize: 12, fontWeight: '600', color: colors.ink, marginTop: 4 },
-  fit: { fontSize: 18, fontWeight: '900', color: colors.accent },
+  fit: { fontSize: 18, fontWeight: '900', color: colors.link },
+  linkText: { color: colors.link, fontSize: 13, fontWeight: '700', marginTop: 6 },
+  msgBtn: { borderRadius: 999, backgroundColor: colors.olive, paddingVertical: 8, paddingHorizontal: 14 },
+  msgBtnText: { color: colors.onBrand, fontSize: 13, fontWeight: '700' },
+  statusCard: { marginBottom: space.md, gap: 4 },
+  statusTitle: { fontSize: 16, fontWeight: '700', color: colors.ink },
+  accept: { width: 40, height: 40, borderRadius: 20, backgroundColor: colors.olive, alignItems: 'center', justifyContent: 'center' },
+  acceptText: { color: colors.onBrand, fontSize: 18, fontWeight: '800' },
+  decline: { width: 40, height: 40, borderRadius: 20, borderWidth: 1, borderColor: colors.edge, alignItems: 'center', justifyContent: 'center' },
+  declineText: { color: colors.ink, fontSize: 16, fontWeight: '700' },
   safety: { fontSize: 13, color: colors.muted, textAlign: 'center', marginTop: space.lg, lineHeight: 18 },
   report: { fontSize: 14, fontWeight: '700', color: colors.danger, textAlign: 'center', marginTop: space.lg },
-});
+}));

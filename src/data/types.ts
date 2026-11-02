@@ -1,6 +1,9 @@
+import type { Role } from './roles';
 import type {
   ActivityId,
+  Gender,
   Goal,
+  Meet,
   GroupSize,
   Level,
   Neighborhood,
@@ -9,7 +12,12 @@ import type {
 } from './options';
 
 export type Profile = {
+  role?: Role; // missing means 'member' (profiles made before roles existed)
+  coachHeadline?: string;
+  coachBio?: string;
   firstName: string;
+  gender?: Gender;
+  meet?: Meet; // who they want to meet up with (missing = everyone)
   age: number;
   neighborhood: Neighborhood;
   activities: ActivityId[];
@@ -47,6 +55,7 @@ export type Activity = {
   participants: string[]; // person ids ("me" for the user)
   hostId: string;
   free: boolean;
+  womenOnly?: boolean; // only women can see and join
   description: string;
   partner?: string;
   recurring?: string;

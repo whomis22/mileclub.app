@@ -6,7 +6,7 @@ import { Body, Button, Chip, Chips, Label, Screen } from '@/components/ui';
 import { ACTIVITIES, LEVELS, NEIGHBORHOOD_NAMES, type ActivityId, type Level, type Neighborhood } from '@/data/options';
 import { friendlyDate } from '@/lib/format';
 import { useStore } from '@/state/store';
-import { colors, radius, space } from '@/theme';
+import { colors, radius, space, themed, useTheme } from '@/theme';
 
 function nextDays(n: number) {
   const pad = (x: number) => String(x).padStart(2, '0');
@@ -21,6 +21,7 @@ const TIMES = ['07:00', '07:30', '08:00', '09:00', '10:00', '12:00', '12:30', '1
 const SIZES = [4, 6, 8, 10, 12, 15];
 
 export default function CreateActivity() {
+  useTheme();
   const { createActivity, profile } = useStore();
   const [type, setType] = useState<ActivityId | undefined>(profile?.activities[0]);
   const [title, setTitle] = useState('');
@@ -30,6 +31,7 @@ export default function CreateActivity() {
   const [neighborhood, setNeighborhood] = useState<Neighborhood | undefined>(profile?.neighborhood);
   const [level, setLevel] = useState<Level | undefined>(profile?.level);
   const [groupSize, setGroupSize] = useState<number>();
+  const [womenOnly, setWomenOnly] = useState(false);
   const [description, setDescription] = useState('');
   const [distance, setDistance] = useState('');
   const [pace, setPace] = useState('');
@@ -41,7 +43,7 @@ export default function CreateActivity() {
     if (!ready) return;
     const a = createActivity({
       type, title: title.trim(), date, time, location: location.trim(), neighborhood, level, groupSize,
-      description: description.trim(), free: true,
+      description: description.trim(), free: true, womenOnly,
       distance: distance.trim() || undefined, pace: pace.trim() || undefined,
       recurring: weekly ? 'Every week' : undefined,
     });
@@ -103,6 +105,15 @@ export default function CreateActivity() {
           <Chip key={s} label={`${s} people`} selected={groupSize === s} onPress={() => setGroupSize(s)} />
         ))}
       </Chips>
+      {profile?.gender === 'Woman' ? (
+        <>
+          <Label>Who can join</Label>
+          <Chips>
+            <Chip label="Everyone" selected={!womenOnly} onPress={() => setWomenOnly(false)} />
+            <Chip label="♀ Women only" selected={womenOnly} onPress={() => setWomenOnly(true)} />
+          </Chips>
+        </>
+      ) : null}
       <Label>Description</Label>
       {input(description, setDescription, "What should people expect? Pace, vibe, what to bring…", true)}
       <Label>Optional</Label>
@@ -123,9 +134,9 @@ function TextInputSpacer({ big }: { big?: boolean }) {
   return <View style={{ height: big ? space.xl : space.sm }} />;
 }
 
-const styles = StyleSheet.create({
+const styles = themed(() => StyleSheet.create({
   input: {
     backgroundColor: colors.card, borderWidth: 1.5, borderColor: colors.line, borderRadius: radius.md,
     paddingHorizontal: space.lg, paddingVertical: 14, fontSize: 16, color: colors.ink,
   },
-});
+}));

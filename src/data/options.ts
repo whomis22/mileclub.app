@@ -75,3 +75,13 @@ export function distanceKm(a: Neighborhood, b: Neighborhood) {
   // Same neighbourhood still means a short walk, never zero.
   return Math.max(0.6, 2 * 6371 * Math.asin(Math.sqrt(h)));
 }
+
+// Who you are, and who you'd like to meet up with. Used to filter runs and people.
+export const GENDERS = ['Woman', 'Man', 'Non-binary'] as const;
+export type Gender = (typeof GENDERS)[number];
+export const MEET = [
+  { id: 'everyone', label: 'Everyone' },
+  { id: 'women', label: 'Women only' },
+  { id: 'men', label: 'Men only' },
+] as const;
+export type Meet = (typeof MEET)[number]['id'];
