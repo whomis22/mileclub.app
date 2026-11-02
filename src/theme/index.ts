@@ -1,21 +1,21 @@
 import { Storage } from 'expo-sqlite/kv-store';
 import { useSyncExternalStore } from 'react';
 
-// Mile Club look (Yana, 2026-11-02): backgrounds are always white in light mode
+// Mile Club look (Yana, 2026-11-02): backgrounds are always light cream in light mode
 // and black in dark mode. The logo's colours do the rest: Rich Olive (the m:
 // brand, buttons) and Soft Peach (the c: highlights, likes, social bits).
 const light = {
-  bg: '#FFFFFF', // white
-  card: '#F6F6F4',
-  sand: '#F1F1EE', // fields and chat bubbles
+  bg: '#FCF9F3', // light cream (Yana: 'use a light cream as the white')
+  card: '#FFFFFF',
+  sand: '#F3EEE4', // fields and chat bubbles
   ink: '#111111',
   muted: '#6E6E6A',
-  line: '#E8E8E5',
-  edge: '#DCDCD8', // outlines of round buttons and fields
-  track: '#ECECE9', // empty part of progress bars
+  line: '#ECE5D8',
+  edge: '#E0D8C9', // outlines of round buttons and fields
+  track: '#EEE7DA', // empty part of progress bars
   dashed: '#B5B5B0',
   off: '#D6D6D2', // disabled button
-  offText: '#F6F6F4',
+  offText: '#FCF9F3',
   inkBg: '#111111', // dark panels (earnings, coach dashboard)
   link: '#556B2F', // olive text and links
   olive: '#556B2F',
