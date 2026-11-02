@@ -1,23 +1,22 @@
 import { Storage } from 'expo-sqlite/kv-store';
 import { useSyncExternalStore } from 'react';
 
-// Mile Club look: Rich Olive (brand, buttons), Warm Cream (backgrounds),
-// Soft Peach (highlights, likes, social bits). Logo: olive m + peach c on cream.
-// Dark mode is "True black" (picked by Yana 2026-11-01): pure black background,
-// cream text, same olive and peach.
+// Mile Club look (Yana, 2026-11-02): backgrounds are always white in light mode
+// and black in dark mode. The logo's colours do the rest: Rich Olive (the m:
+// brand, buttons) and Soft Peach (the c: highlights, likes, social bits).
 const light = {
-  bg: '#F7F1E6', // warm cream
-  card: '#FFFFFF',
-  sand: '#EDE5D6', // slightly darker cream for fields and chat bubbles
-  ink: '#262A1C',
-  muted: '#6E6A5E',
-  line: '#E0D7C6',
-  edge: '#D8CFBE', // outlines of round buttons and fields
-  track: '#E6DDCC', // empty part of progress bars
-  dashed: '#B9AE98',
-  off: '#CFC8B6', // disabled button
-  offText: '#F3EDE2',
-  inkBg: '#262A1C', // dark panels (earnings, coach dashboard)
+  bg: '#FFFFFF', // white
+  card: '#F6F6F4',
+  sand: '#F1F1EE', // fields and chat bubbles
+  ink: '#111111',
+  muted: '#6E6E6A',
+  line: '#E8E8E5',
+  edge: '#DCDCD8', // outlines of round buttons and fields
+  track: '#ECECE9', // empty part of progress bars
+  dashed: '#B5B5B0',
+  off: '#D6D6D2', // disabled button
+  offText: '#F6F6F4',
+  inkBg: '#111111', // dark panels (earnings, coach dashboard)
   link: '#556B2F', // olive text and links
   olive: '#556B2F',
   oliveDark: '#2F3D29',
@@ -25,9 +24,9 @@ const light = {
   peach: '#F6C6A8',
   peachDeep: '#F4B595',
   black: '#111111',
-  onBrand: '#F7F1E6', // text on olive, photos and dark panels
-  onPeach: '#262A1C', // text on peach
-  overlay: 'rgba(38,42,28,0.55)',
+  onBrand: '#FFFFFF', // text on olive, photos and dark panels
+  onPeach: '#111111', // text on peach
+  overlay: 'rgba(0,0,0,0.55)',
   // Older names still used around the app, mapped onto the new palette.
   accent: '#556B2F',
   accentSoft: '#E3E6D3',
@@ -41,7 +40,7 @@ const dark: typeof light = {
   bg: '#000000',
   card: '#141414',
   sand: '#1C1C1C',
-  ink: '#F7F1E6',
+  ink: '#F5F5F5',
   muted: '#9A968C',
   line: '#262626',
   edge: '#333333',
@@ -57,8 +56,8 @@ const dark: typeof light = {
   peach: '#F6C6A8',
   peachDeep: '#F4B595',
   black: '#111111',
-  onBrand: '#F7F1E6',
-  onPeach: '#262A1C',
+  onBrand: '#FFFFFF',
+  onPeach: '#111111',
   overlay: 'rgba(0,0,0,0.7)',
   accent: '#556B2F',
   accentSoft: '#1F2618',
