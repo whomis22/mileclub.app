@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <link rel="icon" href="icon.png">
 <title>Mile Club</title>
-<script>(function(){var r=document.documentElement;r.setAttribute("data-palette","black");r.setAttribute("data-dark","black");try{if(localStorage.getItem("mc-mode")==="dark")r.setAttribute("data-mode","dark");var d=localStorage.getItem("mc-dark");if(d)r.setAttribute("data-dark",d);}catch(e){}})();</script>
+<script>(function(){var r=document.documentElement;r.setAttribute("data-palette","black");r.setAttribute("data-dark","black");r.setAttribute("data-font","unbounded");try{if(localStorage.getItem("mc-mode")==="dark")r.setAttribute("data-mode","dark");}catch(e){}})();</script>
 <meta name="claude:viewport-fit-sides" content="cover">
 <meta name="description" content="Mile Club matches you with people who run at your pace. Swipe to join a run happening soon, meet up, and run together.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -224,6 +224,8 @@ fieldset { border: 0; padding: 0; margin: 0; }
 .sent { display: none; padding: 16px; border-radius: 14px; background: var(--peach-soft); color: var(--olive-ink); font-weight: 500; }
 .sent.show { display: block; }
 
+.brand span, .btn { white-space: nowrap; }
+@media (max-width: 520px) { .brand span { font-size: 1rem; } nav { gap: 10px; } nav .btn { padding: 10px 16px; font-size: .9rem; } .mode { width: 38px; height: 38px; } }
 .mode { flex: none; width: 42px; height: 42px; border-radius: 50%; border: 1.5px solid var(--line); background: var(--card); color: var(--ink); display: grid; place-items: center; cursor: pointer; }
 .mode svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; }
 .mode .moon { fill: currentColor; stroke: none; }
@@ -238,7 +240,7 @@ fieldset { border: 0; padding: 0; margin: 0; }
 .picker button[aria-pressed="true"] { background: #F1EFEA; box-shadow: inset 0 0 0 1.5px #222; }
 .picker .fa { display: grid; place-items: center; width: 28px; height: 28px; border-radius: 50%; background: #161616; color: #fff; font-weight: 800; font-size: .8rem; }
 @media (max-width: 640px) { .picker button span:not(.fa) { display: none; } .picker button { padding: 4px; } .picker b { display: none; } }
-footer { padding-bottom: 90px; }
+
 footer { border-top: 1px solid var(--line); padding-block: 36px; color: var(--muted); font-size: .92rem; }
 footer .wrap { display: flex; flex-wrap: wrap; gap: 16px; justify-content: space-between; align-items: center; }
 
@@ -400,23 +402,7 @@ footer .wrap { display: flex; flex-wrap: wrap; gap: 16px; justify-content: space
 </footer>
 
 
-<div class="picker darks" role="group" aria-label="Dark mode options (preview only)">
-  <b>Dark style</b>
-  <button type="button" data-d="black" aria-pressed="true"><span class="sw" style="background:linear-gradient(135deg,#000 55%,#556B2F 55%)"></span><span>True black (app)</span></button>
-  <button type="button" data-d="night" aria-pressed="false"><span class="sw" style="background:linear-gradient(135deg,#15170F 55%,#F4B595 55%)"></span><span>E Olive night</span></button>
-  <button type="button" data-d="charcoal" aria-pressed="false"><span class="sw" style="background:linear-gradient(135deg,#121212 55%,#556B2F 55%)"></span><span>A Charcoal</span></button>
-  <button type="button" data-d="olive" aria-pressed="false"><span class="sw" style="background:linear-gradient(135deg,#141A0E 55%,#B5C98A 55%)"></span><span>B Deep Olive</span></button>
-  <button type="button" data-d="midnight" aria-pressed="false"><span class="sw" style="background:linear-gradient(135deg,#0E1116 55%,#F4B595 55%)"></span><span>C Midnight</span></button>
-  <button type="button" data-d="espresso" aria-pressed="false"><span class="sw" style="background:linear-gradient(135deg,#17120F 55%,#F4B595 55%)"></span><span>D Espresso</span></button>
-</div>
-<div class="picker fonts" role="group" aria-label="Font options (preview only)">
-  <b>Fonts</b>
-  <button type="button" data-f="" aria-pressed="true"><span class="fa" style="font-family:Outfit">Aa</span><span>1 Outfit</span></button>
-  <button type="button" data-f="archivo" aria-pressed="false"><span class="fa" style="font-family:Archivo">Aa</span><span>2 Archivo</span></button>
-  <button type="button" data-f="bricolage" aria-pressed="false"><span class="fa" style="font-family:'Bricolage Grotesque'">Aa</span><span>3 Bricolage</span></button>
-  <button type="button" data-f="sora" aria-pressed="false"><span class="fa" style="font-family:Sora">Aa</span><span>4 Sora</span></button>
-  <button type="button" data-f="unbounded" aria-pressed="false"><span class="fa" style="font-family:Unbounded">Aa</span><span>5 Unbounded</span></button>
-</div>
+
 
 <script>
 document.getElementById('contact-form').addEventListener('submit', function (e) {
@@ -454,16 +440,6 @@ document.getElementById('contact-form').addEventListener('submit', function (e) 
   sel.value = C.some(function (c) { return c[0] === guess; }) ? guess : 'US';
 })();
 
-(function () {
-  var btns = document.querySelectorAll('.picker.fonts button');
-  function set(f) {
-    if (f) document.documentElement.setAttribute('data-font', f); else document.documentElement.removeAttribute('data-font');
-    btns.forEach(function (b) { b.setAttribute('aria-pressed', String(b.dataset.f === f)); });
-    try { localStorage.setItem('mc-font', f); } catch (e) {}
-  }
-  btns.forEach(function (b) { b.addEventListener('click', function () { set(b.dataset.f); }); });
-  try { var saved = localStorage.getItem('mc-font'); if (saved) set(saved); } catch (e) {}
-})();
 
 (function () {
   var r = document.documentElement, btn = document.getElementById('mode');
