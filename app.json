@@ -42,6 +42,12 @@
           "microphonePermission": "Mile Club uses your microphone for calls.",
           "recordAudioAndroid": true
         }
+      ],
+      [
+        "expo-location",
+        {
+          "locationWhenInUsePermission": "Mile Club uses your location when you share it in a chat and to give you directions."
+        }
       ]
     ],
     "experiments": {

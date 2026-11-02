@@ -41,6 +41,7 @@ type State = {
   following: string[]; // people and coaches the user follows (private: only the user sees this list)
   myPosts: MyPost[]; // photos the user shared on Explore, newest first
   comments: Record<string, PostComment[]>; // the user's comments, by post id
+  admin: boolean; // Mile Club admin (mock switch in the side menu): can call anyone
 };
 
 type Store = State & {
@@ -62,6 +63,7 @@ type Store = State & {
   cancelRunRequest: (activityId: string) => void;
   respondRun: (requestId: string, status: 'accepted' | 'declined') => void;
   toggleFollow: (id: string) => void;
+  setAdmin: (on: boolean) => void;
   addPost: (uri: string | undefined, caption: string) => void;
   deletePost: (id: string) => void;
   addComment: (postId: string, text: string) => void;
@@ -72,7 +74,7 @@ type Store = State & {
 };
 
 const KEY = 'mileclub-state-v1';
-const empty: State = { profile: null, myActivities: [], joined: [], blocked: [], skipped: [], kudos: [], mySessions: [], booked: [], requests: {}, incoming: [], runRequests: {}, runIncoming: [], following: [], myPosts: [], comments: {} };
+const empty: State = { profile: null, myActivities: [], joined: [], blocked: [], skipped: [], kudos: [], mySessions: [], booked: [], requests: {}, incoming: [], runRequests: {}, runIncoming: [], following: [], myPosts: [], comments: {}, admin: false };
 
 function load(): State {
   try {
@@ -226,6 +228,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       })),
     toggleFollow: (id) =>
       update((s) => ({ ...s, following: s.following.includes(id) ? s.following.filter((x) => x !== id) : [...s.following, id] })),
+    setAdmin: (on) => update((s) => ({ ...s, admin: on })),
     addPost: (uri, caption) =>
       update((s) => ({ ...s, myPosts: [{ id: `mp${Date.now()}`, uri, caption: caption.trim(), at: Date.now() }, ...s.myPosts] })),
     deletePost: (id) => update((s) => ({ ...s, myPosts: s.myPosts.filter((p) => p.id !== id) })),

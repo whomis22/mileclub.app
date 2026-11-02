@@ -67,3 +67,6 @@ export const PEOPLE: Person[] = [
 export function findPerson(id: string) {
   return PEOPLE.find((p) => p.id === id);
 }
+
+// Demo: sample members who follow the user back. Calls need a mutual follow.
+export const FOLLOWS_YOU = ['femke', 'daan', 'sanne', 'lotte'];

@@ -6,7 +6,11 @@ import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context'
 import { LocationCard } from '@/components/location-card';
 import { Avatar, Logo } from '@/components/ui';
 import { findThread, type ChatMessage } from '@/data/messages';
+import { NEIGHBORHOODS } from '@/data/options';
 import { findPerson } from '@/data/people';
+import * as Location from 'expo-location';
+
+import { callRule } from '@/lib/calls';
 import { useGroupSettings } from '@/lib/group-settings';
 import { useStore } from '@/state/store';
 import { colors, fonts, radius, space, themed, useTheme } from '@/theme';
@@ -19,7 +23,7 @@ export default function Chat() {
   const [messages, setMessages] = useState<ChatMessage[]>(thread?.messages ?? []);
   const [draft, setDraft] = useState('');
   const [liked, setLiked] = useState<string[]>([]);
-  const { profile, following, toggleFollow, block } = useStore();
+  const { profile, following, toggleFollow, block, admin } = useStore();
   const [menuOpen, setMenuOpen] = useState(false);
   const insets = useSafeAreaInsets();
   if (!thread) return null;
@@ -45,7 +49,26 @@ export default function Chat() {
       },
     ]);
   }
-  const call = (video = false) => needsFollow(video ? 'video call' : 'call', () => router.push(`/call/${person!.id}${video ? '?video=1' : ''}` as Href));
+  // Calls: only when you follow each other (admins can call anyone).
+  function call(video = false) {
+    const go = () => router.push(`/call/${person!.id}${video ? '?video=1' : ''}` as Href);
+    const rule = callRule(person!.id, following, admin);
+    if (rule.ok) return go();
+    const name = thread!.name;
+    if (!rule.iFollow && rule.theyFollow) {
+      Alert.alert(`Follow ${name} back to call`, `${name} follows you. Follow back and you can call each other.`, [
+        { text: 'Not now', style: 'cancel' },
+        { text: 'Follow back', onPress: () => { toggleFollow(person!.id); go(); } },
+      ]);
+    } else if (!rule.iFollow) {
+      Alert.alert(`You can’t call ${name} yet`, `You can call each other once you both follow each other.`, [
+        { text: 'Not now', style: 'cancel' },
+        { text: `Follow ${name}`, onPress: () => toggleFollow(person!.id) },
+      ]);
+    } else {
+      Alert.alert(`You can’t call ${name} yet`, `You follow ${name}, but ${name} doesn’t follow you back yet. You can call once you follow each other.`);
+    }
+  }
   const askLocation = () => needsFollow('share your location', shareLocation);
 
   function onBlock() {
@@ -67,7 +90,19 @@ export default function Chat() {
       { text: 'Cancel', style: 'cancel' },
       {
         text: 'Share',
-        onPress: () => setMessages((m) => [...m, { id: `${Date.now()}`, from: 'me', text: 'Shared location', location: true }]),
+        onPress: async () => {
+          // Your real position if you allow it, otherwise the middle of your neighbourhood.
+          const home = profile ? NEIGHBORHOODS[profile.neighborhood] : NEIGHBORHOODS.Centrum;
+          let pos: { lat: number; lng: number } = { lat: home.lat, lng: home.lng };
+          try {
+            const perm = await Location.requestForegroundPermissionsAsync();
+            if (perm.granted) {
+              const here = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.Balanced });
+              pos = { lat: here.coords.latitude, lng: here.coords.longitude };
+            }
+          } catch {}
+          setMessages((m) => [...m, { id: `${Date.now()}`, from: 'me', text: 'Shared location', location: true, ...pos }]);
+        },
       },
     ]);
   }
@@ -123,7 +158,12 @@ export default function Chat() {
             return (
               <View key={m.id} style={{ alignItems: mine ? 'flex-end' : 'flex-start' }}>
                 {m.location ? (
-                  <LocationCard mine={mine} place={mine ? profile?.neighborhood ?? 'Near you' : person?.neighborhood ?? 'Nearby'} />
+                  <LocationCard
+                    mine={mine}
+                    name={mine ? 'My location' : `${thread.name}’s location`}
+                    lat={m.lat ?? NEIGHBORHOODS[(mine ? profile?.neighborhood : person?.neighborhood) ?? 'Centrum'].lat}
+                    lng={m.lng ?? NEIGHBORHOODS[(mine ? profile?.neighborhood : person?.neighborhood) ?? 'Centrum'].lng}
+                  />
                 ) : (
                   <View style={[styles.bubble, mine ? styles.mine : styles.theirs]}>
                     {m.from === 'admin' ? <Text style={styles.admin}>Mile Club · Admin</Text> : null}

@@ -5,7 +5,7 @@ import { findPerson } from './people';
 // automatically (needs the server later), and by default only admins can post.
 
 // location: a shared-location card (mock map pin) instead of a text bubble.
-export type ChatMessage = { id: string; from: 'me' | 'them' | 'admin'; text: string; location?: boolean };
+export type ChatMessage = { id: string; from: 'me' | 'them' | 'admin'; text: string; location?: boolean; lat?: number; lng?: number };
 
 export type ChatThread = {
   id: string;
@@ -43,6 +43,7 @@ export const THREADS: ChatThread[] = [
       { id: 'f2', from: 'me', text: 'Yes! Just joined. Is it really chatty pace?' },
       { id: 'f3', from: 'them', text: 'Promise. Coffee after?' },
       { id: 'f4', from: 'them', text: 'See you at the bridge at 8?' },
+      { id: 'f5', from: 'them', text: 'Meeting point', location: true, lat: 52.3878, lng: 4.8751 },
     ],
   },
   {

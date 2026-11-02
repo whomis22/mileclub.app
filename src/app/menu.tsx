@@ -10,7 +10,7 @@ import { colors, fonts, radius, space, themed, useTheme } from '@/theme';
 export default function Menu() {
   const { isDark, setMode } = useTheme();
   const insets = useSafeAreaInsets();
-  const { profile, reset } = useStore();
+  const { profile, reset, admin, setAdmin } = useStore();
 
   const go = (href: Href) => {
     router.back();
@@ -81,6 +81,19 @@ export default function Menu() {
               ios_backgroundColor={colors.edge}
             />
           </Pressable>
+          <Pressable style={[styles.item, styles.toggleRow]} onPress={() => setAdmin(!admin)} accessibilityRole="switch" accessibilityState={{ checked: admin }}>
+            <View>
+              <Text style={styles.small}>Admin mode</Text>
+              <Text style={styles.hint}>Admins can call anyone (for testing)</Text>
+            </View>
+            <Switch
+              value={admin}
+              onValueChange={setAdmin}
+              trackColor={{ false: colors.edge, true: colors.olive }}
+              thumbColor={colors.onBrand}
+              ios_backgroundColor={colors.edge}
+            />
+          </Pressable>
           {settings.map((s) => (
             <Pressable key={s.label} style={({ pressed }) => [styles.item, pressed && styles.itemOn]} onPress={s.onPress}>
               <Text style={styles.small}>{s.label}</Text>
@@ -112,6 +125,7 @@ export default function Menu() {
 }
 
 const styles = themed(() => StyleSheet.create({
+  hint: { fontFamily: fonts.sans, fontSize: 11, color: colors.muted, marginTop: 2 },
   root: { flex: 1, flexDirection: 'row', backgroundColor: colors.overlay },
   panel: { width: '80%', maxWidth: 320, backgroundColor: colors.bg, borderTopRightRadius: 32, borderBottomRightRadius: 32, paddingHorizontal: space.lg },
   me: { flexDirection: 'row', alignItems: 'center', gap: space.md, paddingBottom: space.lg, paddingHorizontal: space.xs },
