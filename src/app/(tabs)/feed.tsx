@@ -15,7 +15,7 @@ import { useStore } from "@/state/store";
 import { colors, fonts, radius, space, themed, useTheme } from "@/theme";
 
 
-const FILTERS = ["For you", "Following", "Nearby", "Coaches"] as const;
+const FILTERS = ["All", "Following", "Nearby", "Coaches"] as const;
 
 function CommentButton({ postId }: { postId: string }) {
   const n = useComments(postId).length;
@@ -123,7 +123,7 @@ export default function Explore() {
     myPosts,
     deletePost,
   } = useStore();
-  const [filter, setFilter] = useState<(typeof FILTERS)[number]>("For you");
+  const [filter, setFilter] = useState<(typeof FILTERS)[number]>("All");
   if (!profile) return <Redirect href="/welcome" />;
 
   const textPosts = TEXT_POSTS.filter((t) => !blocked.includes(t.personId));
@@ -140,7 +140,7 @@ export default function Explore() {
     <Screen>
       <View style={styles.top}>
         <MenuButton onPress={() => router.push("/menu")} />
-        <Text style={styles.title}>Explore</Text>
+        <Text style={styles.title}>For You</Text>
         <Pressable style={styles.people} onPress={() => router.push("/people")}>
           <Text style={styles.peopleText}>People near you</Text>
         </Pressable>
@@ -272,7 +272,7 @@ export default function Explore() {
         if (!person) return null;
         const liked = kudos.includes(post.id);
         const follows = following.includes(person.id);
-        const tp = filter === "For you" ? textPosts[i] : undefined;
+        const tp = filter === "All" ? textPosts[i] : undefined;
         return (
           <View key={post.id}>
             <View style={styles.post}>

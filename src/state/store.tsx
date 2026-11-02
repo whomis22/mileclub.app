@@ -22,6 +22,9 @@ export type MyPost = { id: string; uri?: string; caption: string; at: number }; 
 // A comment under any Explore post. authorId is 'me' or a sample person id.
 export type PostComment = { id: string; authorId: string; text: string; at: number };
 
+// A call the user made, shown as a line in the chat with that person.
+export type CallLog = { id: string; personId: string; video: boolean; secs: number; answered: boolean; at: number };
+
 // Demo: sample coaches and hosts answer a request after this long.
 const DEMO_REPLY_MS = 20000;
 
@@ -42,6 +45,7 @@ type State = {
   following: string[]; // people and coaches the user follows (private: only the user sees this list)
   myPosts: MyPost[]; // photos the user shared on Explore, newest first
   comments: Record<string, PostComment[]>; // the user's comments, by post id
+  calls: CallLog[]; // call history, shown in chats
   admin: boolean; // Mile Club admin (mock switch in the side menu): can call anyone
 };
 
@@ -65,6 +69,7 @@ type Store = State & {
   respondRun: (requestId: string, status: 'accepted' | 'declined') => void;
   toggleFollow: (id: string) => void;
   setAdmin: (on: boolean) => void;
+  logCall: (c: Omit<CallLog, 'id' | 'at'>) => void;
   addPost: (uri: string | undefined, caption: string) => void;
   deletePost: (id: string) => void;
   addComment: (postId: string, text: string) => void;
@@ -75,7 +80,7 @@ type Store = State & {
 };
 
 const KEY = 'mileclub-state-v1';
-const empty: State = { profile: null, myActivities: [], joined: [], blocked: [], skipped: [], kudos: [], mySessions: [], booked: [], requests: {}, incoming: [], runRequests: {}, runIncoming: [], following: [], myPosts: [], comments: {}, admin: false };
+const empty: State = { profile: null, myActivities: [], joined: [], blocked: [], skipped: [], kudos: [], mySessions: [], booked: [], requests: {}, incoming: [], runRequests: {}, runIncoming: [], following: [], myPosts: [], comments: {}, calls: [], admin: false };
 
 function load(): State {
   try {
@@ -230,6 +235,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     toggleFollow: (id) =>
       update((s) => ({ ...s, following: s.following.includes(id) ? s.following.filter((x) => x !== id) : [...s.following, id] })),
     setAdmin: (on) => update((s) => ({ ...s, admin: on })),
+    logCall: (c) => update((s) => ({ ...s, calls: [...(s.calls ?? []), { ...c, id: `call${Date.now()}`, at: Date.now() }] })),
     addPost: (uri, caption) =>
       update((s) => ({ ...s, myPosts: [{ id: `mp${Date.now()}`, uri, caption: caption.trim(), at: Date.now() }, ...s.myPosts] })),
     deletePost: (id) => update((s) => ({ ...s, myPosts: s.myPosts.filter((p) => p.id !== id) })),

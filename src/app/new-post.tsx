@@ -68,7 +68,7 @@ export default function NewPost() {
         multiline
         maxLength={280}
       />
-      <Button title="Share to Explore" onPress={share} disabled={!uri && !caption.trim()} />
+      <Button title="Share to For You" onPress={share} disabled={!uri && !caption.trim()} />
       <Text style={styles.note}>Everyone on Mile Club can see and comment on your post.</Text>
     </ScrollView>
   );

@@ -52,7 +52,7 @@ export default function ProfileTab() {
         <Text style={styles.followTitle}>Following · {following.length}</Text>
         <Text style={styles.followNote}>🔒 Only you can see who you follow and who follows you.</Text>
         {following.length === 0 ? (
-          <Body muted>Tap Follow on someone’s profile or post to see their runs in Explore.</Body>
+          <Body muted>Tap Follow on someone’s profile or post to see their posts in For You.</Body>
         ) : (
           <View style={styles.followRow}>
             {following.map((id) => {
