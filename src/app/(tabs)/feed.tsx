@@ -1,7 +1,14 @@
 import { Image } from "expo-image";
 import { Redirect, router, type Href } from "expo-router";
 import { useState } from "react";
-import { Pressable, StyleSheet, Text, TextInput, View } from "react-native";
+import {
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  View,
+} from "react-native";
 
 import {
   CommentPreview,
@@ -131,6 +138,7 @@ export default function Explore() {
   } = useStore();
   const [filter, setFilter] = useState<(typeof FILTERS)[number]>("All");
   const [query, setQuery] = useState("");
+  const [searching, setSearching] = useState(false);
   if (!profile) return <Redirect href="/welcome" />;
 
   const textPosts = TEXT_POSTS.filter((t) => !blocked.includes(t.personId));
@@ -148,12 +156,77 @@ export default function Explore() {
       <View style={styles.top}>
         <MenuButton onPress={() => router.push("/menu")} />
         <Text style={styles.title}>For You</Text>
-        <Pressable style={styles.people} onPress={() => router.push("/people")}>
-          <Text style={styles.peopleText}>People near you</Text>
+        <Pressable
+          style={styles.iconBtn}
+          onPress={() => {
+            setSearching(!searching);
+            setQuery("");
+          }}
+          accessibilityLabel="Search people"
+        >
+          <Text style={styles.iconText}>{searching ? "✕" : "🔍"}</Text>
+        </Pressable>
+        <Pressable
+          style={styles.iconBtn}
+          onPress={() => router.push("/new-post" as Href)}
+          accessibilityLabel="New post"
+        >
+          <Text style={styles.iconPlus}>＋</Text>
         </Pressable>
       </View>
 
-      <View style={styles.search}>
+      {!searching ? (
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          style={styles.stories}
+          contentContainerStyle={styles.storiesIn}
+        >
+          <Pressable
+            style={styles.story}
+            onPress={() => router.push("/new-post" as Href)}
+          >
+            <View style={styles.storyAdd}>
+              <Text style={styles.storyAddText}>＋</Text>
+            </View>
+            <Text style={styles.storyName}>Your post</Text>
+          </Pressable>
+          {[...PEOPLE]
+            .filter((p) => !blocked.includes(p.id))
+            .sort(
+              (a, b) =>
+                Number(following.includes(b.id)) -
+                Number(following.includes(a.id)),
+            )
+            .map((p) => (
+              <Pressable
+                key={p.id}
+                style={styles.story}
+                onPress={() => router.push(`/person/${p.id}`)}
+              >
+                <View style={styles.storyRing}>
+                  <View style={styles.storyGap}>
+                    <Avatar name={p.firstName} color={p.color} size={58} />
+                  </View>
+                </View>
+                <Text style={styles.storyName} numberOfLines={1}>
+                  {p.firstName}
+                </Text>
+              </Pressable>
+            ))}
+          <Pressable
+            style={styles.story}
+            onPress={() => router.push("/people")}
+          >
+            <View style={styles.storyAdd}>
+              <Text style={styles.storyAddText}>→</Text>
+            </View>
+            <Text style={styles.storyName}>See all</Text>
+          </Pressable>
+        </ScrollView>
+      ) : null}
+
+      <View style={[styles.search, !searching && { display: "none" }]}>
         <Text style={styles.searchIcon}>🔍</Text>
         <TextInput
           value={query}
@@ -163,6 +236,7 @@ export default function Explore() {
           style={styles.searchInput}
           autoCorrect={false}
           returnKeyType="search"
+          autoFocus
         />
         {query ? (
           <Pressable onPress={() => setQuery("")} hitSlop={10}>
@@ -250,17 +324,6 @@ export default function Explore() {
             </Text>
           </Pressable>
         ) : null}
-
-        <Pressable
-          style={styles.composer}
-          onPress={() => router.push("/new-post" as Href)}
-        >
-          <Avatar name={profile.firstName} uri={profile.photoUri} size={36} />
-          <Text style={styles.composerText}>Share a photo or a thought…</Text>
-          <View style={styles.composerBtn}>
-            <Text style={styles.composerBtnText}>Post</Text>
-          </View>
-        </Pressable>
 
         {filter !== "Nearby" && filter !== "Following"
           ? myPosts
@@ -370,23 +433,24 @@ export default function Explore() {
                     style={{ flex: 1 }}
                     onPress={() => router.push(`/person/${person.id}`)}
                   >
-                    <Text style={styles.name}>{person.firstName}</Text>
-                    <Text style={styles.meta}>
-                      {post.withCount
-                        ? `Ran with ${post.withCount} others · `
-                        : ""}
-                      {hoursAgoLabel(post.hoursAgo)}
+                    <Text style={styles.name}>
+                      {person.firstName}
+                      <Text style={styles.meta}>
+                        {" · "}
+                        {hoursAgoLabel(post.hoursAgo)}
+                      </Text>
+                    </Text>
+                    <Text style={styles.meta} numberOfLines={1}>
+                      {post.place}
+                      {post.withCount ? ` · ran with ${post.withCount}` : ""}
                     </Text>
                   </Pressable>
                   <Pressable
                     onPress={() => toggleFollow(person.id)}
-                    style={[styles.follow, follows && styles.following]}
+                    hitSlop={8}
                   >
                     <Text
-                      style={[
-                        styles.followText,
-                        follows && { color: colors.ink },
-                      ]}
+                      style={follows ? styles.followingText : styles.followText}
                     >
                       {follows ? "Following" : "Follow"}
                     </Text>
@@ -400,15 +464,19 @@ export default function Explore() {
                     contentFit="cover"
                   />
                   <View style={styles.overlay}>
-                    <Text style={styles.postTitle} numberOfLines={2}>
+                    <Text style={styles.postTitle} numberOfLines={1}>
                       {post.title}
                     </Text>
                     <Text style={styles.stats}>
-                      {post.distanceKm
-                        ? `${post.distanceKm.toFixed(1)} KM\n`
-                        : ""}
-                      {post.pace ? `${post.pace.toUpperCase()}\n` : ""}
-                      {duration(post.minutes).toUpperCase()}
+                      {[
+                        post.distanceKm
+                          ? `${post.distanceKm.toFixed(1)} km`
+                          : "",
+                        post.pace ?? "",
+                        duration(post.minutes),
+                      ]
+                        .filter(Boolean)
+                        .join("  ·  ")}
                     </Text>
                   </View>
                 </View>
@@ -432,7 +500,6 @@ export default function Explore() {
                     </Text>
                   </Pressable>
                   <CommentButton postId={post.id} />
-                  <Text style={styles.place}>{post.place}</Text>
                 </View>
                 {post.note ? (
                   <Text style={styles.caption}>
@@ -463,18 +530,50 @@ const styles = themed(() =>
       fontSize: 30,
       color: colors.ink,
     },
-    people: {
-      borderRadius: radius.pill,
-      borderWidth: 1,
-      borderColor: colors.line,
-      paddingVertical: 8,
-      paddingHorizontal: 12,
-    },
+    people: { display: "none" },
     peopleText: {
       fontFamily: fonts.sansMedium,
       color: colors.ink,
       fontSize: 12,
     },
+    followingText: {
+      fontFamily: fonts.sansMedium,
+      fontSize: 13,
+      color: colors.muted,
+    },
+    iconBtn: {
+      width: 40,
+      height: 40,
+      borderRadius: 20,
+      borderWidth: 1,
+      borderColor: colors.line,
+      alignItems: "center",
+      justifyContent: "center",
+    },
+    iconText: { fontSize: 15, color: colors.ink },
+    iconPlus: { fontSize: 20, color: colors.ink, marginTop: -2 },
+    stories: { marginHorizontal: -space.xl, marginTop: space.lg },
+    storiesIn: { paddingHorizontal: space.xl, gap: 14 },
+    story: { alignItems: "center", gap: 6, width: 66 },
+    storyRing: {
+      padding: 2.5,
+      borderRadius: 40,
+      borderWidth: 2,
+      borderColor: colors.peach,
+    },
+    storyGap: { padding: 2, borderRadius: 36, backgroundColor: colors.bg },
+    storyAdd: {
+      width: 66,
+      height: 66,
+      borderRadius: 33,
+      borderWidth: 1.5,
+      borderStyle: "dashed",
+      borderColor: colors.muted,
+      alignItems: "center",
+      justifyContent: "center",
+    },
+    storyAddText: { fontSize: 22, color: colors.muted },
+    storyName: { fontFamily: fonts.sans, fontSize: 11, color: colors.muted },
     tabs: {
       flexDirection: "row",
       gap: 22,
@@ -499,7 +598,7 @@ const styles = themed(() =>
       textAlign: "center",
       marginTop: space.xl,
     },
-    post: { marginBottom: space.xxl },
+    post: { marginBottom: space.xl },
     head: {
       flexDirection: "row",
       alignItems: "center",
@@ -513,48 +612,38 @@ const styles = themed(() =>
       color: colors.muted,
       marginTop: 1,
     },
-    follow: {
-      borderRadius: radius.pill,
-      backgroundColor: colors.peach,
-      paddingVertical: 7,
-      paddingHorizontal: 14,
-    },
-    following: { backgroundColor: colors.sand },
+    follow: {},
+    following: {},
     followText: {
-      fontFamily: fonts.sansSemi,
-      fontSize: 12,
-      color: colors.onPeach,
+      fontFamily: fonts.sansBold,
+      fontSize: 13,
+      color: colors.olive,
     },
     photo: {
-      height: 330,
-      borderRadius: 28,
-      overflow: "hidden",
+      marginHorizontal: -space.xl,
+      aspectRatio: 1,
       backgroundColor: colors.oliveDark,
     },
     overlay: {
       position: "absolute",
-      left: 16,
-      right: 16,
-      bottom: 16,
-      flexDirection: "row",
-      alignItems: "flex-end",
-      justifyContent: "space-between",
-      gap: space.md,
+      left: space.lg,
+      right: space.lg,
+      bottom: space.lg,
+      gap: 2,
     },
     postTitle: {
-      flex: 1,
       fontFamily: fonts.serifItalic,
-      fontSize: 24,
-      lineHeight: 32,
-      color: colors.onBrand,
+      fontSize: 22,
+      color: "#fff",
+      textShadowColor: "rgba(0,0,0,0.4)",
+      textShadowRadius: 8,
     },
     stats: {
-      fontFamily: fonts.sansMedium,
-      fontSize: 10,
-      letterSpacing: 1.2,
-      lineHeight: 15,
-      color: colors.onBrand,
-      textAlign: "right",
+      fontFamily: fonts.sansSemi,
+      fontSize: 12,
+      color: "#fff",
+      textShadowColor: "rgba(0,0,0,0.4)",
+      textShadowRadius: 6,
     },
     actions: {
       flexDirection: "row",
@@ -611,12 +700,13 @@ const styles = themed(() =>
     meetTitle: { fontFamily: fonts.sansSemi, fontSize: 14, color: colors.ink },
     meetSub: { fontFamily: fonts.sans, fontSize: 13, color: colors.muted },
     tweet: {
-      backgroundColor: colors.card,
-      borderRadius: radius.lg,
-      borderWidth: 1,
+      marginHorizontal: -space.xl,
+      paddingHorizontal: space.xl,
+      paddingVertical: space.lg,
+      borderTopWidth: StyleSheet.hairlineWidth,
+      borderBottomWidth: StyleSheet.hairlineWidth,
       borderColor: colors.line,
-      padding: space.lg,
-      marginBottom: space.xxl,
+      marginBottom: space.xl,
     },
     tweetHead: { flexDirection: "row", alignItems: "center", gap: space.md },
     tweetText: {
