@@ -21,7 +21,7 @@ import { openPostActions } from "@/lib/post-actions";
 import { PHOTOS } from "@/data/photos";
 import { Avatar, MenuButton, Screen } from "@/components/ui";
 import { agoLabel } from "@/data/comments";
-import { FEED, TEXT_POSTS, type TextPost } from "@/data/feed";
+import { FEED, TEXT_POSTS, type FeedPost, type TextPost } from "@/data/feed";
 import { COACHES } from "@/data/coaches";
 import { PEOPLE, findPerson } from "@/data/people";
 import { hoursAgoLabel } from "@/lib/time";
@@ -29,6 +29,64 @@ import { useStore } from "@/state/store";
 import { colors, fonts, radius, space, themed, useTheme } from "@/theme";
 
 const FILTERS = ["All", "Following", "Nearby", "Coaches"] as const;
+
+// Like Twitter: pulling down adds the newest posts on top, and the feed only
+// keeps the latest MAX_POSTS so it never grows forever. Demo posts for now.
+const MAX_POSTS = 12;
+const FRESH: Omit<FeedPost, "id" | "hoursAgo">[] = [
+  {
+    personId: "sanne",
+    type: "running",
+    title: "Lunch Run Loop",
+    place: "De Pijp",
+    distanceKm: 5.1,
+    minutes: 29,
+    pace: "5:41/km",
+    withCount: 2,
+    note: "Quick one between meetings ☀️",
+    kudos: 3,
+    route: 0,
+  },
+  {
+    personId: "daan",
+    type: "running",
+    title: "Canal Intervals",
+    place: "Centrum",
+    distanceKm: 8.0,
+    minutes: 41,
+    pace: "5:08/km",
+    withCount: 4,
+    note: "6 x 800m. Lungs on fire, worth it.",
+    kudos: 7,
+    route: 1,
+  },
+  {
+    personId: "femke",
+    type: "running",
+    title: "Evening Easy 6K",
+    place: "Westerpark",
+    distanceKm: 6.0,
+    minutes: 37,
+    pace: "6:10/km",
+    withCount: 5,
+    note: "Who's in for Thursday?",
+    kudos: 5,
+    route: 2,
+  },
+  {
+    personId: "amira",
+    type: "running",
+    title: "Park Run With The Crew",
+    place: "Oosterpark",
+    distanceKm: 5.0,
+    minutes: 31,
+    pace: "6:12/km",
+    withCount: 9,
+    note: "Nine of us today! 🧡",
+    kudos: 11,
+    route: 0,
+  },
+];
 
 function CommentButton({ postId }: { postId: string }) {
   const n = useComments(postId).length;
@@ -142,10 +200,27 @@ export default function Explore() {
   const [filter, setFilter] = useState<(typeof FILTERS)[number]>("All");
   const [query, setQuery] = useState("");
   const [searching, setSearching] = useState(false);
+  const [fresh, setFresh] = useState<FeedPost[]>([]);
+  const [pulls, setPulls] = useState(0);
+  // Demo: the first pull brings a new post, after that sometimes nothing is new.
+  function loadNewer() {
+    const n = pulls === 0 ? 1 : [0, 1, 0, 2][pulls % 4];
+    setPulls(pulls + 1);
+    if (!n) return 0;
+    const added = Array.from({ length: n }, (_, k) => ({
+      ...FRESH[(pulls + k) % FRESH.length],
+      id: `fresh-${pulls}-${k}`,
+      hoursAgo: 0,
+    }));
+    setFresh((prev) => [...added, ...prev].slice(0, MAX_POSTS));
+    return n;
+  }
   if (!profile) return <Redirect href="/welcome" />;
 
   const textPosts = TEXT_POSTS.filter((t) => !blocked.includes(t.personId));
-  let posts = FEED.filter((p) => !blocked.includes(p.personId));
+  let posts = [...fresh, ...FEED]
+    .slice(0, MAX_POSTS)
+    .filter((p) => !blocked.includes(p.personId));
   if (filter === "Following")
     posts = posts.filter((p) => following.includes(p.personId));
   if (filter === "Nearby")
@@ -155,7 +230,7 @@ export default function Explore() {
   if (filter === "Coaches") posts = [];
 
   return (
-    <Screen>
+    <Screen onRefresh={loadNewer}>
       <View style={styles.top}>
         <MenuButton onPress={() => router.push("/menu")} />
         <Text style={styles.title}>For You</Text>
@@ -498,7 +573,13 @@ export default function Explore() {
 
                 <View style={styles.photo}>
                   <Image
-                    source={PHOTOS[FEED.indexOf(post) % PHOTOS.length]}
+                    source={
+                      PHOTOS[
+                        (FEED.indexOf(post) >= 0
+                          ? FEED.indexOf(post)
+                          : post.route + 3) % PHOTOS.length
+                      ]
+                    }
                     style={StyleSheet.absoluteFill}
                     contentFit="cover"
                   />

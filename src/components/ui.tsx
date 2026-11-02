@@ -1,24 +1,50 @@
 import { Image } from 'expo-image';
-import type { ReactNode } from 'react';
-import { Pressable, ScrollView, StyleSheet, Text, View, type ViewStyle } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { useState, type ReactNode } from 'react';
+import { Pressable, RefreshControl, ScrollView, StyleSheet, Text, View, type ViewStyle } from 'react-native';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { colors, getThemeMode, fonts, radius, space, themed } from '@/theme';
 
-export function Screen({ children, scroll = true, edges = ['top'] }: {
+// Every scrolling page can be pulled down to refresh. onRefresh returns how many
+// new things arrived; with none, a small "No new feed" pill shows and the page
+// stays as it was.
+export function Screen({ children, scroll = true, edges = ['top'], onRefresh, nothingNew = 'No new feed', newLabel = 'new post' }: {
   children: ReactNode;
   scroll?: boolean;
   edges?: ('top' | 'bottom')[];
+  onRefresh?: () => number;
+  nothingNew?: string;
+  newLabel?: string;
 }) {
+  const insets = useSafeAreaInsets();
+  const [refreshing, setRefreshing] = useState(false);
+  const [toast, setToast] = useState<string | null>(null);
+  function refresh() {
+    setRefreshing(true);
+    setTimeout(() => {
+      const n = onRefresh ? onRefresh() : 0;
+      setRefreshing(false);
+      setToast(n > 0 ? `${n} ${newLabel}${n > 1 ? 's' : ''}` : nothingNew);
+      setTimeout(() => setToast(null), 2200);
+    }, 900);
+  }
   return (
     <SafeAreaView style={styles.screen} edges={edges}>
       {scroll ? (
-        <ScrollView contentContainerStyle={styles.scroll} keyboardShouldPersistTaps="handled">
+        <ScrollView
+          contentContainerStyle={styles.scroll}
+          keyboardShouldPersistTaps="handled"
+          refreshControl={<RefreshControl refreshing={refreshing} onRefresh={refresh} tintColor={colors.olive} colors={[colors.olive]} />}>
           {children}
         </ScrollView>
       ) : (
         children
       )}
+      {toast ? (
+        <View pointerEvents="none" style={[styles.toastWrap, { top: (edges.includes('top') ? insets.top : 0) + 10 }]}>
+          <Text style={styles.toast}>{toast}</Text>
+        </View>
+      ) : null}
     </SafeAreaView>
   );
 }
@@ -111,6 +137,8 @@ export function Badge({ label, tone = 'accent' }: { label: string; tone?: 'accen
 const styles = themed(() => StyleSheet.create({
   screen: { flex: 1, backgroundColor: colors.bg },
   scroll: { padding: space.xl, paddingBottom: 48 },
+  toastWrap: { position: 'absolute', left: 0, right: 0, alignItems: 'center', zIndex: 50 },
+  toast: { backgroundColor: colors.olive, color: colors.onBrand, fontFamily: fonts.sansSemi, fontSize: 13, paddingVertical: 8, paddingHorizontal: 16, borderRadius: 999, overflow: 'hidden' },
   title: { fontSize: 30, fontFamily: fonts.serif, color: colors.ink, lineHeight: 40 },
   sub: { fontSize: 15, fontFamily: fonts.sans, color: colors.muted, marginTop: space.xs, lineHeight: 22 },
   label: {

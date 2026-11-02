@@ -43,7 +43,7 @@ export default function Activities() {
   const types = ACTIVITIES.filter((t) => activities.some((a) => a.type === t.id));
 
   return (
-    <Screen>
+    <Screen nothingNew="No new runs right now">
       <MenuButton onPress={() => router.push('/menu')} />
       <View style={{ height: space.lg }} />
       <Title sub="Join something this week, or start your own.">My runs</Title>

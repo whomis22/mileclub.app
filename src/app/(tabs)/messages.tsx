@@ -17,7 +17,7 @@ export default function Messages() {
   );
 
   return (
-    <Screen>
+    <Screen nothingNew="No new messages">
       <View style={styles.head}>
         <MenuButton onPress={() => router.push('/menu')} />
         <Text style={styles.title}>Messages</Text>
