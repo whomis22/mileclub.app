@@ -16,6 +16,7 @@ import {
   useComments,
 } from "@/components/comment-preview";
 import { CommentsSheet } from "@/components/comments-sheet";
+import { SessionCard } from "@/components/session-card";
 import { openPostActions } from "@/lib/post-actions";
 import { PHOTOS } from "@/data/photos";
 import { Avatar, MenuButton, Screen } from "@/components/ui";
@@ -133,6 +134,8 @@ export default function Explore() {
     following,
     toggleFollow,
     myPosts,
+    sessions,
+    statusOf,
     archivePost,
     deletePost,
   } = useStore();
@@ -298,12 +301,7 @@ export default function Explore() {
       <View style={query.trim() ? { display: "none" } : undefined}>
         <View style={styles.tabs}>
           {FILTERS.map((f) => (
-            <Pressable
-              key={f}
-              onPress={() =>
-                f === "Coaches" ? router.push("/train") : setFilter(f)
-              }
-            >
+            <Pressable key={f} onPress={() => setFilter(f)}>
               <Text style={[styles.tab, filter === f && styles.tabOn]}>
                 {f}
               </Text>
@@ -402,7 +400,48 @@ export default function Explore() {
               })
           : null}
 
-        {posts.length === 0 ? (
+        {filter === "Coaches" ? (
+          <View style={styles.coaches}>
+            <Text style={styles.sectionLabel}>COACHES NEAR YOU</Text>
+            {COACHES.map((c) => (
+              <Pressable
+                key={c.id}
+                style={styles.coachRow}
+                onPress={() => router.push(`/coach/${c.id}` as Href)}
+              >
+                <Avatar name={c.name} color={c.color} size={46} />
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.name}>{c.name}</Text>
+                  <Text style={styles.meta} numberOfLines={1}>
+                    {c.headline}
+                  </Text>
+                  <Text style={styles.meta}>
+                    ★ {c.rating.toFixed(1)} · {c.neighborhood}
+                  </Text>
+                </View>
+                <Text style={styles.meta}>›</Text>
+              </Pressable>
+            ))}
+            <Text style={[styles.sectionLabel, { marginTop: space.lg }]}>
+              UPCOMING SESSIONS
+            </Text>
+            {sessions
+              .filter((x) => x.coachId !== "me")
+              .sort((a, b) => (a.date + a.time).localeCompare(b.date + b.time))
+              .slice(0, 4)
+              .map((x) => (
+                <SessionCard key={x.id} s={x} status={statusOf(x.id)} />
+              ))}
+            <Pressable
+              style={styles.seeAll}
+              onPress={() => router.navigate("/train" as Href)}
+            >
+              <Text style={styles.seeAllText}>See all coach sessions →</Text>
+            </Pressable>
+          </View>
+        ) : null}
+
+        {filter !== "Coaches" && posts.length === 0 ? (
           <Text style={styles.empty}>
             {filter === "Following"
               ? "Follow people to see their runs here."
@@ -574,6 +613,29 @@ const styles = themed(() =>
     },
     storyAddText: { fontSize: 22, color: colors.muted },
     storyName: { fontFamily: fonts.sans, fontSize: 11, color: colors.muted },
+    coaches: { gap: space.md },
+    sectionLabel: {
+      fontFamily: fonts.sansBold,
+      fontSize: 11,
+      letterSpacing: 1.5,
+      color: colors.muted,
+    },
+    coachRow: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: space.md,
+      backgroundColor: colors.card,
+      borderRadius: radius.lg,
+      borderWidth: 1,
+      borderColor: colors.line,
+      padding: space.md,
+    },
+    seeAll: { alignSelf: "center", paddingVertical: space.md },
+    seeAllText: {
+      fontFamily: fonts.sansSemi,
+      fontSize: 14,
+      color: colors.olive,
+    },
     tabs: {
       flexDirection: "row",
       gap: 22,
