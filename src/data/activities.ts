@@ -36,7 +36,7 @@ export function sampleActivities(): Activity[] {
     {
       id: 's3', type: 'yoga', title: 'Rooftop Stretch & Breathe', ...soon(3),
       location: 'NDSM Wharf, rooftop terrace', neighborhood: 'Noord', level: 'Beginner', groupSize: 12,
-      participants: ['amira', 'yasmin'], hostId: 'amira', free: true,
+      participants: ['amira', 'yasmin'], hostId: 'amira', free: true, womenOnly: true,
       description: '40 minutes of easy stretching with a view over the IJ. Perfect after work.',
     },
     {

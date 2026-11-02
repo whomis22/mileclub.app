@@ -47,6 +47,7 @@ export default function RootLayout() {
         <Stack.Screen name="menu" options={{ presentation: 'transparentModal', animation: 'fade', contentStyle: { backgroundColor: 'transparent' } }} />
         <Stack.Screen name="post/[id]" options={{ headerShown: true, title: 'Comments' }} />
         <Stack.Screen name="call/[id]" options={{ presentation: 'fullScreenModal', animation: 'fade' }} />
+        <Stack.Screen name="meet-settings" options={{ headerShown: true, title: 'Who I meet up with' }} />
         <Stack.Screen name="directions" options={{ headerShown: true, title: 'Directions' }} />
         <Stack.Screen name="new-post" options={{ headerShown: true, title: 'New post', presentation: 'modal' }} />
         <Stack.Screen name="group-settings" options={{ headerShown: true, title: 'Group settings' }} />

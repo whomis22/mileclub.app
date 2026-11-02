@@ -192,6 +192,11 @@ function DeckCard({ a, home, onJoin, onOpen }: { a: Activity; home: Neighborhood
       <View style={styles.bottom}>
         <View style={styles.placeRow}>
           <Text style={styles.place} numberOfLines={1}>{place}</Text>
+          {a.womenOnly ? (
+            <View style={styles.tag}>
+              <Text style={styles.tagText}>♀ Women only</Text>
+            </View>
+          ) : null}
           <View style={styles.tag}>
             <Text style={styles.tagText}>{a.neighborhood}</Text>
           </View>

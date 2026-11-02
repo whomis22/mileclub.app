@@ -6,6 +6,7 @@ import { sampleSessions, type CoachSession } from '@/data/coaches';
 import type { Role } from '@/data/roles';
 import { PEOPLE } from '@/data/people';
 import type { Activity, Profile } from '@/data/types';
+import { canSeeRun } from '@/lib/meet';
 
 export type RequestStatus = 'pending' | 'accepted' | 'declined';
 
@@ -105,7 +106,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     });
 
   const activities = [...state.myActivities, ...samples]
-    .filter((a) => !state.blocked.includes(a.hostId))
+    .filter((a) => !state.blocked.includes(a.hostId) && canSeeRun(state.profile, a))
     .map((a) => {
       const accepted = state.runIncoming
         .filter((r) => r.activityId === a.id && r.status === 'accepted' && !a.participants.includes(r.personId))

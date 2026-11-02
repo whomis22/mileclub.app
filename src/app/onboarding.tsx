@@ -8,7 +8,9 @@ import { Avatar, Body, Button, Chip, Chips, Label } from '@/components/ui';
 import {
   ACTIVITIES,
   AVAILABILITY,
+  GENDERS,
   GOALS,
+  MEET,
   GROUP_SIZES,
   LEVELS,
   NEIGHBORHOOD_NAMES,
@@ -84,7 +86,7 @@ export default function Onboarding() {
 
   const valid = [
     !!d.role,
-    !!d.firstName?.trim() && !!d.age && d.age >= 18 && d.age <= 99,
+    !!d.firstName?.trim() && !!d.age && d.age >= 18 && d.age <= 99 && !!d.gender,
     !!d.neighborhood,
     d.activities.length > 0 && !!d.level,
     d.goals.length > 0,
@@ -193,6 +195,19 @@ export default function Onboarding() {
               {d.age !== undefined && d.age < 18 ? (
                 <Body muted>You need to be 18 or older to join Mile Club.</Body>
               ) : null}
+              <Label>I am</Label>
+              <Chips>
+                {GENDERS.map((g) => (
+                  <Chip key={g} label={g} selected={d.gender === g} onPress={() => set({ gender: g })} />
+                ))}
+              </Chips>
+              <Label>Who do you want to meet up with?</Label>
+              <Chips>
+                {MEET.map((m) => (
+                  <Chip key={m.id} label={m.label} selected={(d.meet ?? 'everyone') === m.id} onPress={() => set({ meet: m.id })} />
+                ))}
+              </Chips>
+              <Body muted>You can change this any time in Settings. Nobody else sees it.</Body>
             </>
           )}
 

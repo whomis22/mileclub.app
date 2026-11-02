@@ -5,6 +5,7 @@ import { Avatar, Badge, Card, Screen, Title } from '@/components/ui';
 import { activityInfo } from '@/data/options';
 import { PEOPLE } from '@/data/people';
 import { formatKm, rankPeople } from '@/lib/matching';
+import { fitsMeet } from '@/lib/meet';
 import { useStore } from '@/state/store';
 import { colors, space, themed, useTheme } from '@/theme';
 
@@ -15,7 +16,7 @@ export default function Discover() {
 
   const matches = rankPeople(
     profile,
-    PEOPLE.filter((p) => !blocked.includes(p.id)),
+    PEOPLE.filter((p) => !blocked.includes(p.id) && fitsMeet(profile, p)),
   );
 
   return (

@@ -31,6 +31,7 @@ export default function CreateActivity() {
   const [neighborhood, setNeighborhood] = useState<Neighborhood | undefined>(profile?.neighborhood);
   const [level, setLevel] = useState<Level | undefined>(profile?.level);
   const [groupSize, setGroupSize] = useState<number>();
+  const [womenOnly, setWomenOnly] = useState(false);
   const [description, setDescription] = useState('');
   const [distance, setDistance] = useState('');
   const [pace, setPace] = useState('');
@@ -42,7 +43,7 @@ export default function CreateActivity() {
     if (!ready) return;
     const a = createActivity({
       type, title: title.trim(), date, time, location: location.trim(), neighborhood, level, groupSize,
-      description: description.trim(), free: true,
+      description: description.trim(), free: true, womenOnly,
       distance: distance.trim() || undefined, pace: pace.trim() || undefined,
       recurring: weekly ? 'Every week' : undefined,
     });
@@ -104,6 +105,15 @@ export default function CreateActivity() {
           <Chip key={s} label={`${s} people`} selected={groupSize === s} onPress={() => setGroupSize(s)} />
         ))}
       </Chips>
+      {profile?.gender === 'Woman' ? (
+        <>
+          <Label>Who can join</Label>
+          <Chips>
+            <Chip label="Everyone" selected={!womenOnly} onPress={() => setWomenOnly(false)} />
+            <Chip label="♀ Women only" selected={womenOnly} onPress={() => setWomenOnly(true)} />
+          </Chips>
+        </>
+      ) : null}
       <Label>Description</Label>
       {input(description, setDescription, "What should people expect? Pace, vibe, what to bring…", true)}
       <Label>Optional</Label>

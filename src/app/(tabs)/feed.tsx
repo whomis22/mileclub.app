@@ -159,6 +159,13 @@ export default function Explore() {
         ))}
       </View>
 
+      {!profile.gender ? (
+        <Pressable style={styles.meetBanner} onPress={() => router.push("/meet-settings" as Href)}>
+          <Text style={styles.meetTitle}>New: choose who you meet up with</Text>
+          <Text style={styles.meetSub}>Everyone, women only or men only. Tap to set it →</Text>
+        </Pressable>
+      ) : null}
+
       <Pressable
         style={styles.composer}
         onPress={() => router.push("/new-post" as Href)}
@@ -480,6 +487,9 @@ const styles = themed(() =>
       color: colors.muted,
     },
     bubble: { fontSize: 18 },
+  meetBanner: { backgroundColor: colors.oliveSoft, borderRadius: radius.lg, padding: space.lg, marginBottom: space.lg, gap: 2 },
+  meetTitle: { fontFamily: fonts.sansSemi, fontSize: 14, color: colors.ink },
+  meetSub: { fontFamily: fonts.sans, fontSize: 13, color: colors.muted },
     tweet: {
       backgroundColor: colors.card,
       borderRadius: radius.lg,

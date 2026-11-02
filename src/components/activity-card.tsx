@@ -32,7 +32,7 @@ export function ActivityCard({ activity }: { activity: Activity }) {
       </View>
       <View style={[styles.row, { marginTop: space.md, justifyContent: 'space-between' }]}>
         <Text style={styles.spots}>
-          {filled}/{activity.groupSize} spots filled
+          {filled}/{activity.groupSize} spots filled{activity.womenOnly ? ' · ♀ Women only' : ''}
         </Text>
         {joined ? (
           <Badge label={activity.hostId === 'me' ? "YOU'RE HOSTING" : "YOU'RE IN"} tone="green" />
