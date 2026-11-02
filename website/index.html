@@ -3,7 +3,9 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<link rel="icon" href="icon.png">
+<link rel="icon" type="image/png" href="icon.png">
+<link rel="apple-touch-icon" href="icon.png">
+<meta name="theme-color" content="#FFFFFF">
 <title>Mile Club</title>
 <script>(function(){var r=document.documentElement;r.setAttribute("data-palette","black");r.setAttribute("data-dark","black");r.setAttribute("data-font","unbounded");try{if(localStorage.getItem("mc-mode")==="dark")r.setAttribute("data-mode","dark");}catch(e){}})();</script>
 <meta name="claude:viewport-fit-sides" content="cover">
@@ -225,14 +227,23 @@ fieldset { border: 0; padding: 0; margin: 0; }
 .sent.show { display: block; }
 
 .brand span, .btn { white-space: nowrap; }
-@media (max-width: 520px) { .brand span { font-size: 1rem; } nav { gap: 10px; } nav .btn { padding: 10px 16px; font-size: .9rem; } .social { display: flex; flex-wrap: wrap; gap: 10px; }
+@media (max-width: 520px) { .brand span { font-size: 1rem; } nav { gap: 10px; } nav .btn { padding: 10px 16px; font-size: .9rem; } .mode { width: 38px; height: 38px; } }
+.about { display: grid; grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr); gap: 44px; align-items: center; }
+.about > * { min-width: 0; }
+.about-main { margin: 0; border-radius: 28px; overflow: hidden; background: var(--cream-2); }
+.about-main img { display: block; width: 100%; height: auto; }
+.about-text { display: grid; gap: 16px; }
+.about-text p { color: var(--muted); font-size: 1.1rem; max-width: 44ch; }
+.details { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; margin-top: 10px; }
+.details img { display: block; width: 100%; height: auto; aspect-ratio: 1; object-fit: cover; border-radius: 16px; }
+@media (max-width: 900px) { .about { grid-template-columns: 1fr; gap: 28px; } }
+.social { display: flex; flex-wrap: wrap; gap: 10px; }
 .social a { display: inline-flex; align-items: center; gap: 8px; padding: 9px 16px 9px 12px; border-radius: 999px; border: 1.5px solid var(--line); background: var(--card); color: var(--ink); text-decoration: none; font-weight: 600; font-size: .92rem; }
 .social a:hover { border-color: var(--olive); }
 .social.icons a { padding: 9px; }
 .social svg { width: 20px; height: 20px; flex: none; }
 .follow { margin-top: 28px; }
 .follow p { font-weight: 600; color: var(--olive-ink); margin-bottom: 10px; font-size: .95rem; }
-.mode { width: 38px; height: 38px; } }
 .mode { flex: none; width: 42px; height: 42px; border-radius: 50%; border: 1.5px solid var(--line); background: var(--card); color: var(--ink); display: grid; place-items: center; cursor: pointer; }
 .mode svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; }
 .mode .moon { fill: currentColor; stroke: none; }
@@ -276,6 +287,7 @@ footer .wrap { display: flex; flex-wrap: wrap; gap: 16px; justify-content: space
     </a>
     <nav aria-label="Main">
       <a href="#how">How it works</a>
+      <a href="#about">About</a>
       <a href="#coaches">For coaches</a>
       <a href="#contact">Contact</a>
       <button class="mode" id="mode" type="button" aria-label="Switch to dark mode" aria-pressed="false">
@@ -350,6 +362,22 @@ footer .wrap { display: flex; flex-wrap: wrap; gap: 16px; justify-content: space
         <div class="feat"><span class="ico"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/><path d="M12 8v4l3 2"/></svg></span><div><h3>Runs happening soon</h3><p>Swipe through group runs starting in the next few hours or days. Join in one tap.</p></div></div>
         <div class="feat"><span class="ico"><svg viewBox="0 0 24 24"><path d="M4 5h16v11H9l-5 4z"/></svg></span><div><h3>Chats and community</h3><p>Message your running buddies and join the Mile Club Members group to meet everyone.</p></div></div>
         <div class="feat"><span class="ico"><svg viewBox="0 0 24 24"><path d="M12 3l7 3v6c0 4-3 7-7 9-4-2-7-5-7-9V6z"/><path d="M9 12l2 2 4-4"/></svg></span><div><h3>Safety built in</h3><p>Add an emergency contact, and report or block anyone who makes you feel unsafe.</p></div></div>
+      </div>
+    </div>
+  </section>
+
+  <section id="about" style="padding-top:0">
+    <div class="wrap about">
+      <figure class="about-main"><img src="team.jpg" alt="Five people in white Mile Club shirts with the mc logo, standing in front of a Mile Club sign" width="1179" height="748" loading="lazy"></figure>
+      <div class="about-text">
+        <h2>About Mile Club</h2>
+        <p>We started Mile Club because running is better with people. Finding a group that runs at your pace, at a time that suits you, shouldn't be hard.</p>
+        <p>So we built an app that does the finding for you. You turn up, meet people and run.</p>
+        <div class="details">
+          <img src="detail-1.jpg" alt="Close-up of the mc logo on a shirt" width="408" height="413" loading="lazy">
+          <img src="detail-2.jpg" alt="MILE CLUB printed on the back of a shirt collar" width="406" height="413" loading="lazy">
+          <img src="detail-3.jpg" alt="Close-up of a white shirt cuff" width="348" height="413" loading="lazy">
+        </div>
       </div>
     </div>
   </section>
