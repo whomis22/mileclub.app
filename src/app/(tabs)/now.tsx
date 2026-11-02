@@ -1,4 +1,4 @@
-import { Redirect, router } from 'expo-router';
+import { Redirect, router, type Href } from 'expo-router';
 import { useRef, useState } from 'react';
 import { Modal, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -57,7 +57,8 @@ type Picker = 'what' | 'with' | 'when' | 'dist' | 'all' | null;
 
 export default function Now() {
   useTheme();
-  const { profile, activities, skipped, runRequests, join, skip, clearSkipped } = useStore();
+  const { profile, activities, skipped, runRequests, join, skip, clearSkipped, notices } = useStore();
+  const unread = (notices ?? []).filter((n) => !n.read).length;
   const deck = useRef<SwipeDeckHandle | null>(null);
   const [joinedMsg, setJoinedMsg] = useState<Activity | null>(null);
   const [now] = useState(() => Date.now());
@@ -141,6 +142,14 @@ export default function Now() {
           <Text style={styles.title} numberOfLines={1} adjustsFontSizeToFit>
             Your week
           </Text>
+          <Pressable style={styles.notif} onPress={() => router.push('/notifications' as Href)} accessibilityLabel="Notifications">
+            <Text style={styles.notifIcon}>🔔</Text>
+            {unread ? (
+              <View style={styles.notifBadge}>
+                <Text style={styles.notifBadgeText}>{unread}</Text>
+              </View>
+            ) : null}
+          </Pressable>
           <Pressable style={styles.bell} onPress={() => router.push('/messages')} accessibilityLabel="Messages">
             <View style={styles.bubble} />
             <View style={styles.badge} />
@@ -170,7 +179,7 @@ export default function Now() {
         {joinedMsg && (
           <Pressable style={styles.toast} onPress={() => router.push('/activities')}>
             <Text style={styles.toastText}>
-              Request sent for {joinedMsg.title}. You’re in once the host accepts. See it in My runs.
+              Request sent for {joinedMsg.title}. We’ll let you know as soon as the host answers.
             </Text>
           </Pressable>
         )}
@@ -310,6 +319,10 @@ const styles = themed(() => StyleSheet.create({
   screen: { flex: 1, backgroundColor: deckColors.cream },
   wrap: { flex: 1, paddingHorizontal: 22, paddingTop: 8, paddingBottom: 12 },
   header: { flexDirection: 'row', alignItems: 'center', gap: 10 },
+  notif: { width: 44, height: 44, borderRadius: 22, borderWidth: 1, borderColor: colors.edge, alignItems: 'center', justifyContent: 'center' },
+  notifIcon: { fontSize: 18 },
+  notifBadge: { position: 'absolute', top: -2, right: -2, minWidth: 18, height: 18, borderRadius: 9, backgroundColor: colors.peachDeep, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 4 },
+  notifBadgeText: { fontFamily: fonts.sansBold, fontSize: 11, color: '#fff' },
   pillScroll: { marginHorizontal: -22, marginTop: 14, flexGrow: 0 },
   pills: { gap: 8, paddingHorizontal: 22, alignItems: 'center' },
   pill: { borderRadius: 999, borderWidth: 1, borderColor: colors.edge, paddingVertical: 9, paddingHorizontal: 12, backgroundColor: colors.card },

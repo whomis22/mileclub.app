@@ -15,17 +15,17 @@ import { fonts } from '@/theme';
 
 // "Calm rings", always dark whatever the app's light/dark setting.
 const C = {
-  bg: '#14170F',
+  bg: '#000000',
   text: '#F2ECDF',
-  muted: '#ABA593',
-  btn: '#262C1D',
-  chip: '#2A3121',
+  muted: '#A1A1A1',
+  btn: '#1F1F1F',
+  chip: '#262626',
   olive: '#556B2F',
   cream: '#F7F1E6',
   peach: '#F4B595',
   peachText: '#3A2210',
   red: '#C2412D',
-  ring2: '#3A4A1F',
+  ring2: '#3A3A3A',
 };
 
 type Phase = 'ringing' | 'live' | 'ended';
@@ -111,8 +111,10 @@ export default function Call() {
   function end() {
     Vibration.cancel();
     logCall({ personId: id, video: videoOn, secs, answered: phase !== 'ringing', incoming });
-    setPhase('ended');
-    setTimeout(() => router.back(), 1000);
+    if (incoming) ringtone.pause();
+    // Close straight away, like a real phone hang-up.
+    if (router.canGoBack()) router.back();
+    else router.replace('/' as Href);
   }
 
   const clock = `${Math.floor(secs / 60)}:${String(secs % 60).padStart(2, '0')}`;
@@ -122,7 +124,7 @@ export default function Call() {
   // Video call: their video full screen (pretend), you in the corner.
   if (videoOn && phase === 'live') {
     return (
-      <View style={[s.screen, { backgroundColor: '#2C3520' }]}>
+      <View style={[s.screen, { backgroundColor: '#0D0D0D' }]}>
         <StatusBar style="light" />
         <View style={s.remote}>
           <Text style={s.remoteLetter}>{initial}</Text>
@@ -256,14 +258,14 @@ const s = StyleSheet.create({
   round: { alignItems: 'center', justifyContent: 'center' },
   roundIcon: { color: '#fff' },
   roundLabel: { fontFamily: fonts.sans, fontSize: 13, color: C.muted },
-  note: { fontFamily: fonts.sans, fontSize: 12, color: '#6E6B5F', textAlign: 'center', marginBottom: 8 },
+  note: { fontFamily: fonts.sans, fontSize: 12, color: '#6B6B6B', textAlign: 'center', marginBottom: 8 },
   remote: { ...StyleSheet.absoluteFill, alignItems: 'center', justifyContent: 'center' },
   remoteLetter: { fontFamily: fonts.serif, fontSize: 200, color: 'rgba(242,236,223,0.18)' },
   videoTop: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', paddingHorizontal: 16, paddingTop: 8 },
-  namePill: { backgroundColor: 'rgba(20,23,15,0.55)', borderRadius: 18, paddingVertical: 8, paddingHorizontal: 14 },
+  namePill: { backgroundColor: 'rgba(0,0,0,0.55)', borderRadius: 18, paddingVertical: 8, paddingHorizontal: 14 },
   pillName: { fontFamily: fonts.serif, fontSize: 18, color: C.text },
   pillTime: { fontFamily: fonts.sansMedium, fontSize: 13, color: C.muted, fontVariant: ['tabular-nums'] },
   self: { width: 104, height: 148, borderRadius: 18, overflow: 'hidden', borderWidth: 2, borderColor: C.cream, backgroundColor: '#000', alignItems: 'center', justifyContent: 'center' },
   selfOff: { color: C.muted, fontFamily: fonts.sans, fontSize: 12, textAlign: 'center' },
-  bar: { position: 'absolute', left: 20, right: 20, bottom: 40, height: 84, borderRadius: 42, backgroundColor: 'rgba(20,23,15,0.6)', flexDirection: 'row', alignItems: 'center', justifyContent: 'space-around', paddingHorizontal: 10 },
+  bar: { position: 'absolute', left: 20, right: 20, bottom: 40, height: 84, borderRadius: 42, backgroundColor: 'rgba(0,0,0,0.6)', flexDirection: 'row', alignItems: 'center', justifyContent: 'space-around', paddingHorizontal: 10 },
 });

@@ -159,12 +159,18 @@ export default function ActivityDetail() {
             <Card style={styles.statusCard}>
               <Text style={styles.statusTitle}>Waiting for {host?.firstName ?? 'the host'} to accept</Text>
               <Text style={styles.hostMeta}>You can take part once you’re accepted. We’ll let you know.</Text>
+              <Pressable onPress={() => router.push(`/suggest?activityId=${a.id}` as Href)}>
+                <Text style={styles.linkText}>No answer yet? See others to work out with →</Text>
+              </Pressable>
             </Card>
           )}
           {status === 'declined' && (
             <Card style={styles.statusCard}>
               <Text style={styles.statusTitle}>Not accepted this time</Text>
-              <Text style={styles.hostMeta}>This run is full or not the right fit. Try another one.</Text>
+              <Text style={styles.hostMeta}>This run is full or not the right fit. There are plenty of others.</Text>
+              <Pressable onPress={() => router.push(`/suggest?activityId=${a.id}` as Href)} style={[styles.msgBtn, { alignSelf: 'flex-start', marginTop: space.sm }]}>
+                <Text style={styles.msgBtnText}>Find others to work out with</Text>
+              </Pressable>
             </Card>
           )}
           {joined && (
@@ -214,6 +220,7 @@ const styles = themed(() => StyleSheet.create({
   person: { alignItems: 'center', width: 56 },
   personName: { fontSize: 12, fontWeight: '600', color: colors.ink, marginTop: 4 },
   fit: { fontSize: 18, fontWeight: '900', color: colors.link },
+  linkText: { color: colors.link, fontSize: 13, fontWeight: '700', marginTop: 6 },
   msgBtn: { borderRadius: 999, backgroundColor: colors.olive, paddingVertical: 8, paddingHorizontal: 14 },
   msgBtnText: { color: colors.onBrand, fontSize: 13, fontWeight: '700' },
   statusCard: { marginBottom: space.md, gap: 4 },

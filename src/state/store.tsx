@@ -25,6 +25,9 @@ export type PostComment = { id: string; authorId: string; text: string; at: numb
 // A call the user made, shown as a line in the chat with that person.
 export type CallLog = { id: string; personId: string; video: boolean; secs: number; answered: boolean; at: number; incoming?: boolean };
 
+// A heads-up for the user: a host answered their request to join.
+export type Notice = { id: string; kind: 'accepted' | 'declined'; activityId?: string; sessionId?: string; at: number; read?: boolean };
+
 // Demo: sample coaches and hosts answer a request after this long.
 const DEMO_REPLY_MS = 20000;
 
@@ -46,6 +49,7 @@ type State = {
   myPosts: MyPost[]; // photos the user shared on Explore, newest first
   comments: Record<string, PostComment[]>; // the user's comments, by post id
   calls: CallLog[]; // call history, shown in chats
+  notices: Notice[]; // newest first
   admin: boolean; // Mile Club admin (mock switch in the side menu): can call anyone
 };
 
@@ -71,6 +75,7 @@ type Store = State & {
   setAdmin: (on: boolean) => void;
   logCall: (c: Omit<CallLog, 'id' | 'at'>) => void;
   deleteCall: (id: string) => void;
+  readNotices: () => void;
   addPost: (uri: string | undefined, caption: string) => void;
   deletePost: (id: string) => void;
   editPost: (id: string, caption: string, uri?: string) => void;
@@ -83,7 +88,7 @@ type Store = State & {
 };
 
 const KEY = 'mileclub-state-v1';
-const empty: State = { profile: null, myActivities: [], joined: [], blocked: [], skipped: [], kudos: [], mySessions: [], booked: [], requests: {}, incoming: [], runRequests: {}, runIncoming: [], following: [], myPosts: [], comments: {}, calls: [], admin: false };
+const empty: State = { profile: null, myActivities: [], joined: [], blocked: [], skipped: [], kudos: [], mySessions: [], booked: [], requests: {}, incoming: [], runRequests: {}, runIncoming: [], following: [], myPosts: [], comments: {}, calls: [], notices: [], admin: false };
 
 function load(): State {
   try {
@@ -134,16 +139,24 @@ export function StoreProvider({ children }: { children: ReactNode }) {
           ([, r]) => r.status === 'pending' && Date.now() - r.at > DEMO_REPLY_MS,
         );
         if (!due.length && !runDue.length) return prev;
+        const now = Date.now();
+        const notices = [...(prev.notices ?? [])];
         const requests = { ...prev.requests };
-        for (const [id, r] of due) requests[id] = { ...r, status: 'accepted' };
-        // Demo: hosts of sample runs accept, and the run moves into the user's plans.
+        for (const [id, r] of due) {
+          requests[id] = { ...r, status: 'accepted' };
+          notices.unshift({ id: `n${now}${id}`, kind: 'accepted', sessionId: id, at: now });
+        }
+        // Demo: hosts of sample runs answer. Most accept (the run moves into the user's
+        // plans); about one in three says no, so the user sees other options instead.
         const runRequests = { ...prev.runRequests };
         const joined = [...prev.joined];
         for (const [id, r] of runDue) {
-          runRequests[id] = { ...r, status: 'accepted' };
-          if (!joined.includes(id)) joined.push(id);
+          const declined = [...id].reduce((n, c) => n + c.charCodeAt(0), 0) % 3 === 0;
+          runRequests[id] = { ...r, status: declined ? 'declined' : 'accepted' };
+          if (!declined && !joined.includes(id)) joined.push(id);
+          notices.unshift({ id: `n${now}${id}`, kind: declined ? 'declined' : 'accepted', activityId: id, at: now });
         }
-        const next = { ...prev, requests, runRequests, joined };
+        const next = { ...prev, requests, runRequests, joined, notices };
         try {
           Storage.setItemSync(KEY, JSON.stringify(next));
         } catch {}
@@ -238,6 +251,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     toggleFollow: (id) =>
       update((s) => ({ ...s, following: s.following.includes(id) ? s.following.filter((x) => x !== id) : [...s.following, id] })),
     setAdmin: (on) => update((s) => ({ ...s, admin: on })),
+    readNotices: () => update((s) => ({ ...s, notices: (s.notices ?? []).map((n) => ({ ...n, read: true })) })),
     deleteCall: (id) => update((s) => ({ ...s, calls: (s.calls ?? []).filter((c) => c.id !== id) })),
     logCall: (c) => update((s) => ({ ...s, calls: [...(s.calls ?? []), { ...c, id: `call${Date.now()}`, at: Date.now() }] })),
     addPost: (uri, caption) =>
