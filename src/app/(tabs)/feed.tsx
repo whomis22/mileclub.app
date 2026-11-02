@@ -3,7 +3,9 @@ import { Redirect, router, type Href } from "expo-router";
 import { useState } from "react";
 import { Alert, Pressable, StyleSheet, Text, View } from "react-native";
 
-import { CommentPreview, useComments } from "@/components/comment-preview";
+import { CommentPreview, openComments, useComments } from "@/components/comment-preview";
+import { CommentsSheet } from "@/components/comments-sheet";
+import { PHOTOS } from "@/data/photos";
 import { Avatar, MenuButton, Screen } from "@/components/ui";
 import { agoLabel } from "@/data/comments";
 import { FEED, TEXT_POSTS, type TextPost } from "@/data/feed";
@@ -12,12 +14,6 @@ import { hoursAgoLabel } from "@/lib/time";
 import { useStore } from "@/state/store";
 import { colors, fonts, radius, space, themed, useTheme } from "@/theme";
 
-const PHOTOS = [
-  require("../../../assets/images/photos/river.png"),
-  require("../../../assets/images/photos/park.png"),
-  require("../../../assets/images/photos/dusk.png"),
-  require("../../../assets/images/photos/lake.png"),
-];
 
 const FILTERS = ["For you", "Following", "Nearby", "Coaches"] as const;
 
@@ -25,7 +21,7 @@ function CommentButton({ postId }: { postId: string }) {
   const n = useComments(postId).length;
   return (
     <Pressable
-      onPress={() => router.push(`/post/${postId}` as Href)}
+      onPress={() => openComments(postId)}
       style={styles.action}
       accessibilityLabel="Comments"
     >
@@ -310,7 +306,7 @@ export default function Explore() {
 
               <View style={styles.photo}>
                 <Image
-                  source={PHOTOS[i % PHOTOS.length]}
+                  source={PHOTOS[FEED.indexOf(post) % PHOTOS.length]}
                   style={StyleSheet.absoluteFill}
                   contentFit="cover"
                 />
@@ -360,6 +356,7 @@ export default function Explore() {
           </View>
         );
       })}
+      <CommentsSheet />
     </Screen>
   );
 }

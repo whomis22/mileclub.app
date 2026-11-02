@@ -1,10 +1,27 @@
-import { router, type Href } from 'expo-router';
+import { useSyncExternalStore } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { sampleComments } from '@/data/comments';
 import { findPerson } from '@/data/people';
 import { useStore } from '@/state/store';
 import { colors, fonts, space, themed } from '@/theme';
+
+// Which post's comment sheet is open (TikTok-style: the post stays visible above it).
+let openId: string | null = null;
+const subs = new Set<() => void>();
+export function openComments(id: string | null) {
+  openId = id;
+  subs.forEach((f) => f());
+}
+export function useOpenComments() {
+  return useSyncExternalStore(
+    (f) => {
+      subs.add(f);
+      return () => subs.delete(f);
+    },
+    () => openId,
+  );
+}
 
 export function useComments(postId: string) {
   const { comments } = useStore();
@@ -19,7 +36,7 @@ export function authorName(authorId: string, myName?: string) {
 export function CommentPreview({ postId }: { postId: string }) {
   const { profile } = useStore();
   const all = useComments(postId);
-  const open = () => router.push(`/post/${postId}` as Href);
+  const open = () => openComments(postId);
   return (
     <View style={styles.wrap}>
       {all.length > 2 ? (
