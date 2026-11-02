@@ -26,6 +26,7 @@ export default function Menu() {
         { label: 'Host a session', href: '/host-session' },
         { label: 'Booking requests', href: '/requests' },
         { label: 'Earnings', href: '/earnings' },
+        { label: 'About Mile Club', href: '/about' as Href },
         { label: 'Messages', href: '/messages' },
         { label: 'My runs', href: '/activities' },
       ]
@@ -36,6 +37,7 @@ export default function Menu() {
         { label: 'My runs', href: '/activities' },
         { label: 'Coaches', href: '/train' },
         { label: 'People near you', href: '/people' },
+        { label: 'About Mile Club', href: '/about' as Href },
       ];
   const settings: { label: string; onPress: () => void }[] = [
     { label: 'Account', onPress: () => go('/profile') },

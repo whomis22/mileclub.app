@@ -38,6 +38,7 @@ export default function RootLayout() {
         }}>
         <Stack.Screen name="activity/[id]" options={{ headerShown: true, title: '' }} />
         <Stack.Screen name="person/[id]" options={{ headerShown: true, title: '' }} />
+        <Stack.Screen name="about" options={{ headerShown: true, title: 'About Mile Club' }} />
         <Stack.Screen name="people" options={{ headerShown: true, title: 'People near you' }} />
         <Stack.Screen name="coach/[id]" options={{ headerShown: true, title: '' }} />
         <Stack.Screen name="session/[id]" options={{ headerShown: true, title: '' }} />
