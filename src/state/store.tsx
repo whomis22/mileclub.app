@@ -17,13 +17,13 @@ export type IncomingRequest = { id: string; sessionId: string; personId: string;
 export type RunRequest = { id: string; activityId: string; personId: string; status: RequestStatus; at: number };
 
 // A photo the user posted on Explore (mock: the picture stays on this phone only).
-export type MyPost = { id: string; uri?: string; caption: string; at: number }; // no uri = text-only post
+export type MyPost = { id: string; uri?: string; caption: string; at: number; archived?: boolean; edited?: boolean }; // no uri = text-only post
 
 // A comment under any Explore post. authorId is 'me' or a sample person id.
 export type PostComment = { id: string; authorId: string; text: string; at: number };
 
 // A call the user made, shown as a line in the chat with that person.
-export type CallLog = { id: string; personId: string; video: boolean; secs: number; answered: boolean; at: number };
+export type CallLog = { id: string; personId: string; video: boolean; secs: number; answered: boolean; at: number; incoming?: boolean };
 
 // Demo: sample coaches and hosts answer a request after this long.
 const DEMO_REPLY_MS = 20000;
@@ -73,6 +73,8 @@ type Store = State & {
   deleteCall: (id: string) => void;
   addPost: (uri: string | undefined, caption: string) => void;
   deletePost: (id: string) => void;
+  editPost: (id: string, caption: string, uri?: string) => void;
+  archivePost: (id: string, archived: boolean) => void;
   addComment: (postId: string, text: string) => void;
   deleteComment: (postId: string, commentId: string) => void;
   cancelBooking: (sessionId: string) => void;
@@ -240,6 +242,10 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     logCall: (c) => update((s) => ({ ...s, calls: [...(s.calls ?? []), { ...c, id: `call${Date.now()}`, at: Date.now() }] })),
     addPost: (uri, caption) =>
       update((s) => ({ ...s, myPosts: [{ id: `mp${Date.now()}`, uri, caption: caption.trim(), at: Date.now() }, ...s.myPosts] })),
+    editPost: (id, caption, uri) =>
+      update((s) => ({ ...s, myPosts: s.myPosts.map((p) => (p.id === id ? { ...p, caption: caption.trim(), uri, edited: true } : p)) })),
+    archivePost: (id, archived) =>
+      update((s) => ({ ...s, myPosts: s.myPosts.map((p) => (p.id === id ? { ...p, archived } : p)) })),
     deletePost: (id) => update((s) => ({ ...s, myPosts: s.myPosts.filter((p) => p.id !== id) })),
     addComment: (postId, text) =>
       update((s) => ({

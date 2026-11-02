@@ -1,3 +1,4 @@
+import { setAudioModeAsync, useAudioPlayer, useAudioPlayerStatus } from 'expo-audio';
 import { CameraView, useCameraPermissions } from 'expo-camera';
 import * as Haptics from 'expo-haptics';
 import { router, useLocalSearchParams, type Href } from 'expo-router';
@@ -33,7 +34,10 @@ type Phase = 'ringing' | 'live' | 'ended';
 // Your own camera shows for real in video calls; the other person is pretend
 // until Mile Club has a calling service and a server.
 export default function Call() {
-  const { id, video } = useLocalSearchParams<{ id: string; video?: string }>();
+  const { id, video, incoming: inc } = useLocalSearchParams<{ id: string; video?: string; incoming?: string }>();
+  const incoming = inc === '1';
+  // Mile Club's own ringtone (soft marimba chimes), only when someone calls you.
+  const ringtone = useAudioPlayer(require('../../../assets/sounds/ringtone.m4a'));
   const { activities, logCall } = useStore();
   const p = findPerson(id);
   const c = p ? undefined : findCoach(id);
@@ -64,16 +68,39 @@ export default function Call() {
     );
     loop.start();
     if (Platform.OS !== 'web') Vibration.vibrate([0, 400, 800, 400], true);
-    const answer = setTimeout(() => {
-      setPhase('live');
-      if (Platform.OS !== 'web') Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-    }, 3500);
+    if (incoming) {
+      setAudioModeAsync({ playsInSilentMode: true }).catch(() => {});
+      ringtone.seekTo(0);
+      ringtone.play();
+    }
+    // Calling out: they "answer" after a moment. Someone calling you: wait for Accept.
+    const answer = incoming
+      ? undefined
+      : setTimeout(() => {
+          setPhase('live');
+          if (Platform.OS !== 'web') Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+        }, 3500);
     return () => {
       loop.stop();
       Vibration.cancel();
-      clearTimeout(answer);
+      if (incoming) ringtone.pause();
+      if (answer) clearTimeout(answer);
     };
-  }, [phase, pulse]);
+  }, [phase, pulse, incoming, ringtone]);
+
+  // Loop the ringtone until the call is answered or declined.
+  const ringStatus = useAudioPlayerStatus(ringtone);
+  useEffect(() => {
+    if (incoming && phase === 'ringing' && ringStatus.didJustFinish) {
+      ringtone.seekTo(0);
+      ringtone.play();
+    }
+  }, [ringStatus.didJustFinish, incoming, phase, ringtone]);
+
+  function accept() {
+    setPhase('live');
+    if (Platform.OS !== 'web') Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+  }
 
   useEffect(() => {
     if (phase !== 'live') return;
@@ -83,7 +110,7 @@ export default function Call() {
 
   function end() {
     Vibration.cancel();
-    logCall({ personId: id, video: videoOn, secs, answered: phase !== 'ringing' });
+    logCall({ personId: id, video: videoOn, secs, answered: phase !== 'ringing', incoming });
     setPhase('ended');
     setTimeout(() => router.back(), 1000);
   }
@@ -144,7 +171,13 @@ export default function Call() {
         </View>
         <Text style={s.name}>{name}</Text>
         <Text style={s.status}>
-          {phase === 'ringing' ? (videoOn ? 'Video calling…' : 'Calling…') : phase === 'live' ? clock : `Call ended · ${clock}`}
+          {phase === 'ringing'
+            ? incoming
+              ? videoOn ? 'Wants to video call…' : 'Calling you…'
+              : videoOn ? 'Video calling…' : 'Calling…'
+            : phase === 'live'
+              ? clock
+              : `Call ended · ${clock}`}
         </Text>
         {shared ? (
           <View style={s.chip}>
@@ -158,7 +191,14 @@ export default function Call() {
 
       {phase === 'ringing' ? (
         <View style={s.ringBtns}>
-          <Round big icon="📞" label="Cancel" red onPress={end} />
+          {incoming ? (
+            <View style={{ flexDirection: 'row', gap: 80 }}>
+              <Round big icon="📞" label="Decline" red onPress={end} />
+              <Round big icon="📞" label="Accept" accept onPress={accept} />
+            </View>
+          ) : (
+            <Round big icon="📞" label="Cancel" red onPress={end} />
+          )}
         </View>
       ) : (
         <View style={s.grid}>
@@ -182,11 +222,11 @@ export default function Call() {
   );
 }
 
-function Round({ icon, label, onPress, on, red, big, small, disabled }: {
-  icon: string; label: string; onPress: () => void; on?: boolean; red?: boolean; big?: boolean; small?: boolean; disabled?: boolean;
+function Round({ icon, label, onPress, on, red, accept, big, small, disabled }: {
+  icon: string; label: string; onPress: () => void; on?: boolean; red?: boolean; accept?: boolean; big?: boolean; small?: boolean; disabled?: boolean;
 }) {
   const size = big ? 74 : small ? 56 : 66;
-  const bg = red ? C.red : on ? C.peach : C.btn;
+  const bg = red ? C.red : accept ? C.olive : on ? C.peach : C.btn;
   return (
     <Pressable onPress={onPress} disabled={disabled} style={[s.roundWrap, small && { width: 64 }, disabled && { opacity: 0.4 }]} accessibilityLabel={label}>
       <View style={[s.round, { width: size, height: size, borderRadius: size / 2, backgroundColor: bg }]}>

@@ -40,6 +40,13 @@ export default function Menu() {
   const settings: { label: string; onPress: () => void }[] = [
     { label: 'Account', onPress: () => go('/profile') },
     { label: 'Who I meet up with', onPress: () => go('/meet-settings' as Href) },
+    {
+      label: 'Try an incoming call (demo)',
+      onPress: () => {
+        router.back();
+        setTimeout(() => router.push('/call/femke?incoming=1' as Href), 1500);
+      },
+    },
     { label: 'Notifications', onPress: () => soon('Notifications') },
     { label: 'Privacy and safety', onPress: () => soon('Privacy and safety') },
     { label: 'Payments', onPress: () => soon('Payments') },

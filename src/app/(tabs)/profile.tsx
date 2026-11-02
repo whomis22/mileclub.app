@@ -2,6 +2,7 @@ import { router, type Href } from 'expo-router';
 import { Alert, Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { Avatar, Badge, Body, Button, Card, Chip, Chips, Label, MenuButton, Screen } from '@/components/ui';
+import { MyContent } from '@/components/my-content';
 import { findCoach } from '@/data/coaches';
 import { activityInfo } from '@/data/options';
 import { findPerson } from '@/data/people';
@@ -47,6 +48,8 @@ export default function ProfileTab() {
           <Text style={styles.statLabel}>SPORTS</Text>
         </View>
       </View>
+
+      <MyContent />
 
       <Card style={styles.followCard}>
         <Text style={styles.followTitle}>Following · {following.length}</Text>

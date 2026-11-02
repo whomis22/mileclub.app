@@ -208,7 +208,7 @@ export default function Chat() {
           .map(
             (c): ChatMessage => ({
               id: c.id,
-              from: "me",
+              from: c.incoming ? "them" : "me",
               text: c.video ? "Video call" : "Voice call",
               call: { video: c.video, secs: c.secs, answered: c.answered },
               at: c.at,

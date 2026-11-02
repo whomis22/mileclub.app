@@ -1,6 +1,6 @@
 import { Image } from 'expo-image';
 import * as ImagePicker from 'expo-image-picker';
-import { router } from 'expo-router';
+import { router, useLocalSearchParams } from 'expo-router';
 import { useState } from 'react';
 import { Alert, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 
@@ -10,9 +10,11 @@ import { colors, fonts, radius, space, themed, useTheme } from '@/theme';
 
 export default function NewPost() {
   useTheme();
-  const { addPost } = useStore();
-  const [uri, setUri] = useState<string | null>(null);
-  const [caption, setCaption] = useState('');
+  const { addPost, editPost, myPosts } = useStore();
+  const { edit } = useLocalSearchParams<{ edit?: string }>();
+  const editing = edit ? myPosts.find((p) => p.id === edit) : undefined;
+  const [uri, setUri] = useState<string | null>(editing?.uri ?? null);
+  const [caption, setCaption] = useState(editing?.caption ?? '');
 
   async function fromLibrary() {
     const r = await ImagePicker.launchImageLibraryAsync({ mediaTypes: ['images'], allowsEditing: true, aspect: [4, 5], quality: 0.7 });
@@ -31,7 +33,8 @@ export default function NewPost() {
 
   function share() {
     if (!uri && !caption.trim()) return;
-    addPost(uri ?? undefined, caption);
+    if (editing) editPost(editing.id, caption, uri ?? undefined);
+    else addPost(uri ?? undefined, caption);
     router.back();
   }
 
@@ -68,7 +71,7 @@ export default function NewPost() {
         multiline
         maxLength={280}
       />
-      <Button title="Share to For You" onPress={share} disabled={!uri && !caption.trim()} />
+      <Button title={editing ? 'Save changes' : 'Share to For You'} onPress={share} disabled={!uri && !caption.trim()} />
       <Text style={styles.note}>Everyone on Mile Club can see and comment on your post.</Text>
     </ScrollView>
   );

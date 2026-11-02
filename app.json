@@ -48,7 +48,8 @@
         {
           "locationWhenInUsePermission": "Mile Club uses your location when you share it in a chat and to give you directions."
         }
-      ]
+      ],
+      "expo-audio"
     ],
     "experiments": {
       "typedRoutes": true,
