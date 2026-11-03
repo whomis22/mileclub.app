@@ -7,6 +7,7 @@ import type { Role } from '@/data/roles';
 import { PEOPLE } from '@/data/people';
 import type { Activity, Profile } from '@/data/types';
 import { canSeeRun } from '@/lib/meet';
+import { pushProfile, supabase } from '@/lib/supabase';
 
 export type RequestStatus = 'pending' | 'accepted' | 'declined';
 
@@ -201,7 +202,11 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     statusOf: (id) => state.requests[id]?.status,
     respond: (rid, status) =>
       update((s) => ({ ...s, incoming: s.incoming.map((r) => (r.id === rid ? { ...r, status } : r)) })),
-    saveProfile: (profile) => update((s) => ({ ...s, profile })),
+    saveProfile: (profile) => {
+      update((s) => ({ ...s, profile }));
+      // Also save it to the person's Mile Club account (if they're logged in).
+      pushProfile(profile).catch(() => {});
+    },
     createActivity: (input) => {
       const activity: Activity = { ...input, id: `me-${Date.now()}`, participants: ['me'], hostId: 'me' };
       // Demo: a couple of people ask to join straight away, so there are requests to accept or decline.
@@ -272,7 +277,10 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     deleteComment: (postId, cid) =>
       update((s) => ({ ...s, comments: { ...s.comments, [postId]: (s.comments[postId] ?? []).filter((c) => c.id !== cid) } })),
     block: (personId) => update((s) => ({ ...s, blocked: [...s.blocked, personId] })),
-    reset: () => update(() => empty),
+    reset: () => {
+      update(() => empty);
+      supabase.auth.signOut().catch(() => {});
+    },
   };
 
   return <Ctx.Provider value={store}>{children}</Ctx.Provider>;
