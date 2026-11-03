@@ -237,6 +237,20 @@ fieldset { border: 0; padding: 0; margin: 0; }
 .details { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; margin-top: 10px; }
 .details img { display: block; width: 100%; height: auto; aspect-ratio: 1; object-fit: cover; border-radius: 16px; }
 @media (max-width: 900px) { .about { grid-template-columns: 1fr; gap: 28px; } }
+.waitlist { display: grid; grid-template-columns: minmax(0, .9fr) minmax(0, 1.1fr); gap: 48px; align-items: start; }
+.waitlist .head { margin-bottom: 0; }
+.try { display: grid; grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr); gap: 40px; align-items: center; background: var(--cream-2); border-radius: 32px; padding: clamp(28px, 5vw, 56px); }
+.try-text { display: grid; gap: 18px; justify-items: start; }
+.try-text > p { color: var(--muted); font-size: 1.1rem; max-width: 46ch; }
+.try-steps { margin: 0; padding-left: 1.3em; display: grid; gap: 10px; }
+.try-steps li { padding-left: 4px; }
+.try-steps .links { display: inline-flex; gap: 8px; margin-left: 4px; }
+.try-steps .links a { font-weight: 600; color: var(--olive-ink); }
+.qr { margin: 0; justify-self: center; text-align: center; }
+.qr img { display: block; width: 100%; max-width: 240px; height: auto; background: #FFFFFF; border-radius: 20px; padding: 12px; }
+.qr figcaption { margin-top: 10px; font-size: .9rem; color: var(--muted); }
+.soon a { color: var(--olive-ink); font-weight: 600; }
+@media (max-width: 900px) { .waitlist, .try { grid-template-columns: 1fr; } }
 .social { display: flex; flex-wrap: wrap; gap: 10px; }
 .social a { display: inline-flex; align-items: center; gap: 8px; padding: 9px 16px 9px 12px; border-radius: 999px; border: 1.5px solid var(--line); background: var(--card); color: var(--ink); text-decoration: none; font-weight: 600; font-size: .92rem; }
 .social a:hover { border-color: var(--olive); }
@@ -288,6 +302,7 @@ footer .wrap { display: flex; flex-wrap: wrap; gap: 16px; justify-content: space
     <nav aria-label="Main">
       <a href="#how">How it works</a>
       <a href="#about">About</a>
+      <a href="#waitlist">Waitlist</a>
       <a href="#coaches">For coaches</a>
       <a href="#contact">Contact</a>
       <button class="mode" id="mode" type="button" aria-label="Switch to dark mode" aria-pressed="false">
@@ -306,16 +321,16 @@ footer .wrap { display: flex; flex-wrap: wrap; gap: 16px; justify-content: space
       <h1>Find your <em>running</em> crew.</h1>
       <p class="lede">Mile Club matches you with people who run at your pace. Swipe to join a run happening soon, meet up, and go.</p>
       <div class="stores">
-        <a class="store" href="#download" aria-label="Download on the App Store (coming soon)">
+        <a class="store" href="#try" aria-label="Download on the App Store (coming soon)">
           <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M16.4 12.6c0-2.4 2-3.6 2.1-3.7-1.1-1.7-2.9-1.9-3.5-1.9-1.5-.2-2.9.9-3.7.9-.8 0-1.9-.9-3.2-.8-1.6 0-3.1 1-4 2.4-1.7 3-.4 7.4 1.2 9.8.8 1.2 1.8 2.5 3 2.4 1.2 0 1.7-.8 3.2-.8s1.9.8 3.2.8c1.3 0 2.2-1.2 3-2.4.9-1.4 1.3-2.7 1.3-2.8-.1 0-2.6-1-2.6-3.9zM14 5.5c.7-.8 1.1-1.9 1-3-1 0-2.1.7-2.8 1.5-.6.7-1.2 1.8-1 2.9 1 .1 2.1-.6 2.8-1.4z"/></svg>
           <span><small>Download on the</small><b>App Store</b></span>
         </a>
-        <a class="store" href="#download" aria-label="Get it on Google Play (coming soon)">
+        <a class="store" href="#try" aria-label="Get it on Google Play (coming soon)">
           <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 2.6c-.3.3-.4.7-.4 1.2v16.4c0 .5.1.9.4 1.2l9.2-9.4L4 2.6zm10.4 8.2 2.6-2.6L6.2 2.1c-.4-.2-.8-.3-1.1-.2l9.3 8.9zm0 2.4-9.3 8.9c.3.1.7 0 1.1-.2L17 15.8l-2.6-2.6zm6.2-2.6-2.4-1.4-2.8 2.8 2.8 2.8 2.4-1.4c.8-.5.8-2.3 0-2.8z"/></svg>
           <span><small>Get it on</small><b>Google Play</b></span>
         </a>
       </div>
-      <p class="soon">Launching 2027. Download links go live on launch day.</p>
+      <p class="soon">Launching 2027. <a href="#try">Try the test version now</a> or <a href="#waitlist">join the waitlist</a>.</p>
     </div>
     <div class="stack" aria-label="Example runs in the app">
       <article class="run r1">
@@ -337,6 +352,47 @@ footer .wrap { display: flex; flex-wrap: wrap; gap: 16px; justify-content: space
       <div class="swipe" aria-hidden="true"><span>✕</span><span class="yes">✓</span></div>
     </div>
   </div>
+
+  <section id="waitlist">
+    <div class="wrap waitlist">
+      <div class="head">
+        <span class="eyebrow"><i></i>City by city</span>
+        <h2>Not in your city yet?</h2>
+        <p>We're launching one city at a time. Join the waitlist and we'll email you the moment Mile Club arrives where you live.</p>
+      </div>
+      <form id="waitlist-form" class="wl" novalidate>
+        <div class="row">
+          <div><label for="w-name">Name</label><input id="w-name" name="name" autocomplete="name" maxlength="100" required placeholder="Sam Jones"></div>
+          <div><label for="w-age">Age</label><input id="w-age" name="age" type="number" inputmode="numeric" min="16" max="100" required placeholder="28"></div>
+        </div>
+        <div><label for="w-email">Email</label><input id="w-email" name="email" type="email" autocomplete="email" maxlength="254" required placeholder="sam@example.com"></div>
+        <div><label for="w-city">Your city</label><input id="w-city" name="city" autocomplete="address-level2" maxlength="100" required placeholder="e.g. New York"></div>
+        <p class="err" id="w-err" role="alert"></p>
+        <button class="btn btn-olive" type="submit" id="w-btn">Join the waitlist</button>
+        <p class="sent" id="w-sent" role="status"></p>
+        <p class="note">We only use your details to tell you when Mile Club launches near you. You must be 16 or older.</p>
+      </form>
+    </div>
+  </section>
+
+  <section id="try" style="padding-top:0">
+    <div class="wrap">
+      <div class="try">
+        <div class="try-text">
+          <h2>Try Mile Club today.</h2>
+          <p>The full app arrives in the App Store and Google Play at launch. Until then you can try the early test version on your phone.</p>
+          <ol class="try-steps">
+            <li><b>Get the free Expo Go app.</b> <span class="links"><a href="https://apps.apple.com/app/expo-go/id982107779" target="_blank" rel="noopener noreferrer">iPhone</a> <a href="https://play.google.com/store/apps/details?id=host.exp.exponent" target="_blank" rel="noopener noreferrer">Android</a></span></li>
+            <li><b>Scan the code with your phone camera,</b> or tap the button below on your phone.</li>
+            <li><b>Mile Club opens in Expo Go.</b> Have a look around.</li>
+          </ol>
+          <a class="btn btn-olive" href="exp://u.expo.dev/b85234b4-b788-4cd1-90d2-2a9300b0b702?runtime-version=exposdk%3A58.0.0&amp;channel-name=preview">Open the test app</a>
+          <p class="note">This is an early test version, so some things are examples.</p>
+        </div>
+        <figure class="qr"><img src="expo-qr.png" alt="QR code that opens the Mile Club test app in Expo Go" width="600" height="600" loading="lazy"><figcaption>Scan with your phone camera</figcaption></figure>
+      </div>
+    </div>
+  </section>
 
   <section id="how">
     <div class="wrap">
@@ -461,6 +517,40 @@ document.getElementById('contact-form').addEventListener('submit', function (e) 
   ok.textContent = 'Thanks, ' + name.split(' ')[0] + '! In the live site this would reach the Mile Club inbox and we would reply to ' + email + '.';
   ok.classList.add('show');
 });
+
+(function () {
+  var SUPABASE_URL = 'https://zfdklgeiacutfezykweq.supabase.co';
+  var SUPABASE_KEY = 'sb_publishable_dDX4vOCfhyjOp-_nKYKUQA_VnUgbPTS';
+  var form = document.getElementById('waitlist-form');
+  var err = document.getElementById('w-err'), ok = document.getElementById('w-sent'), btn = document.getElementById('w-btn');
+  form.addEventListener('submit', function (e) {
+    e.preventDefault();
+    var f = form.elements;
+    var name = f.name.value.trim(), email = f.email.value.trim(), city = f.city.value.trim(), age = parseInt(f.age.value, 10);
+    ok.classList.remove('show');
+    if (!name) { err.textContent = 'Please add your name.'; f.name.focus(); return; }
+    if (!(age >= 16 && age <= 100)) { err.textContent = 'Please add your age. You need to be 16 or older.'; f.age.focus(); return; }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { err.textContent = 'Please add an email address so we can tell you when we launch.'; f.email.focus(); return; }
+    if (!city) { err.textContent = 'Please add your city.'; f.city.focus(); return; }
+    err.textContent = '';
+    var first = name.split(' ')[0];
+    function done(msg) { ok.textContent = msg; ok.classList.add('show'); form.reset(); btn.disabled = false; btn.textContent = 'Join the waitlist'; }
+    if (window.MC_PREVIEW) { done('Thanks, ' + first + '! On the live website this adds you to the waitlist for ' + city + '.'); return; }
+    btn.disabled = true; btn.textContent = 'Joining…';
+    fetch(SUPABASE_URL + '/rest/v1/waitlist', {
+      method: 'POST',
+      headers: { 'apikey': SUPABASE_KEY, 'Content-Type': 'application/json', 'Prefer': 'return=minimal' },
+      body: JSON.stringify({ name: name, email: email, city: city, age: age })
+    }).then(function (r) {
+      if (r.ok) return done("You're on the list, " + first + "! We'll email you when Mile Club launches in " + city + '.');
+      if (r.status === 409) return done("You're already on the list for " + city + ". We'll be in touch!");
+      throw new Error(r.status);
+    }).catch(function () {
+      btn.disabled = false; btn.textContent = 'Join the waitlist';
+      err.textContent = "Sorry, that didn't go through. Please check your connection and try again.";
+    });
+  });
+})();
 
 (function () {
   // [ISO code, dial code, name]
