@@ -158,6 +158,8 @@ nav a:hover { color: var(--olive-ink); }
 .run { position: absolute; left: 50%; top: 50%; width: 270px; max-width: 78%; aspect-ratio: 3 / 4; border-radius: 26px; padding: 20px; display: flex; flex-direction: column; justify-content: space-between; color: #FFFDF8; box-shadow: 0 24px 50px -24px rgba(42, 51, 24, .45); overflow: hidden; }
 .run::before { content: ""; position: absolute; inset: 0; background: repeating-linear-gradient(115deg, rgba(255,255,255,.07) 0 2px, transparent 2px 26px); }
 .run > * { position: relative; }
+.run > .court { position: absolute; inset: 0; width: 100%; height: 100%; }
+.has-art::before { display: none; }
 .r1 > div, .r2 > div { visibility: hidden; }
 .r2 .tag { margin-left: auto; }
 .r1 { background: linear-gradient(160deg, var(--c1a), var(--c1b)); transform: translate(-82%, -47%) rotate(-10deg); }
@@ -363,7 +365,48 @@ footer .social a:hover { border-color: var(--on-band); }
         <span class="tag">Tue · 7:00</span>
         <div><h3>Sunrise 5K</h3><div class="stats"><span>5 km</span><span>Easy pace</span></div></div>
       </article>
-      <article class="run r3">
+      <article class="run r3 has-art">
+        <svg class="court" viewBox="0 0 300 400" aria-hidden="true" preserveAspectRatio="xMidYMin slice">
+    <defs><linearGradient id="fade" x1="0" y1="0" x2="0" y2="1"><stop offset=".45" stop-color="#000" stop-opacity="0"/><stop offset="1" stop-color="#000" stop-opacity=".85"/></linearGradient></defs>
+    <rect x="0" y="0" width="300" height="400" fill="#3F5222"/>
+    <g transform="translate(36 6) scale(.76)">
+    <rect x="38" y="22" width="224" height="330" rx="6" fill="#6F8640" stroke="rgba(247,241,230,.55)" stroke-width="3"/>
+    <path d="M38 98H262M38 276H262M150 98V276" stroke="#F7F1E6" stroke-width="2.5" opacity=".9"/>
+    <rect x="30" y="183" width="240" height="8" rx="3" fill="#F7F1E6"/>
+    <path d="M30 187H270" stroke="#161616" stroke-width="1" stroke-dasharray="3 3" opacity=".5"/>
+    <g>
+      <line x1="98" y1="62" x2="120" y2="80" stroke="#C98B68" stroke-width="5" stroke-linecap="round"/>
+      <circle cx="127" cy="86" r="10" fill="#161616" stroke="#F7F1E6" stroke-width="2"/>
+      <ellipse cx="98" cy="62" rx="19" ry="12" fill="#F4B595"/>
+      <circle cx="98" cy="62" r="9.5" fill="#2A1E17"/>
+      <circle cx="98" cy="59" r="6.5" fill="#C98B68"/>
+    </g>
+    <g>
+      <line x1="205" y1="128" x2="181" y2="148" stroke="#F1C9A5" stroke-width="5" stroke-linecap="round"/>
+      <circle cx="174" cy="154" r="10" fill="#161616" stroke="#F7F1E6" stroke-width="2"/>
+      <ellipse cx="205" cy="128" rx="19" ry="12" fill="#F7F1E6"/>
+      <circle cx="205" cy="128" r="9.5" fill="#8A5A2B"/>
+      <circle cx="205" cy="125" r="6.5" fill="#F1C9A5"/>
+    </g>
+    <g>
+      <line x1="92" y1="240" x2="116" y2="220" stroke="#8D5B3E" stroke-width="5" stroke-linecap="round"/>
+      <circle cx="123" cy="214" r="10" fill="#161616" stroke="#F7F1E6" stroke-width="2"/>
+      <ellipse cx="92" cy="240" rx="19" ry="12" fill="#161616"/>
+      <circle cx="92" cy="240" r="9.5" fill="#161616"/>
+      <circle cx="92" cy="243" r="6.5" fill="#8D5B3E"/>
+    </g>
+    <g>
+      <line x1="208" y1="306" x2="186" y2="286" stroke="#E7B48F" stroke-width="5" stroke-linecap="round"/>
+      <circle cx="179" cy="280" r="10" fill="#161616" stroke="#F7F1E6" stroke-width="2"/>
+      <ellipse cx="208" cy="306" rx="19" ry="12" fill="#F4B595"/>
+      <circle cx="208" cy="306" r="9.5" fill="#3B2A22"/>
+      <circle cx="208" cy="309" r="6.5" fill="#E7B48F"/>
+    </g>
+    <path d="M176 210 Q170 190 162 170" stroke="#F2E46B" stroke-width="2" stroke-dasharray="2 4" fill="none" opacity=".8"/>
+    <circle cx="160" cy="164" r="5.5" fill="#E9F06A" stroke="#C9D43A" stroke-width="1"/>
+    </g>
+    <rect width="300" height="400" fill="url(#fade)"/>
+  </svg>
         <span class="tag">Starts in 2 h</span>
         <div>
           <h3>Padel doubles</h3>
