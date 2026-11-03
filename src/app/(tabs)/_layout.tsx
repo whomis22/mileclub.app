@@ -109,7 +109,7 @@ export default function TabsLayout() {
       <Tabs.Screen name="feed" options={{ title: 'For You' }} />
       <Tabs.Screen name="now" options={{ title: 'Home' }} />
       <Tabs.Screen name="studio" options={{ title: 'Studio' }} />
-      <Tabs.Screen name="activities" options={{ title: 'Runs' }} />
+      <Tabs.Screen name="activities" options={{ title: 'Plans' }} />
       <Tabs.Screen name="messages" options={{ title: 'Messages' }} />
       <Tabs.Screen name="profile" options={{ title: 'You' }} />
       <Tabs.Screen name="train" options={{ title: 'Coaches', href: null }} />

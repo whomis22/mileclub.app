@@ -21,7 +21,7 @@ export default function Notifications() {
   return (
     <Screen edges={['bottom']}>
       {list.length === 0 ? (
-        <Body muted>Nothing yet. When you ask to join a run, you’ll hear here as soon as the host answers.</Body>
+        <Body muted>Nothing yet. When you ask to join something, you’ll hear here as soon as the host answers.</Body>
       ) : null}
       {list.map((n) => {
         const d = describeNotice(n, activities, sessions);

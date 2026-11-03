@@ -519,7 +519,7 @@ export default function Explore() {
         {filter !== "Coaches" && posts.length === 0 ? (
           <Text style={styles.empty}>
             {filter === "Following"
-              ? "Follow people to see their runs here."
+              ? "Follow people to see what they get up to here."
               : "Nothing here yet."}
           </Text>
         ) : null}

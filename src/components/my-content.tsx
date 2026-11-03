@@ -82,7 +82,7 @@ export function MyContent() {
       {tab === 'activity' ? (
         <View style={{ gap: space.sm }}>
           <View style={styles.statsRow}>
-            <Stat n={myRuns.length} label="runs" />
+            <Stat n={myRuns.length} label="plans" />
             <Stat n={live.length} label="posts" />
             <Stat n={myComments.length} label="comments" />
             <Stat n={kudos.length} label="likes" />
@@ -101,7 +101,7 @@ export function MyContent() {
               <Text style={styles.rowTime}>{agoLabel(c.at)}</Text>
             </View>
           ))}
-          {!myRuns.length && !myComments.length ? <Text style={styles.emptyText}>Join a run or comment on a post and it shows up here.</Text> : null}
+          {!myRuns.length && !myComments.length ? <Text style={styles.emptyText}>Join a plan or comment on a post and it shows up here.</Text> : null}
         </View>
       ) : null}
 

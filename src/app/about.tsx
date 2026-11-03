@@ -7,8 +7,10 @@ import { colors, fonts, radius, space, themed, useTheme } from '@/theme';
 
 // About Mile Club: the team photo, what the club is and how it works.
 const POINTS = [
-  { icon: '🏃', title: 'Run with people near you', body: 'Find a run that fits your pace and time, ask to join, and the host says yes.' },
-  { icon: '🤝', title: 'Meet people, not just miles', body: 'Follow people you like, chat after a run, and keep showing up together.' },
+  { icon: '🧑‍🤝‍🧑', title: 'Meet new people', body: 'Find people near you, and people in your line of work, who want to do things together.' },
+  { icon: '🏋️', title: 'Move together', body: 'Workouts, runs, pilates, yoga, tennis. Pick a plan, ask to join, and the host says yes.' },
+  { icon: '🧖', title: 'Try new things', body: 'Spa days, coffee and chats, new classes. Say yes to something different with someone new.' },
+  { icon: '🤝', title: 'Never do it alone', body: 'Follow people you like, chat after a meet-up, and keep showing up together.' },
   { icon: '🎓', title: 'Train with coaches', body: 'Book sessions with local coaches when you want a bit more.' },
 ];
 
@@ -21,8 +23,8 @@ export default function About() {
         <Logo size={34} />
         <Text style={styles.title}>Meet the club</Text>
         <Text style={styles.lead}>
-          Mile Club is a social running club in your pocket. We bring people together for runs, so nobody has to go the
-          distance alone.
+          Mile Club is a lifestyle, not just a club. Meet new people, including people in your field, and do things together:
+          workouts, fitness, spa days and new experiences. Nobody has to feel alone.
         </Text>
         <View style={{ gap: space.md, marginTop: space.lg }}>
           {POINTS.map((p) => (
@@ -36,7 +38,7 @@ export default function About() {
           ))}
         </View>
         <Pressable style={styles.cta} onPress={() => router.navigate('/activities' as Href)}>
-          <Text style={styles.ctaText}>Find a run</Text>
+          <Text style={styles.ctaText}>Find something to do</Text>
         </Pressable>
         <Text style={styles.social}>Instagram and TikTok: @mileclub.app</Text>
       </View>

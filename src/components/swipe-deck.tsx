@@ -217,7 +217,7 @@ function DeckCard({ a, home, onJoin, onOpen }: { a: Activity; home: Neighborhood
         </View>
         <View style={styles.joinRow}>
           <Pressable style={styles.joinPill} onPress={onJoin} disabled={!onJoin}>
-            <Text style={styles.joinText}>Join {info.id === 'running' ? 'run' : 'session'}</Text>
+            <Text style={styles.joinText}>Join</Text>
           </Pressable>
           <Pressable style={styles.joinArrow} onPress={onOpen} disabled={!onOpen} accessibilityLabel="See details">
             <Text style={styles.arrowText}>↗</Text>

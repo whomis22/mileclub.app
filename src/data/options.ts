@@ -7,6 +7,10 @@ export const ACTIVITIES = [
   { id: 'basketball', label: 'Basketball', emoji: '🏀' },
   { id: 'tennis', label: 'Tennis', emoji: '🎾' },
   { id: 'hiking', label: 'Hiking', emoji: '🥾' },
+  { id: 'spa', label: 'Spa & wellness', emoji: '🧖' },
+  { id: 'coffee', label: 'Coffee & chats', emoji: '☕' },
+  { id: 'networking', label: 'Meet people in my field', emoji: '💼' },
+  { id: 'new', label: 'Try something new', emoji: '🌟' },
   { id: 'strength', label: 'Strength training', emoji: '💪' },
   { id: 'other', label: 'Other', emoji: '✨' },
 ] as const;
@@ -24,6 +28,8 @@ export type Level = (typeof LEVELS)[number];
 export const GOALS = [
   'Get more active',
   'Meet new people',
+  'Meet people in my field',
+  'Try new things',
   'Train for a race',
   'Stay consistent',
   'Get stronger',

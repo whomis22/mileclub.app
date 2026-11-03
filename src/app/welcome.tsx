@@ -13,8 +13,8 @@ import { colors, fonts, radius, space, themed, useTheme } from '@/theme';
 // "Find your running crew." and the Join button at the bottom.
 
 const CARDS = [
-  { photo: require('../../assets/images/photos/dusk.png'), title: 'Sunrise 5K', style: { left: '6%', top: 36, transform: [{ rotate: '-10deg' }] } },
-  { photo: require('../../assets/images/photos/lake.png'), title: 'Riverside', style: { right: '6%', top: 16, transform: [{ rotate: '9deg' }] } },
+  { photo: require('../../assets/images/photos/dusk.png'), title: 'Spa Sunday', style: { left: '6%', top: 36, transform: [{ rotate: '-10deg' }] } },
+  { photo: require('../../assets/images/photos/lake.png'), title: 'Coffee & chats', style: { right: '6%', top: 16, transform: [{ rotate: '9deg' }] } },
 ] as const;
 
 export default function Welcome() {
@@ -81,7 +81,7 @@ export default function Welcome() {
 
       <View style={styles.bottom}>
         <Text style={styles.hero}>
-          Find your <Text style={styles.heroItalic}>running crew.</Text>
+          Find your <Text style={styles.heroItalic}>people.</Text>
         </Text>
         <View style={{ gap: space.md }}>
           {appleReady ? (

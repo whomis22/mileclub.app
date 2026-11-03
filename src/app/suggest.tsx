@@ -41,11 +41,11 @@ export default function Suggest() {
       <Text style={styles.title}>{status === 'declined' ? 'Not this time, but plenty more' : 'Others to work out with'}</Text>
       <Body muted>
         {status === 'declined'
-          ? `${from?.title ?? 'That run'} didn’t work out. Here are other ${activityInfo(type).label.toLowerCase()} plans and people near you.`
+          ? `${from?.title ?? 'That plan'} didn’t work out. Here are other ${activityInfo(type).label.toLowerCase()} plans and people near you.`
           : 'While you wait for an answer, here are other plans and people near you.'}
       </Body>
 
-      <Label>Runs you can join</Label>
+      <Label>Plans you can join</Label>
       {open.length ? open.map((a) => <ActivityCard key={a.id} activity={a} />) : <Body muted>Nothing open right now.</Body>}
       <Pressable style={styles.cta} onPress={() => router.push('/create-activity')}>
         <Text style={styles.ctaText}>Or start your own and invite people</Text>

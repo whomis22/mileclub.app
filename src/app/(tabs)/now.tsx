@@ -203,13 +203,13 @@ export default function Now() {
               <Pressable
                 onPress={() => deck.current?.swipe('left')}
                 style={({ pressed }) => [styles.choice, styles.skipBtn, pressed && { opacity: 0.7 }]}
-                accessibilityLabel="Skip this run">
+                accessibilityLabel="Skip this plan">
                 <Text style={styles.skipBtnText}>← ✕ Skip</Text>
               </Pressable>
               <Pressable
                 onPress={() => deck.current?.swipe('right')}
                 style={({ pressed }) => [styles.choice, styles.joinBtn, pressed && { opacity: 0.8 }]}
-                accessibilityLabel="Join this run">
+                accessibilityLabel="Join this plan">
                 <Text style={styles.joinBtnText}>Join ✓ →</Text>
               </Pressable>
             </View>
@@ -218,7 +218,7 @@ export default function Now() {
         ) : (
           <ScrollView style={{ flex: 1 }} contentContainerStyle={{ gap: 10, paddingVertical: 12 }}>
             <Text style={styles.emptyTitle}>Who’s free to move</Text>
-            <Text style={styles.emptySub}>No runs are open right now, but these people are around. Say hi or start something together.</Text>
+            <Text style={styles.emptySub}>Nothing is open right now, but these people are around. Say hi or start something together.</Text>
             {people.map((p) => (
               <Pressable key={p.id} style={styles.personRow} onPress={() => router.push(`/person/${p.id}`)}>
                 <Avatar name={p.firstName} color={p.color} size={44} />
@@ -236,7 +236,7 @@ export default function Now() {
             </Pressable>
             {skipped.length > 0 && (
               <Pressable style={styles.secondary} onPress={clearSkipped}>
-                <Text style={styles.secondaryText}>See skipped runs again</Text>
+                <Text style={styles.secondaryText}>See skipped plans again</Text>
               </Pressable>
             )}
           </ScrollView>

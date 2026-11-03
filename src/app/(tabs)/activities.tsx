@@ -43,14 +43,14 @@ export default function Activities() {
   const types = ACTIVITIES.filter((t) => activities.some((a) => a.type === t.id));
 
   return (
-    <Screen nothingNew="No new runs right now">
+    <Screen nothingNew="Nothing new right now">
       <MenuButton onPress={() => router.push('/menu')} />
       <View style={{ height: space.lg }} />
-      <Title sub="Join something this week, or start your own.">My runs</Title>
-      <Button title="+ Start a run" onPress={() => router.push('/create-activity')} />
+      <Title sub="Join something this week, or start your own.">My plans</Title>
+      <Button title="+ Start a plan" onPress={() => router.push('/create-activity')} />
       {asking.length > 0 && (
         <>
-          <Label>Asking to join your runs · {asking.length}</Label>
+          <Label>Asking to join your plans · {asking.length}</Label>
           {asking.map((r) => {
             const p = findPerson(r.personId);
             const a = activities.find((x) => x.id === r.activityId);

@@ -111,9 +111,9 @@ export default function Studio() {
         )}
 
         <Pressable style={styles.joinCard} onPress={() => router.navigate('/now')}>
-          <Text style={styles.joinTitle}>Run with others too</Text>
-          <Text style={styles.empty}>Coaches can join group runs like everyone else. Swipe through what’s on this week.</Text>
-          <Text style={styles.joinLink}>Find a run →</Text>
+          <Text style={styles.joinTitle}>Join in too</Text>
+          <Text style={styles.empty}>Coaches can join plans like everyone else. Swipe through what’s on this week.</Text>
+          <Text style={styles.joinLink}>Find something to do →</Text>
         </Pressable>
       </ScrollView>
     </SafeAreaView>

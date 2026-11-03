@@ -28,13 +28,13 @@ export default function Menu() {
         { label: 'Earnings', href: '/earnings' },
         { label: 'About Mile Club', href: '/about' as Href },
         { label: 'Messages', href: '/messages' },
-        { label: 'My runs', href: '/activities' },
+        { label: 'My plans', href: '/activities' },
       ]
     : [
         { label: 'Home', href: '/now' },
         { label: 'For You', href: '/feed' },
         { label: 'Messages', href: '/messages' },
-        { label: 'My runs', href: '/activities' },
+        { label: 'My plans', href: '/activities' },
         { label: 'Coaches', href: '/train' },
         { label: 'People near you', href: '/people' },
         { label: 'About Mile Club', href: '/about' as Href },

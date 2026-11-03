@@ -448,7 +448,7 @@ export default function SignUp() {
               <Text style={styles.title}>
                 Pick a profile <Text style={styles.titleItalic}>picture</Text>
               </Text>
-              <Text style={styles.help}>Have a favourite photo? Add it now so your running buddies know who to look for.</Text>
+              <Text style={styles.help}>Have a favourite photo? Add it now so the people you meet know who to look for.</Text>
               <Pressable onPress={pickPhoto} style={styles.photo}>
                 {photoUri ? <Image source={{ uri: photoUri }} style={styles.photoImg} /> : <Text style={styles.photoPlus}>+</Text>}
               </Pressable>

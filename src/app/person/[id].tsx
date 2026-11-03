@@ -41,7 +41,7 @@ function tilesFor(personId: string): Tile[] {
 
 const TABS = [
   { id: 'posts', icon: '▦', label: 'Posts' },
-  { id: 'runs', icon: '🏃', label: 'Runs' },
+  { id: 'runs', icon: '🏃', label: 'Plans' },
   { id: 'tagged', icon: '◎', label: 'Tagged' },
 ] as const;
 
@@ -123,7 +123,7 @@ export default function PersonDetail() {
         <View style={s.bio}>
           <Text style={[s.name, { color: c.ink }]}>{p.firstName}</Text>
           <Text style={[s.meta, { color: c.muted }]}>
-            {p.isCaptain ? 'Run host' : 'Member'} · {km}
+            {p.isCaptain ? 'Host' : 'Member'} · {km}
           </Text>
           <Text style={[s.bioText, { color: c.ink }]}>{p.experience}</Text>
           <Text style={[s.match, { color: olive }]}>{score}% match with you</Text>
@@ -142,7 +142,7 @@ export default function PersonDetail() {
             </Pressable>
           ) : (
             <Pressable
-              onPress={() => Alert.alert('Message after a session', `Once you’re accepted into a run with ${p.firstName}, you can message each other.`)}
+              onPress={() => Alert.alert('Message after a session', `Once you’re accepted into a plan with ${p.firstName}, you can message each other.`)}
               style={[s.btn, { backgroundColor: c.pill, flex: 1.4 }]}>
               <Text style={[s.btnText, { color: c.muted, fontSize: 13 }]} numberOfLines={1} adjustsFontSizeToFit>
                 Message after a session

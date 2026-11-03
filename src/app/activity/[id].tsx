@@ -167,7 +167,7 @@ export default function ActivityDetail() {
           {status === 'declined' && (
             <Card style={styles.statusCard}>
               <Text style={styles.statusTitle}>Not accepted this time</Text>
-              <Text style={styles.hostMeta}>This run is full or not the right fit. There are plenty of others.</Text>
+              <Text style={styles.hostMeta}>This one is full or not the right fit. There are plenty of others.</Text>
               <Pressable onPress={() => router.push(`/suggest?activityId=${a.id}` as Href)} style={[styles.msgBtn, { alignSelf: 'flex-start', marginTop: space.sm }]}>
                 <Text style={styles.msgBtnText}>Find others to work out with</Text>
               </Pressable>
@@ -186,7 +186,7 @@ export default function ActivityDetail() {
           )}
           {status !== 'declined' && (
             <Button
-              title={joined ? 'Leave this run' : status === 'pending' ? 'Cancel request' : full ? 'Ask to join the waitlist' : 'Ask to join'}
+              title={joined ? 'Leave' : status === 'pending' ? 'Cancel request' : full ? 'Ask to join the waitlist' : 'Ask to join'}
               variant={joined || status === 'pending' ? 'ghost' : 'secondary'}
               onPress={() => toggleJoin(a.id)}
             />

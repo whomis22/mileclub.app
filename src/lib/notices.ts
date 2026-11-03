@@ -9,7 +9,7 @@ export function describeNotice(n: Notice, activities: Activity[], sessions: Coac
   if (n.activityId) {
     const a = activities.find((x) => x.id === n.activityId);
     const host = a ? findPerson(a.hostId)?.firstName ?? 'The host' : 'The host';
-    const title = a?.title ?? 'the run';
+    const title = a?.title ?? 'the plan';
     return n.kind === 'accepted'
       ? { icon: '🎉', title: `${host} accepted you`, body: `You’re in for ${title}. Tap to see the details.`, href: `/activity/${n.activityId}` }
       : { icon: '🙌', title: `${host} can’t take you this time`, body: `${title} didn’t work out. Tap to find others to work out with.`, href: `/suggest?activityId=${n.activityId}` };

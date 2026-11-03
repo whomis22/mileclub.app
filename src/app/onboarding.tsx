@@ -144,7 +144,7 @@ export default function Onboarding() {
                   <Pressable key={r} onPress={() => set({ role: r })} style={[styles.role, on && styles.roleOn]}>
                     <View style={{ flex: 1 }}>
                       <Text style={[styles.roleName, on && { color: colors.onBrand }]}>
-                        {r === 'member' ? 'I want to run' : 'I’m a coach'}
+                        {r === 'member' ? 'I want to join in' : 'I’m a coach'}
                       </Text>
                       <Text style={[styles.rolePitch, on && { color: colors.oliveSoft }]}>{ROLES[r].pitch}</Text>
                     </View>
