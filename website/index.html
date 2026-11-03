@@ -280,8 +280,23 @@ fieldset { border: 0; padding: 0; margin: 0; }
 .picker .fa { display: grid; place-items: center; width: 28px; height: 28px; border-radius: 50%; background: #161616; color: #fff; font-weight: 800; font-size: .8rem; }
 @media (max-width: 640px) { .picker button span:not(.fa) { display: none; } .picker button { padding: 4px; } .picker b { display: none; } }
 
-footer { border-top: 1px solid var(--line); padding-block: 36px; color: var(--muted); font-size: .92rem; }
-footer .wrap { display: flex; flex-wrap: wrap; gap: 16px; justify-content: space-between; align-items: center; }
+footer { background: var(--band); color: var(--on-band); padding-block: 64px 28px; font-size: .95rem; margin-top: 40px; }
+:root[data-mode="dark"] footer { border-top: 1px solid var(--line); }
+.foot { display: grid; grid-template-columns: minmax(0, 1.6fr) repeat(3, minmax(0, 1fr)); gap: 40px 32px; padding-bottom: 44px; }
+.foot-brand { display: grid; gap: 16px; align-content: start; justify-items: start; }
+.foot-brand .brand span { color: var(--on-band); }
+.foot-brand p { opacity: .72; max-width: 34ch; }
+footer .social a { background: transparent; color: var(--on-band); border-color: color-mix(in srgb, var(--on-band) 25%, transparent); }
+footer .social a:hover { border-color: var(--on-band); }
+.foot-col h4 { margin: 0 0 16px; font: 700 .78rem var(--body); letter-spacing: .12em; text-transform: uppercase; opacity: .6; }
+.foot-col ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 12px; }
+.foot-col a { color: var(--on-band); text-decoration: none; opacity: .88; }
+.foot-col a:hover { opacity: 1; text-decoration: underline; text-underline-offset: 3px; }
+.foot-bottom { display: flex; flex-wrap: wrap; gap: 12px 24px; justify-content: space-between; padding-top: 24px; border-top: 1px solid color-mix(in srgb, var(--on-band) 18%, transparent); font-size: .88rem; opacity: .75; }
+.support { user-select: all; }
+.toast { position: fixed; z-index: 50; left: 50%; transform: translateX(-50%); bottom: calc(20px + env(safe-area-inset-bottom, 0px)); margin: 0; background: var(--on-band); color: var(--band); padding: 12px 20px; border-radius: 999px; font-weight: 600; box-shadow: 0 12px 30px -12px rgba(0,0,0,.5); max-width: calc(100vw - 32px); text-align: center; }
+@media (max-width: 900px) { .foot { grid-template-columns: repeat(3, minmax(0, 1fr)); } .foot-brand { grid-column: 1 / -1; } }
+@media (max-width: 560px) { .foot { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 
 @media (max-width: 900px) {
   .hero, .coach, .contact { grid-template-columns: 1fr; }
@@ -494,14 +509,50 @@ footer .wrap { display: flex; flex-wrap: wrap; gap: 16px; justify-content: space
 </main>
 
 <footer>
-  <div class="wrap">
-    <a class="brand" href="#top" aria-label="Back to top"><svg class="mark" aria-hidden="true" style="width:40px;height:22px"><use href="#mc"/></svg><span style="font-size:1rem">mile club</span></a>
-    <div class="social icons">
+  <div class="wrap foot">
+    <div class="foot-brand">
+      <a class="brand" href="#top" aria-label="Back to top"><svg class="mark" aria-hidden="true" style="width:46px;height:25px"><use href="#mc"/></svg><span>mile club</span></a>
+      <p>Find your running crew. Swipe to join group runs near you, meet up and run together.</p>
+      <div class="social icons">
           <a href="https://www.instagram.com/mileclub.app" target="_blank" rel="noopener noreferrer" aria-label="Mile Club on Instagram"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="5" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="12" cy="12" r="4" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="17.5" cy="6.5" r="1.3" fill="currentColor"/></svg></a>
           <a href="https://www.tiktok.com/@mileclub.app" target="_blank" rel="noopener noreferrer" aria-label="Mile Club on TikTok"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M16.6 2h-3.3v13.2a2.9 2.9 0 1 1-2.9-2.9c.3 0 .6 0 .9.1V9a6.3 6.3 0 1 0 5.3 6.2V8.6a7.9 7.9 0 0 0 4.4 1.4V6.7a4.6 4.6 0 0 1-4.4-4.7z"/></svg></a>
         </div>
-    <span>© 2026 Mile Club · mileclub.co</span>
+    </div>
+    <div class="foot-col" role="navigation" aria-label="App">
+      <h4>App</h4>
+      <ul>
+          <li><a href="#try">Try the test version</a></li>
+          <li><a href="#download">iPhone: coming 2027</a></li>
+          <li><a href="#download">Android: coming 2027</a></li>
+          <li><a href="#waitlist">Join the waitlist</a></li>
+      </ul>
+    </div>
+    <div class="foot-col" role="navigation" aria-label="Company">
+      <h4>Company</h4>
+      <ul>
+          <li><a href="#about">About us</a></li>
+          <li><a href="#coaches">For coaches</a></li>
+          <li><a href="#" class="soon-link" data-soon>Community Guidelines</a></li>
+          <li><a href="#contact">Contact</a></li>
+      </ul>
+    </div>
+    <div class="foot-col" role="navigation" aria-label="Legal">
+      <h4>Legal</h4>
+      <ul>
+          <li><a href="#" class="soon-link" data-soon>Privacy Policy</a></li>
+          <li><a href="#" class="soon-link" data-soon>Terms of Service</a></li>
+          <li><a href="#" class="soon-link" data-soon>EULA</a></li>
+          <li><a href="#" class="soon-link" data-soon>Refund Policy</a></li>
+          <li><a href="#" class="soon-link" data-soon>Cookie Policy</a></li>
+          <li><a href="#" class="soon-link" data-soon>Advertising Policy</a></li>
+      </ul>
+    </div>
   </div>
+  <div class="wrap foot-bottom">
+    <span>© 2026 Mile Club. All rights reserved.</span>
+    <span class="support">hello@mileclub.co</span>
+  </div>
+  <p class="toast" id="toast" role="status" hidden>This page is being written. Check back soon.</p>
 </footer>
 
 
@@ -520,6 +571,17 @@ document.getElementById('contact-form').addEventListener('submit', function (e) 
   ok.textContent = 'Thanks, ' + name.split(' ')[0] + '! In the live site this would reach the Mile Club inbox and we would reply to ' + email + '.';
   ok.classList.add('show');
 });
+
+(function () {
+  var toast = document.getElementById('toast'), t;
+  document.querySelectorAll('[data-soon]').forEach(function (a) {
+    a.addEventListener('click', function (e) {
+      e.preventDefault();
+      toast.textContent = a.textContent + ' is being written. Check back soon.';
+      toast.hidden = false; clearTimeout(t); t = setTimeout(function () { toast.hidden = true; }, 2600);
+    });
+  });
+})();
 
 (function () {
   var SUPABASE_URL = 'https://zfdklgeiacutfezykweq.supabase.co';
