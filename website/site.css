@@ -369,3 +369,18 @@ body.leaving main { transition: transform .28s ease-in, opacity .28s ease-in; tr
   body.leaving main { transform: none; opacity: 1; }
 }
 html, body { overflow-x: clip; }
+
+/* Floating background behind every page */
+.bg-float { position: fixed; inset: 0; z-index: -1; overflow: hidden; pointer-events: none; }
+.bg-float i { position: absolute; border-radius: 50%; filter: blur(60px); opacity: .42; animation: roam 22s ease-in-out infinite; }
+.bg-float i:nth-child(1) { width: 340px; height: 340px; background: var(--peach); left: -80px; top: 10%; }
+.bg-float i:nth-child(2) { width: 300px; height: 300px; background: #8FA65E; right: -60px; top: 35%; animation-duration: 26s; animation-delay: -6s; }
+.bg-float i:nth-child(3) { width: 220px; height: 220px; background: var(--peach); left: 40%; top: 70%; animation-duration: 19s; animation-delay: -12s; }
+.bg-float i:nth-child(4) { width: 180px; height: 180px; background: #C9D7A6; left: 20%; top: -40px; animation-duration: 24s; animation-delay: -3s; }
+.bg-float i:nth-child(5) { width: 260px; height: 260px; background: #8FA65E; left: -40px; bottom: -60px; animation-duration: 28s; animation-delay: -15s; opacity: .22; }
+.bg-float i:nth-child(6) { width: 160px; height: 160px; background: var(--peach); right: 15%; top: 4%; animation-duration: 17s; animation-delay: -9s; opacity: .25; }
+:root[data-mode="dark"] .bg-float i { opacity: .18; }
+@keyframes roam { 0%, 100% { transform: translate(0, 0) scale(1); } 25% { transform: translate(60px, -40px) scale(1.1); } 50% { transform: translate(-30px, 50px) scale(.95); } 75% { transform: translate(40px, 30px) scale(1.05); } }
+body { position: relative; z-index: 0; }
+header { background: color-mix(in srgb, var(--cream) 75%, transparent); }
+@media (prefers-reduced-motion: reduce) { .bg-float i { animation: none !important; } }
