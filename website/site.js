@@ -104,3 +104,39 @@ if (contactForm) contactForm.addEventListener('submit', function (e) {
   }); });
   sync();
 })();
+
+(function () {
+  var reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  // Slide sections in as you scroll
+  if (!reduce && 'IntersectionObserver' in window) {
+    var sel = '.head, .steps li, .feat, .tile, .timeline li, .faq details, .coach, .about-main, .about-text, .panel, .try, .cta, .photo, .prose, form, .follow';
+    var items = Array.prototype.slice.call(document.querySelectorAll(sel)).filter(function (el) {
+      return !el.closest('.pre') && el.getBoundingClientRect().top > window.innerHeight * 0.9;
+    });
+    var io = new IntersectionObserver(function (entries) {
+      entries.forEach(function (e) {
+        if (e.isIntersecting) { e.target.classList.remove('pre'); io.unobserve(e.target); }
+      });
+    }, { rootMargin: '0px 0px -8% 0px' });
+    items.forEach(function (el) {
+      var sibs = el.parentElement ? Array.prototype.indexOf.call(el.parentElement.children, el) : 0;
+      el.style.setProperty('--d', (Math.min(sibs, 5) * 0.08) + 's');
+      el.style.setProperty('--from', (sibs % 2 ? '40px' : '-40px'));
+      el.classList.add('slide-in', 'pre');
+      io.observe(el);
+    });
+    // Safety net: never leave anything hidden
+    setTimeout(function () { items.forEach(function (el) { if (el.getBoundingClientRect().top < window.innerHeight) el.classList.remove('pre'); }); }, 2500);
+  }
+  // Slide the page out before going to another page
+  if (!reduce) {
+    document.addEventListener('click', function (e) {
+      var a = e.target.closest && e.target.closest('a[href$=".html"], a[href*=".html#"]');
+      if (!a || a.target === '_blank' || e.metaKey || e.ctrlKey || e.shiftKey) return;
+      e.preventDefault();
+      document.body.classList.add('leaving');
+      setTimeout(function () { location.href = a.getAttribute('href'); }, 260);
+    });
+    window.addEventListener('pageshow', function () { document.body.classList.remove('leaving'); });
+  }
+})();
