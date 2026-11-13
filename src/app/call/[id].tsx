@@ -21,7 +21,7 @@ const C = {
   muted: '#A1A1A1',
   btn: '#1F1F1F',
   chip: '#262626',
-  olive: '#556B2F',
+  olive: '#5E7A2F',
   cream: '#F7F1E6',
   peach: '#F4B595',
   peachText: '#3A2210',

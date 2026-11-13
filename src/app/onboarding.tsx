@@ -400,7 +400,7 @@ const styles = themed(() => StyleSheet.create({
   phoneCard: { flex: 1, marginTop: 8, borderRadius: 14, backgroundColor: '#2F3D29', padding: 8, justifyContent: 'flex-end' },
   phoneCardText: { fontFamily: fonts.serifItalic, fontSize: 13, color: '#F7F1E6' },
   phoneJoin: { width: 34, height: 10, borderRadius: 5, backgroundColor: '#F7F1E6', marginTop: 5 },
-  phoneNav: { height: 18, borderRadius: 9, backgroundColor: '#556B2F', marginTop: 8, flexDirection: 'row', alignItems: 'center', paddingHorizontal: 3, gap: 5 },
+  phoneNav: { height: 18, borderRadius: 9, backgroundColor: '#5E7A2F', marginTop: 8, flexDirection: 'row', alignItems: 'center', paddingHorizontal: 3, gap: 5 },
   phoneNavOn: { width: 26, height: 12, borderRadius: 6, backgroundColor: '#F7F1E6' },
   phoneNavDot: { width: 5, height: 5, borderRadius: 3, backgroundColor: '#D9DDC4' },
   lookTick: { width: 26, height: 26, borderRadius: 13, borderWidth: 1.5, borderColor: colors.dashed, alignItems: 'center', justifyContent: 'center' },

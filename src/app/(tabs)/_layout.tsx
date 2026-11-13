@@ -1,12 +1,13 @@
+import Feather from '@expo/vector-icons/Feather';
 import { router, type Href } from 'expo-router';
 import { Tabs } from 'expo-router/js-tabs';
 import * as Haptics from 'expo-haptics';
 import { useEffect, useMemo, useState } from 'react';
-import { Animated, PanResponder, Platform, Pressable, StyleSheet, Text, View } from 'react-native';
+import { Animated, PanResponder, Platform, Pressable, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { useStore } from '@/state/store';
-import { colors, fonts, themed, useTheme } from '@/theme';
+import { colors, themed, useTheme } from '@/theme';
 
 type TabBarProps = {
   state: { index: number; routes: { key: string; name: string }[] };
@@ -19,8 +20,17 @@ type TabBarProps = {
 const MEMBER_TABS = ['now', 'feed', 'activities', 'messages', 'profile'];
 const COACH_TABS = ['now', 'feed', 'studio', 'messages', 'profile'];
 const COACH_TITLES: Record<string, string> = {};
+// Blend look (Yana, 2026-11-13): icons instead of words in a floating pill.
+const ICONS: Record<string, keyof typeof Feather.glyphMap> = {
+  now: 'home',
+  feed: 'layers',
+  activities: 'calendar',
+  studio: 'star',
+  messages: 'message-square',
+  profile: 'user',
+};
 
-// Floating olive pill at the bottom. The open tab is a cream pill that slides:
+// Floating dark pill at the bottom (light pill in dark mode). The open tab is an olive pill that slides:
 // tap a tab, or drag the pill along the bar and let go on the page you want.
 function PillTabBar({ state, descriptors, isCoach }: TabBarProps & { isCoach: boolean }) {
   const insets = useSafeAreaInsets();
@@ -81,15 +91,14 @@ function PillTabBar({ state, descriptors, isCoach }: TabBarProps & { isCoach: bo
             <Pressable
               key={r.key}
               accessibilityRole="tab"
+              accessibilityLabel={title}
               accessibilityState={{ selected: focused }}
               onPress={() => {
                 // Go through the router: the tab bar's own navigation prop is not always passed in.
                 if (!focused) router.navigate(`/${r.name}` as Href);
               }}
               style={styles.item}>
-              <Text style={[styles.label, i === lit && styles.labelOn]} numberOfLines={1}>
-                {title}
-              </Text>
+              <Feather name={ICONS[r.name] ?? 'circle'} size={21} color={i === lit ? colors.onBrand : colors.bg} style={{ opacity: i === lit ? 1 : 0.75 }} />
             </Pressable>
           );
         })}
@@ -118,13 +127,12 @@ export default function TabsLayout() {
 }
 
 const styles = themed(() => StyleSheet.create({
-  wrap: { backgroundColor: colors.bg, paddingHorizontal: 16, paddingTop: 6 },
+  wrap: { backgroundColor: colors.bg, paddingHorizontal: 40, paddingTop: 6, alignItems: 'center' },
   bar: {
-    height: 60, borderRadius: 30, backgroundColor: colors.olive, flexDirection: 'row', alignItems: 'center',
+    height: 62, width: '100%', maxWidth: 340, borderRadius: 31, backgroundColor: colors.ink, flexDirection: 'row', alignItems: 'center',
     paddingHorizontal: 6,
+    shadowColor: '#000', shadowOpacity: 0.18, shadowRadius: 16, shadowOffset: { width: 0, height: 6 }, elevation: 8,
   },
-  pill: { position: 'absolute', left: 6, top: 7, height: 46, borderRadius: 23, backgroundColor: colors.onBrand },
-  item: { flex: 1, height: 46, borderRadius: 23, alignItems: 'center', justifyContent: 'center' },
-  label: { fontFamily: fonts.sansMedium, fontSize: 12, color: '#D9DDC4', userSelect: 'none' },
-  labelOn: { fontFamily: fonts.sansSemi, fontSize: 13, color: colors.onPeach },
+  pill: { position: 'absolute', left: 6, top: 7, height: 48, borderRadius: 24, backgroundColor: colors.olive },
+  item: { flex: 1, height: 48, borderRadius: 24, alignItems: 'center', justifyContent: 'center' },
 }));

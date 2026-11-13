@@ -60,7 +60,7 @@ export default function PersonDetail() {
   const c = isDark
     ? { bg: '#000000', ink: '#F5F5F5', muted: '#A8A8A8', line: '#262626', pill: '#262626', tile: '#121212' }
     : { bg: '#FFFFFF', ink: '#000000', muted: '#737373', line: '#DBDBDB', pill: '#EFEFEF', tile: '#F2F2F2' };
-  const olive = isDark ? '#8FA567' : '#556B2F';
+  const olive = isDark ? '#8FA567' : '#5E7A2F';
 
   const score = matchScore(profile, p);
   const theirs = activities.filter((a) => a.participants.includes(p.id) || a.hostId === p.id);
@@ -132,7 +132,7 @@ export default function PersonDetail() {
         <View style={s.btnRow}>
           <Pressable
             onPress={() => toggleFollow(p.id)}
-            style={[s.btn, { backgroundColor: follows ? c.pill : '#556B2F' }]}
+            style={[s.btn, { backgroundColor: follows ? c.pill : '#5E7A2F' }]}
             accessibilityLabel={follows ? `Unfollow ${p.firstName}` : `Follow ${p.firstName}`}>
             <Text style={[s.btnText, { color: follows ? c.ink : '#FFFFFF' }]}>{follows ? 'Following' : 'Follow'}</Text>
           </Pressable>

@@ -1,5 +1,10 @@
-import { Karla_400Regular, Karla_500Medium, Karla_600SemiBold, Karla_700Bold } from '@expo-google-fonts/karla';
-import { Lora_600SemiBold, Lora_600SemiBold_Italic } from '@expo-google-fonts/lora';
+import {
+  PlusJakartaSans_400Regular,
+  PlusJakartaSans_500Medium,
+  PlusJakartaSans_600SemiBold,
+  PlusJakartaSans_700Bold,
+} from '@expo-google-fonts/plus-jakarta-sans';
+import { Sora_600SemiBold, Sora_700Bold } from '@expo-google-fonts/sora';
 import { Outfit_800ExtraBold } from '@expo-google-fonts/outfit';
 import { useFonts } from 'expo-font';
 import { Stack } from 'expo-router';
@@ -13,12 +18,12 @@ import { colors, useTheme } from '@/theme';
 export default function RootLayout() {
   const { isDark } = useTheme();
   const [fontsLoaded, fontError] = useFonts({
-    Lora_600SemiBold,
-    Lora_600SemiBold_Italic,
-    Karla_400Regular,
-    Karla_500Medium,
-    Karla_600SemiBold,
-    Karla_700Bold,
+    Sora_600SemiBold,
+    Sora_700Bold,
+    PlusJakartaSans_400Regular,
+    PlusJakartaSans_500Medium,
+    PlusJakartaSans_600SemiBold,
+    PlusJakartaSans_700Bold,
     Outfit_800ExtraBold,
   });
   if (!fontsLoaded && !fontError) return null;
@@ -33,7 +38,7 @@ export default function RootLayout() {
           headerTintColor: colors.ink,
           headerStyle: { backgroundColor: colors.bg },
           headerShadowVisible: false,
-          headerTitleStyle: { fontFamily: 'Lora_600SemiBold', fontSize: 19 },
+          headerTitleStyle: { fontFamily: 'Sora_700Bold', fontSize: 17 },
           headerBackTitle: 'Back',
         }}>
         <Stack.Screen name="activity/[id]" options={{ headerShown: true, title: '' }} />

@@ -20,7 +20,7 @@ export function RouteMap({ from, dest, path }: { from: LatLng | null; dest: LatL
       showsUserLocation
       initialRegion={{ ...dest, latitudeDelta: 0.03, longitudeDelta: 0.03 }}>
       <Marker coordinate={dest} pinColor="#E8956F" />
-      {path.length > 1 ? <Polyline coordinates={path} strokeColor="#556B2F" strokeWidth={5} /> : null}
+      {path.length > 1 ? <Polyline coordinates={path} strokeColor="#5E7A2F" strokeWidth={5} /> : null}
     </MapView>
   );
 }

@@ -1,3 +1,4 @@
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { Image } from "expo-image";
 import { Redirect, router, type Href } from "expo-router";
 import { useState } from "react";
@@ -96,7 +97,7 @@ function CommentButton({ postId }: { postId: string }) {
       style={styles.action}
       accessibilityLabel="Comments"
     >
-      <Text style={styles.bubble}>💬</Text>
+      <Ionicons name="chatbubble-outline" size={20} color={colors.ink} />
       <Text style={styles.count}>{n}</Text>
     </Pressable>
   );
@@ -149,9 +150,7 @@ function TextPostCard({
           style={styles.action}
           accessibilityLabel="Like"
         >
-          <Text style={[styles.heart, liked && { color: colors.peachDeep }]}>
-            {liked ? "♥" : "♡"}
-          </Text>
+          <Ionicons name={liked ? "heart" : "heart-outline"} size={22} color={liked ? colors.peachDeep : colors.ink} />
           <Text style={styles.count}>{likes + (liked ? 1 : 0)}</Text>
         </Pressable>
         <CommentButton postId={id} />
@@ -376,7 +375,7 @@ export default function Explore() {
       <View style={query.trim() ? { display: "none" } : undefined}>
         <View style={styles.tabs}>
           {FILTERS.map((f) => (
-            <Pressable key={f} onPress={() => setFilter(f)}>
+            <Pressable key={f} style={styles.tabItem} onPress={() => setFilter(f)}>
               <Text style={[styles.tab, filter === f && styles.tabOn]}>
                 {f}
               </Text>
@@ -449,14 +448,7 @@ export default function Explore() {
                         style={styles.action}
                         accessibilityLabel="Like"
                       >
-                        <Text
-                          style={[
-                            styles.heart,
-                            liked && { color: colors.peachDeep },
-                          ]}
-                        >
-                          {liked ? "♥" : "♡"}
-                        </Text>
+                        <Ionicons name={liked ? "heart" : "heart-outline"} size={22} color={liked ? colors.peachDeep : colors.ink} />
                         <Text style={styles.count}>{liked ? 1 : 0}</Text>
                       </Pressable>
                       <CommentButton postId={mp.id} />
@@ -583,21 +575,26 @@ export default function Explore() {
                     style={StyleSheet.absoluteFill}
                     contentFit="cover"
                   />
-                  <View style={styles.overlay}>
-                    <Text style={styles.postTitle} numberOfLines={1}>
-                      {post.title}
+                </View>
+
+                {/* Plan card (blend look, Yana 2026-11-13): what happened, in numbers. */}
+                <Text style={styles.postTitle} numberOfLines={1}>
+                  {post.title}
+                </Text>
+                <View style={styles.statsRow}>
+                  <View style={styles.stat}>
+                    <Text style={styles.statNum}>{(post.withCount ?? 0) + 1}</Text>
+                    <Text style={styles.statLabel}>{(post.withCount ?? 0) ? "people" : "solo"}</Text>
+                  </View>
+                  <View style={styles.stat}>
+                    <Text style={styles.statNum}>{duration(post.minutes)}</Text>
+                    <Text style={styles.statLabel}>together</Text>
+                  </View>
+                  <View style={styles.stat}>
+                    <Text style={[styles.statNum, { color: colors.link }]}>
+                      {post.distanceKm ? `${post.distanceKm.toFixed(1)} km` : Math.max(1, Math.round((post.withCount ?? 0) / 2))}
                     </Text>
-                    <Text style={styles.stats}>
-                      {[
-                        post.distanceKm
-                          ? `${post.distanceKm.toFixed(1)} km`
-                          : "",
-                        post.pace ?? "",
-                        duration(post.minutes),
-                      ]
-                        .filter(Boolean)
-                        .join("  ·  ")}
-                    </Text>
+                    <Text style={styles.statLabel}>{post.distanceKm ? "distance" : "new friends"}</Text>
                   </View>
                 </View>
 
@@ -607,19 +604,19 @@ export default function Explore() {
                     style={styles.action}
                     accessibilityLabel="Like"
                   >
-                    <Text
-                      style={[
-                        styles.heart,
-                        liked && { color: colors.peachDeep },
-                      ]}
-                    >
-                      {liked ? "♥" : "♡"}
-                    </Text>
+                    <Ionicons name={liked ? "heart" : "heart-outline"} size={22} color={liked ? colors.peachDeep : colors.ink} />
                     <Text style={styles.count}>
                       {post.kudos + (liked ? 1 : 0)}
                     </Text>
                   </Pressable>
                   <CommentButton postId={post.id} />
+                  <Pressable
+                    style={styles.joinNext}
+                    onPress={() => router.navigate("/now" as Href)}
+                    accessibilityLabel="Find the next plan like this"
+                  >
+                    <Text style={styles.joinNextText}>Join next one</Text>
+                  </Pressable>
                 </View>
                 {post.note ? (
                   <Text style={styles.caption}>
@@ -719,21 +716,28 @@ const styles = themed(() =>
     },
     tabs: {
       flexDirection: "row",
-      gap: 22,
       marginTop: space.lg,
       marginBottom: space.lg,
+      backgroundColor: colors.card,
+      borderWidth: StyleSheet.hairlineWidth,
+      borderColor: colors.line,
+      borderRadius: 999,
+      padding: 4,
     },
+    tabItem: { flex: 1 },
     tab: {
-      fontFamily: fonts.sans,
-      fontSize: 14,
+      fontFamily: fonts.sansMedium,
+      fontSize: 13,
       color: colors.muted,
-      paddingBottom: 6,
+      textAlign: "center",
+      paddingVertical: 8,
+      borderRadius: 999,
+      overflow: "hidden",
     },
     tabOn: {
-      fontFamily: fonts.sansSemi,
-      color: colors.ink,
-      borderBottomWidth: 1.5,
-      borderBottomColor: colors.ink,
+      fontFamily: fonts.sansBold,
+      color: colors.bg,
+      backgroundColor: colors.ink,
     },
     empty: {
       fontFamily: fonts.sans,
@@ -741,7 +745,26 @@ const styles = themed(() =>
       textAlign: "center",
       marginTop: space.xl,
     },
-    post: { marginBottom: space.xl },
+    post: {
+      marginBottom: space.lg,
+      backgroundColor: colors.card,
+      borderRadius: 22,
+      borderWidth: StyleSheet.hairlineWidth,
+      borderColor: colors.line,
+      padding: space.lg,
+    },
+    statsRow: { flexDirection: "row", marginTop: space.md },
+    stat: { flex: 1, alignItems: "center", gap: 2 },
+    statNum: { fontFamily: fonts.serif, fontSize: 18, color: colors.ink, letterSpacing: -0.5 },
+    statLabel: { fontFamily: fonts.sans, fontSize: 11, color: colors.muted },
+    joinNext: {
+      marginLeft: "auto",
+      backgroundColor: colors.peach,
+      paddingHorizontal: 14,
+      paddingVertical: 8,
+      borderRadius: 999,
+    },
+    joinNextText: { fontFamily: fonts.sansBold, fontSize: 13, color: colors.onPeach },
     head: {
       flexDirection: "row",
       alignItems: "center",
@@ -763,8 +786,9 @@ const styles = themed(() =>
       color: colors.olive,
     },
     photo: {
-      marginHorizontal: -space.xl,
-      aspectRatio: 1,
+      aspectRatio: 4 / 3,
+      borderRadius: 16,
+      overflow: "hidden",
       backgroundColor: colors.oliveDark,
     },
     overlay: {
@@ -775,11 +799,11 @@ const styles = themed(() =>
       gap: 2,
     },
     postTitle: {
-      fontFamily: fonts.serifItalic,
-      fontSize: 22,
-      color: "#fff",
-      textShadowColor: "rgba(0,0,0,0.4)",
-      textShadowRadius: 8,
+      fontFamily: fonts.serif,
+      fontSize: 18,
+      color: colors.ink,
+      letterSpacing: -0.4,
+      marginTop: space.md,
     },
     stats: {
       fontFamily: fonts.sansSemi,
@@ -843,13 +867,12 @@ const styles = themed(() =>
     meetTitle: { fontFamily: fonts.sansSemi, fontSize: 14, color: colors.ink },
     meetSub: { fontFamily: fonts.sans, fontSize: 13, color: colors.muted },
     tweet: {
-      marginHorizontal: -space.xl,
-      paddingHorizontal: space.xl,
-      paddingVertical: space.lg,
-      borderTopWidth: StyleSheet.hairlineWidth,
-      borderBottomWidth: StyleSheet.hairlineWidth,
+      padding: space.lg,
+      backgroundColor: colors.card,
+      borderRadius: 22,
+      borderWidth: StyleSheet.hairlineWidth,
       borderColor: colors.line,
-      marginBottom: space.xl,
+      marginBottom: space.lg,
     },
     tweetHead: { flexDirection: "row", alignItems: "center", gap: space.md },
     tweetText: {
