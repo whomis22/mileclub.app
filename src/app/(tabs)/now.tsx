@@ -1,3 +1,4 @@
+import Feather from '@expo/vector-icons/Feather';
 import { Redirect, router, type Href } from 'expo-router';
 import { useRef, useState } from 'react';
 import { Modal, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
@@ -55,6 +56,132 @@ type Dist = (typeof DIST)[number]['id'];
 
 type Picker = 'what' | 'with' | 'when' | 'dist' | 'all' | null;
 
+// Home in the blend look (Yana, 2026-11-13/14): a friendly hub first, swiping one tap away.
+const VIBES: ActivityId[] = ['running', 'tennis', 'strength', 'spa', 'coffee', 'new'];
+const VIBE_NAMES: Partial<Record<ActivityId, string>> = { tennis: 'Padel & tennis', strength: 'Strength', spa: 'Spa', coffee: 'Coffee', new: 'New thing' };
+
+function greeting(h: number) {
+  if (h < 12) return 'Good morning';
+  if (h < 18) return 'Good afternoon';
+  return 'Good evening';
+}
+
+function whenLabel(a: Activity, now: number) {
+  const t = startsAt(a).getTime();
+  const hrs = Math.round((t - now) / HOUR);
+  if (hrs < 1) return 'starting soon';
+  if (hrs < 24) return `in ${hrs} hour${hrs === 1 ? '' : 's'}`;
+  const days = Math.round(hrs / 24);
+  return `in ${days} day${days === 1 ? '' : 's'}`;
+}
+
+function HomeHub({ now, openCount, onSwipe }: { now: number; openCount: number; onSwipe: (what?: ActivityId) => void }) {
+  const { profile, activities, notices } = useStore();
+  const unread = (notices ?? []).filter((n) => !n.read).length;
+  if (!profile) return null;
+  const mine = activities
+    .filter((a) => (a.hostId === 'me' || a.participants.includes('me')) && startsAt(a).getTime() > now)
+    .sort((a, b) => startsAt(a).getTime() - startsAt(b).getTime());
+  const next = mine[0];
+  const crew = next ? next.participants.map((id) => findPerson(id)).filter((p): p is NonNullable<typeof p> => !!p).slice(0, 4) : [];
+  const people = PEOPLE.filter((p) => fitsMeet(profile, p)).slice(0, 8);
+  const d = new Date(now);
+  const date = d.toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long' });
+  return (
+    <ScrollView contentContainerStyle={hub.scroll} showsVerticalScrollIndicator={false}>
+      <View style={hub.top}>
+        <MenuButton onPress={() => router.push('/menu')} />
+        <View style={{ flex: 1 }} />
+        <Pressable style={hub.round} onPress={() => router.push('/notifications' as Href)} accessibilityLabel="Notifications">
+          <Feather name="bell" size={19} color={colors.ink} />
+          {unread ? <View style={hub.dot} /> : null}
+        </Pressable>
+        <Pressable onPress={() => router.navigate('/profile' as Href)} accessibilityLabel="Your profile">
+          <View style={hub.ring}>
+            <Avatar name={profile.firstName} uri={profile.photoUri} size={40} />
+          </View>
+        </Pressable>
+      </View>
+
+      <Text style={hub.date}>{date}</Text>
+      <Text style={hub.hello}>
+        {greeting(d.getHours())}, {profile.firstName}.{'\n'}
+        <Text style={{ color: colors.link }}>What are we trying today?</Text>
+      </Text>
+
+      {next ? (
+        <Pressable style={hub.next} onPress={() => router.push(`/activity/${next.id}`)}>
+          <View style={hub.nextRow}>
+            <Text style={hub.nextLabel}>YOUR NEXT PLAN</Text>
+            <Text style={hub.nextWhen}>{whenLabel(next, now)}</Text>
+          </View>
+          <Text style={hub.nextTitle} numberOfLines={2}>{next.title}</Text>
+          <View style={hub.nextRow}>
+            <View style={{ flexDirection: 'row' }}>
+              {crew.map((p, i) => (
+                <View key={p.id} style={[hub.crew, i > 0 && { marginLeft: -10 }]}>
+                  <Avatar name={p.firstName} color={p.color} size={28} />
+                </View>
+              ))}
+            </View>
+            <View style={hub.nextBtn}>
+              <Text style={hub.nextBtnText}>Open plan</Text>
+            </View>
+          </View>
+        </Pressable>
+      ) : (
+        <Pressable style={hub.next} onPress={() => onSwipe()}>
+          <Text style={hub.nextLabel}>NO PLANS YET</Text>
+          <Text style={hub.nextTitle}>Find your first plan this week</Text>
+          <View style={[hub.nextBtn, { alignSelf: 'flex-start' }]}>
+            <Text style={hub.nextBtnText}>Start swiping</Text>
+          </View>
+        </Pressable>
+      )}
+
+      <Pressable style={hub.swipe} onPress={() => onSwipe()}>
+        <View style={hub.swipeIcon}>
+          <Feather name="layers" size={22} color={colors.onPeach} />
+        </View>
+        <View style={{ flex: 1 }}>
+          <Text style={hub.swipeTitle}>Swipe plans near you</Text>
+          <Text style={hub.swipeSub}>{openCount} open this week · right to join, left to skip</Text>
+        </View>
+        <Feather name="arrow-right" size={20} color={colors.ink} />
+      </Pressable>
+
+      <Text style={hub.h2}>Pick a vibe</Text>
+      <View style={hub.grid}>
+        {VIBES.map((id, i) => {
+          const a = ACTIVITIES.find((x) => x.id === id);
+          if (!a) return null;
+          return (
+            <Pressable key={id} style={[hub.vibe, { backgroundColor: i % 3 === 1 ? colors.peach : i % 3 === 0 ? colors.oliveSoft : colors.sand }]} onPress={() => onSwipe(id)}>
+              <Text style={hub.vibeEmoji}>{a.emoji}</Text>
+              <Text style={[hub.vibeText, { color: i % 3 === 1 ? colors.onPeach : colors.ink }]} numberOfLines={1}>{VIBE_NAMES[id] ?? a.label}</Text>
+            </Pressable>
+          );
+        })}
+      </View>
+
+      <View style={hub.rowHead}>
+        <Text style={hub.h2}>People you might click with</Text>
+        <Pressable onPress={() => router.push('/people')} hitSlop={8}>
+          <Text style={hub.link}>See all</Text>
+        </Pressable>
+      </View>
+      <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginHorizontal: -22 }} contentContainerStyle={{ paddingHorizontal: 22, gap: 14 }}>
+        {people.map((p) => (
+          <Pressable key={p.id} style={hub.person} onPress={() => router.push(`/person/${p.id}`)}>
+            <Avatar name={p.firstName} color={p.color} size={60} />
+            <Text style={hub.personName} numberOfLines={1}>{p.firstName}</Text>
+          </Pressable>
+        ))}
+      </ScrollView>
+    </ScrollView>
+  );
+}
+
 export default function Now() {
   useTheme();
   const { profile, activities, skipped, runRequests, join, skip, clearSkipped, notices } = useStore();
@@ -67,6 +194,7 @@ export default function Now() {
   const [when, setWhen] = useState<When>('week');
   const [dist, setDist] = useState<Dist>('any');
   const [picker, setPicker] = useState<Picker>(null);
+  const [swiping, setSwiping] = useState(false);
   if (!profile) return <Redirect href="/welcome" />;
 
   // Everything open to join this week.
@@ -134,16 +262,32 @@ export default function Now() {
     setPicker(null);
   }
 
+  if (!swiping)
+    return (
+      <SafeAreaView style={styles.screen} edges={['top']}>
+        <HomeHub
+          now={now}
+          openCount={open.length}
+          onSwipe={(w) => {
+            if (w) setWhat(w);
+            setSwiping(true);
+          }}
+        />
+      </SafeAreaView>
+    );
+
   return (
     <SafeAreaView style={styles.screen} edges={['top']}>
       <View style={styles.wrap}>
         <View style={styles.header}>
-          <MenuButton onPress={() => router.push('/menu')} />
+          <Pressable style={styles.notif} onPress={() => setSwiping(false)} accessibilityLabel="Back to Home">
+            <Feather name="chevron-left" size={22} color={colors.ink} />
+          </Pressable>
           <Text style={styles.title} numberOfLines={1} adjustsFontSizeToFit>
-            Your week
+            Swipe plans
           </Text>
           <Pressable style={styles.notif} onPress={() => router.push('/notifications' as Href)} accessibilityLabel="Notifications">
-            <Text style={styles.notifIcon}>🔔</Text>
+            <Feather name="bell" size={19} color={colors.ink} />
             {unread ? (
               <View style={styles.notifBadge}>
                 <Text style={styles.notifBadgeText}>{unread}</Text>
@@ -369,4 +513,35 @@ const styles = themed(() => StyleSheet.create({
   primaryText: { color: colors.onBrand, fontFamily: fonts.sansSemi, fontSize: 15 },
   secondary: { borderRadius: 999, paddingVertical: 12, alignSelf: 'stretch', alignItems: 'center', borderWidth: 1.5, borderColor: deckColors.olive },
   secondaryText: { color: deckColors.olive, fontFamily: fonts.sansSemi, fontSize: 15 },
+}));
+
+const hub = themed(() => StyleSheet.create({
+  scroll: { paddingHorizontal: 22, paddingTop: 8, paddingBottom: 120, gap: 16 },
+  top: { flexDirection: 'row', alignItems: 'center', gap: 10 },
+  round: { width: 44, height: 44, borderRadius: 22, borderWidth: 1, borderColor: colors.edge, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.card },
+  dot: { position: 'absolute', top: 10, right: 11, width: 9, height: 9, borderRadius: 5, backgroundColor: colors.peachDeep },
+  ring: { padding: 2, borderRadius: 24, borderWidth: 2, borderColor: colors.olive },
+  date: { fontFamily: fonts.sansSemi, fontSize: 14, color: colors.muted, marginTop: 4 },
+  hello: { fontFamily: fonts.serif, fontSize: 28, lineHeight: 34, color: colors.ink, letterSpacing: -0.8, marginTop: -8 },
+  next: { backgroundColor: colors.olive, borderRadius: 24, padding: 18, gap: 10 },
+  nextRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
+  nextLabel: { fontFamily: fonts.sansBold, fontSize: 11, letterSpacing: 1.2, color: colors.peach },
+  nextWhen: { fontFamily: fonts.sans, fontSize: 13, color: colors.onBrand, opacity: 0.85 },
+  nextTitle: { fontFamily: fonts.serif, fontSize: 22, lineHeight: 27, color: colors.onBrand, letterSpacing: -0.6 },
+  crew: { borderWidth: 2, borderColor: colors.olive, borderRadius: 16 },
+  nextBtn: { backgroundColor: colors.peach, borderRadius: 999, paddingHorizontal: 16, paddingVertical: 10 },
+  nextBtnText: { fontFamily: fonts.sansBold, fontSize: 14, color: colors.onPeach },
+  swipe: { flexDirection: 'row', alignItems: 'center', gap: 14, backgroundColor: colors.card, borderRadius: 22, borderWidth: StyleSheet.hairlineWidth, borderColor: colors.line, padding: 14 },
+  swipeIcon: { width: 46, height: 46, borderRadius: 16, backgroundColor: colors.peach, alignItems: 'center', justifyContent: 'center' },
+  swipeTitle: { fontFamily: fonts.sansBold, fontSize: 16, color: colors.ink },
+  swipeSub: { fontFamily: fonts.sans, fontSize: 13, color: colors.muted, marginTop: 2 },
+  h2: { fontFamily: fonts.serif, fontSize: 20, color: colors.ink, letterSpacing: -0.5, marginTop: 6 },
+  grid: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
+  vibe: { width: '31.5%', height: 92, borderRadius: 20, padding: 12, justifyContent: 'space-between' },
+  vibeEmoji: { fontSize: 24 },
+  vibeText: { fontFamily: fonts.sansBold, fontSize: 14 },
+  rowHead: { flexDirection: 'row', alignItems: 'baseline', justifyContent: 'space-between' },
+  link: { fontFamily: fonts.sansBold, fontSize: 14, color: colors.link },
+  person: { alignItems: 'center', gap: 6, width: 64 },
+  personName: { fontFamily: fonts.sansSemi, fontSize: 13, color: colors.ink },
 }));
