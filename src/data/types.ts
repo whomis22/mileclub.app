@@ -61,4 +61,5 @@ export type Activity = {
   description: string;
   partner?: string;
   recurring?: string;
+  solo?: boolean; // one person asking someone to join them (not a group plan)
 };

@@ -1,4 +1,4 @@
-import type { ActivityId } from './options';
+import type { ActivityId, Neighborhood } from './options';
 
 // One person asking for one (or two) people to join them. Sample data until
 // there's a server (Yana, 2026-11-15: "not all has to be groups").
@@ -9,7 +9,7 @@ export type Invite = {
   what: string; // in their own words
   day: 'Today' | 'Tomorrow' | 'Sat' | 'Sun';
   time: string;
-  place: string;
+  place: Neighborhood;
   spots: number;
 };
 

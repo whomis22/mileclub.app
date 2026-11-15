@@ -1,3 +1,4 @@
+import { INVITES } from './invites';
 import type { Activity } from './types';
 
 function inDays(n: number) {
@@ -18,9 +19,32 @@ function soon(hours: number) {
   };
 }
 
+const DAY_OFFSET = { Today: 0, Tomorrow: 1, Sat: 2, Sun: 3 } as const;
+
+// One person asking someone to join them, as a small plan (groupSize = them + spots).
+function inviteActivities(): Activity[] {
+  return INVITES.map((i) => ({
+    id: i.id,
+    type: i.type,
+    title: i.what,
+    date: inDays(DAY_OFFSET[i.day]),
+    time: i.time,
+    location: i.place,
+    neighborhood: i.place,
+    level: 'Beginner',
+    groupSize: i.spots + 1,
+    participants: [i.personId],
+    hostId: i.personId,
+    free: true,
+    solo: true,
+    description: i.what,
+  }));
+}
+
 // Sample activities, always placed in the coming days so the list never looks stale.
 export function sampleActivities(): Activity[] {
   return [
+    ...inviteActivities(),
     {
       id: 's1', type: 'running', title: 'Canal Ring 6K', ...soon(1),
       location: 'Westerkerk steps', neighborhood: 'Jordaan', distance: '6 km', pace: '6:00/km',
