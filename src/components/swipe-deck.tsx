@@ -4,7 +4,9 @@ import { router } from 'expo-router';
 import { Animated, Dimensions, PanResponder, Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { activityInfo, distanceKm, type ActivityId, type Neighborhood } from '@/data/options';
+import { findPerson } from '@/data/people';
 import type { Activity } from '@/data/types';
+import { Avatar } from '@/components/ui';
 import { formatKm } from '@/lib/matching';
 import { startsAt, startsIn } from '@/lib/time';
 import { colors, fonts, themed } from '@/theme';
@@ -126,7 +128,6 @@ export function SwipeDeck({
 }
 
 const PEEK = 22;
-const SERIF = fonts.serif;
 
 // Rich Olive / Warm Cream / Soft Peach
 export const deckColors = {
@@ -162,67 +163,73 @@ export function photoFor(a: Pick<Activity, "id" | "type">) {
   return list[n % list.length];
 }
 
-const DAYS = ['SUNDAY', 'MONDAY', 'TUESDAY', 'WEDNESDAY', 'THURSDAY', 'FRIDAY', 'SATURDAY'];
-const MONTHS = ['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC'];
-
+// Ticket card (design 3, Yana 2026-11-15): photo on top, the time big and bold,
+// what and where, then the "seats": a row of spots for groups, or "Name + you"
+// when one person is asking someone to join them.
 function DeckCard({ a, home, onJoin, onOpen }: { a: Activity; home: Neighborhood; onJoin?: () => void; onOpen?: () => void }) {
   const info = activityInfo(a.type);
   const d = startsAt(a);
-  const place = a.location.split(/[,(]/)[0].trim();
-  const left = a.groupSize - a.participants.length;
+  const left = Math.max(0, a.groupSize - a.participants.length);
   const today = new Date();
+  const tomorrow = new Date(today.getTime() + 86400000);
   const day =
     d.toDateString() === today.toDateString()
-      ? 'TONIGHT'
-      : DAYS[d.getDay()];
+      ? d.getHours() >= 17 ? 'TONIGHT' : 'TODAY'
+      : d.toDateString() === tomorrow.toDateString()
+        ? 'TOMORROW'
+        : d.toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'short' }).toUpperCase();
+  const host = findPerson(a.hostId);
+  const seats = Math.min(a.groupSize, 12);
   return (
-    // Tapping the card (not dragging it) opens the run's details.
+    // Tapping the card (not dragging it) opens the plan's details.
     <Pressable style={styles.card} onPress={onOpen} disabled={!onOpen} accessibilityLabel={`${a.title}, see details`}>
-      <Image source={{ uri: photoFor(a) }} style={StyleSheet.absoluteFill} contentFit="cover" transition={250} />
-      {/* soft shade so the white text always reads */}
-      <View style={[styles.shade, { top: 0, height: 90, opacity: 0.35 }]} />
-      <View style={[styles.shade, { bottom: 0, height: '62%', opacity: 0.25 }]} />
-      <View style={[styles.shade, { bottom: 0, height: '42%', opacity: 0.35 }]} />
-
-      <View style={styles.topLabel}>
-        <Text style={styles.kicker}>{info.label.toUpperCase()}</Text>
-        <Text style={styles.club}>MILE CLUB</Text>
+      <View style={styles.photo}>
+        <Image source={{ uri: photoFor(a) }} style={StyleSheet.absoluteFill} contentFit="cover" transition={250} />
+        <View style={[styles.kind, a.solo && { backgroundColor: colors.peach }]}>
+          <Text style={styles.kindText}>{a.solo ? `Wants ${left === 1 ? '1 person' : `${left} people`}` : 'Group plan'}</Text>
+        </View>
+        <View style={styles.type}>
+          <Text style={styles.typeText}>{info.emoji} {info.label}</Text>
+        </View>
       </View>
 
-      <View style={styles.bottom}>
-        <View style={styles.placeRow}>
-          <Text style={styles.place} numberOfLines={1}>{place}</Text>
-          {a.womenOnly ? (
-            <View style={styles.tag}>
-              <Text style={styles.tagText}>♀ Women only</Text>
+      <View style={styles.body}>
+        <View style={styles.timeRow}>
+          <Text style={styles.time}>{a.time}</Text>
+          <Text style={styles.day} numberOfLines={1}>{day}</Text>
+        </View>
+        <Text style={styles.title} numberOfLines={2}>{a.solo ? `“${a.title}”` : a.title}</Text>
+        <Text style={styles.where} numberOfLines={1}>
+          {a.location.split(/[,(]/)[0].trim()} · {a.neighborhood} · {formatKm(distanceKm(home, a.neighborhood))}
+        </Text>
+        <Text style={styles.where} numberOfLines={1}>{startsIn(a)}</Text>
+
+        <View style={styles.perf}>
+          <View style={[styles.notch, { left: -12 }]} />
+          <View style={styles.dash} />
+          <View style={[styles.notch, { right: -12 }]} />
+        </View>
+
+        <View style={styles.seatRow}>
+          {a.solo && host ? (
+            <View style={styles.pair}>
+              <Avatar name={host.firstName} color={host.color} size={34} />
+              <View style={styles.you}>
+                <Text style={styles.youText}>?</Text>
+              </View>
+              <Text style={styles.pairText} numberOfLines={1}>{host.firstName} + you</Text>
             </View>
-          ) : null}
-          <View style={styles.tag}>
-            <Text style={styles.tagText}>{a.neighborhood}</Text>
-          </View>
-        </View>
-        <View style={styles.rule} />
-        <View style={styles.whenRow}>
-          <View style={{ flex: 1 }}>
-            <Text style={styles.small} numberOfLines={1}>{a.title.toUpperCase()}</Text>
-            <Text style={styles.small} numberOfLines={1}>
-              {[a.distance, a.pace].filter(Boolean).join(' · ').toUpperCase() || a.level.toUpperCase()}
-            </Text>
-            <Text style={styles.small}>{MONTHS[d.getMonth()]} {d.getDate()} · {formatKm(distanceKm(home, a.neighborhood)).toUpperCase()}</Text>
-          </View>
-          <View style={{ alignItems: 'flex-end' }}>
-            <Text style={styles.day}>{day}</Text>
-            <Text style={styles.small}>{a.time} · {startsIn(a).replace('Starts ', '').toUpperCase()}</Text>
-          </View>
-        </View>
-        <View style={styles.joinRow}>
+          ) : (
+            <View style={styles.seats}>
+              {Array.from({ length: seats }, (_, k) => (
+                <View key={k} style={[styles.seat, k < seats - Math.min(left, seats) && styles.seatTaken]} />
+              ))}
+              <Text style={styles.leftText}>{left === 1 ? '1 left' : `${left} left`}</Text>
+            </View>
+          )}
           <Pressable style={styles.joinPill} onPress={onJoin} disabled={!onJoin}>
-            <Text style={styles.joinText}>Join</Text>
+            <Text style={styles.joinText}>{a.solo ? 'I’m in' : 'Join'}</Text>
           </Pressable>
-          <Pressable style={styles.joinArrow} onPress={onOpen} disabled={!onOpen} accessibilityLabel="See details">
-            <Text style={styles.arrowText}>↗</Text>
-          </Pressable>
-          <Text style={styles.spots}>{left} {left === 1 ? 'spot' : 'spots'} left</Text>
         </View>
       </View>
     </Pressable>
@@ -233,28 +240,35 @@ const styles = themed(() => StyleSheet.create({
   deck: { flex: 1, marginTop: PEEK * 2 + 8 },
   cardWrap: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 },
   card: {
-    flex: 1, borderRadius: 30, overflow: 'hidden', backgroundColor: deckColors.olive,
-    shadowColor: '#2A2A1A', shadowOpacity: 0.18, shadowRadius: 16, shadowOffset: { width: 0, height: 8 }, elevation: 5,
+    flex: 1, borderRadius: 28, overflow: 'hidden', backgroundColor: colors.card,
+    borderWidth: StyleSheet.hairlineWidth, borderColor: colors.line,
+    shadowColor: '#2A2A1A', shadowOpacity: 0.14, shadowRadius: 16, shadowOffset: { width: 0, height: 8 }, elevation: 5,
   },
-  shade: { position: 'absolute', left: 0, right: 0, backgroundColor: '#14180A' },
-  topLabel: { alignItems: 'center', paddingTop: 12 },
-  kicker: { color: '#fff', fontSize: 11, fontWeight: '700', letterSpacing: 3 },
-  club: { color: '#fff', fontFamily: SERIF, fontSize: 20, letterSpacing: 2, marginTop: 4 },
-  bottom: { position: 'absolute', left: 0, right: 0, bottom: 0, padding: 20 },
-  placeRow: { flexDirection: 'row', alignItems: 'center', gap: 10 },
-  place: { color: '#fff', fontFamily: fonts.serifItalic, fontSize: 27, flexShrink: 1 },
-  tag: { borderWidth: 1, borderColor: '#ffffffcc', borderRadius: 999, paddingVertical: 3, paddingHorizontal: 10 },
-  tagText: { color: '#fff', fontSize: 11, fontWeight: '600' },
-  rule: { height: 1, backgroundColor: '#ffffff66', marginVertical: 10 },
-  whenRow: { flexDirection: 'row', alignItems: 'flex-end', gap: 12 },
-  small: { color: '#fff', fontSize: 10, fontWeight: '600', letterSpacing: 1, marginTop: 2, opacity: 0.92 },
-  day: { color: '#fff', fontSize: 30, letterSpacing: 0.5, fontFamily: SERIF },
-  joinRow: { flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 18 },
-  joinPill: { backgroundColor: '#fff', borderRadius: 999, paddingVertical: 10, paddingHorizontal: 20 },
-  joinText: { color: deckColors.olive, fontWeight: '700', fontSize: 14 },
-  joinArrow: { backgroundColor: '#fff', width: 40, height: 40, borderRadius: 20, alignItems: 'center', justifyContent: 'center' },
-  arrowText: { color: deckColors.olive, fontSize: 18, fontWeight: '800' },
-  spots: { color: deckColors.peach, fontWeight: '700', fontSize: 12, marginLeft: 'auto' },
+  photo: { flex: 1, minHeight: 150, backgroundColor: colors.oliveSoft },
+  kind: { position: 'absolute', top: 14, left: 14, backgroundColor: '#FFFFFF', borderRadius: 999, paddingVertical: 6, paddingHorizontal: 12 },
+  kindText: { fontFamily: fonts.sansBold, fontSize: 12, color: '#16190F' },
+  type: { position: 'absolute', top: 14, right: 14, backgroundColor: 'rgba(0,0,0,0.45)', borderRadius: 999, paddingVertical: 6, paddingHorizontal: 12 },
+  typeText: { fontFamily: fonts.sansSemi, fontSize: 12, color: '#FFFFFF' },
+  body: { padding: 18, paddingBottom: 16, gap: 4 },
+  timeRow: { flexDirection: 'row', alignItems: 'baseline', justifyContent: 'space-between', gap: 10 },
+  time: { fontFamily: fonts.serif, fontSize: 38, color: colors.link, letterSpacing: -1.2 },
+  day: { fontFamily: fonts.sansBold, fontSize: 12, letterSpacing: 1, color: colors.muted, flexShrink: 1 },
+  title: { fontFamily: fonts.sansBold, fontSize: 19, lineHeight: 25, color: colors.ink, marginTop: 2 },
+  where: { fontFamily: fonts.sans, fontSize: 13, color: colors.muted },
+  perf: { height: 24, justifyContent: 'center', marginHorizontal: -18, marginTop: 6 },
+  dash: { borderTopWidth: 2, borderStyle: 'dashed', borderColor: colors.line, marginHorizontal: 16 },
+  notch: { position: 'absolute', width: 24, height: 24, borderRadius: 12, backgroundColor: colors.bg, top: 0 },
+  seatRow: { flexDirection: 'row', alignItems: 'center', gap: 10 },
+  seats: { flex: 1, flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap', gap: 4 },
+  seat: { width: 14, height: 14, borderRadius: 4, borderWidth: 2, borderColor: colors.link },
+  seatTaken: { backgroundColor: colors.link },
+  leftText: { fontFamily: fonts.sansBold, fontSize: 12, color: colors.ink, marginLeft: 4 },
+  pair: { flex: 1, flexDirection: 'row', alignItems: 'center' },
+  you: { width: 34, height: 34, borderRadius: 17, borderWidth: 2, borderStyle: 'dashed', borderColor: colors.link, alignItems: 'center', justifyContent: 'center', marginLeft: 6 },
+  youText: { fontFamily: fonts.sansBold, fontSize: 14, color: colors.link },
+  pairText: { fontFamily: fonts.sansBold, fontSize: 13, color: colors.ink, marginLeft: 8, flexShrink: 1 },
+  joinPill: { backgroundColor: colors.olive, borderRadius: 999, paddingVertical: 11, paddingHorizontal: 20 },
+  joinText: { fontFamily: fonts.sansBold, fontSize: 14, color: colors.onBrand },
   stamp: {
     position: 'absolute', top: 80, borderWidth: 3, borderRadius: 12, paddingVertical: 6, paddingHorizontal: 14,
     backgroundColor: '#F5F0E6EE',

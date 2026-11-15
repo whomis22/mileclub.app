@@ -4,12 +4,14 @@ import { useRef, useState } from 'react';
 import { Modal, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { OutOfSwipes } from '@/components/out-of-swipes';
 import { SwipeDeck, deckColors, type SwipeDeckHandle } from '@/components/swipe-deck';
 import { Avatar, MenuButton } from '@/components/ui';
 import { ACTIVITIES, distanceKm, type ActivityId } from '@/data/options';
 import { PEOPLE, findPerson } from '@/data/people';
 import type { Activity } from '@/data/types';
 import { fitsMeet } from '@/lib/meet';
+import { useSwipes } from '@/lib/swipes';
 import { startsAt } from '@/lib/time';
 import { useStore } from '@/state/store';
 import { colors, fonts, themed, useTheme } from '@/theme';
@@ -68,6 +70,7 @@ export default function Now() {
   const [when, setWhen] = useState<When>('week');
   const [dist, setDist] = useState<Dist>('any');
   const [picker, setPicker] = useState<Picker>(null);
+  const swipes = useSwipes();
   if (!profile) return <Redirect href="/welcome" />;
 
   // Everything open to join this week.
@@ -180,22 +183,26 @@ export default function Now() {
         {joinedMsg && (
           <Pressable style={styles.toast} onPress={() => router.push('/activities')}>
             <Text style={styles.toastText}>
-              Request sent for {joinedMsg.title}. We’ll let you know as soon as the host answers.
+              Request sent for {joinedMsg.title}. We’ll let you know as soon as the host answers. Can’t make it? Cancel in time: 3 no-shows means a 3-month break.
             </Text>
           </Pressable>
         )}
 
-        {soon.length > 0 ? (
+        {swipes.outOfSwipes ? (
+          <OutOfSwipes onPlus={swipes.buyPlus} onBonus={swipes.addBonus} />
+        ) : soon.length > 0 ? (
           <>
             <SwipeDeck
               items={soon}
               home={profile.neighborhood}
               deckRef={deck}
               onJoin={(a) => {
+                swipes.use();
                 join(a.id);
                 setJoinedMsg(a);
               }}
               onSkip={(a) => {
+                swipes.use();
                 skip(a.id);
                 setJoinedMsg(null);
               }}
@@ -214,7 +221,9 @@ export default function Now() {
                 <Text style={styles.joinBtnText}>Join ✓ →</Text>
               </Pressable>
             </View>
-            <Text style={styles.hint}>Swipe left to skip, right to join</Text>
+            <Text style={styles.hint}>
+              {swipes.plus ? 'Plus: unlimited swipes' : `${swipes.left} free ${swipes.left === 1 ? 'swipe' : 'swipes'} left today`} · swipe left to skip, right to join
+            </Text>
           </>
         ) : (
           <ScrollView style={{ flex: 1 }} contentContainerStyle={{ gap: 10, paddingVertical: 12 }}>

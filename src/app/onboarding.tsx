@@ -341,6 +341,12 @@ export default function Onboarding() {
                 You’ll be meeting people in real life. Meet in public places, tell a friend where you’re going, and
                 report anyone who makes you uncomfortable.
               </Body>
+              <View style={styles.rule}>
+                <Text style={styles.ruleTitle}>Show up, or cancel in time</Text>
+                <Text style={styles.ruleText}>
+                  People plan around you. If you miss 3 plans without cancelling, your account is paused for 3 months.
+                </Text>
+              </View>
               <Label>Emergency contact (optional)</Label>
               <TextInput
                 value={d.emergencyContact ?? ''}
@@ -354,7 +360,7 @@ export default function Onboarding() {
                   {agreed && <Text style={{ color: colors.onBrand, fontWeight: '900' }}>✓</Text>}
                 </View>
                 <Text style={styles.agreeText}>
-                  I agree to the community guidelines: be kind, show up, respect everyone’s pace.
+                  I agree to the community guidelines: be kind, show up (3 no-shows = 3-month pause), respect everyone’s pace.
                 </Text>
               </Pressable>
             </>
@@ -370,6 +376,9 @@ export default function Onboarding() {
 }
 
 const styles = themed(() => StyleSheet.create({
+  rule: { backgroundColor: colors.oliveSoft, borderRadius: 16, padding: 14, gap: 4, marginTop: 12 },
+  ruleTitle: { fontFamily: fonts.sansBold, fontSize: 14, color: colors.ink },
+  ruleText: { fontFamily: fonts.sans, fontSize: 13, lineHeight: 18, color: colors.ink },
   screen: { flex: 1, backgroundColor: colors.bg },
   header: { flexDirection: 'row', alignItems: 'center', gap: space.lg, paddingHorizontal: space.xl, paddingTop: space.sm },
   backBtn: { width: 44, height: 44, borderRadius: 22, borderWidth: 1, borderColor: colors.edge, alignItems: 'center', justifyContent: 'center' },
