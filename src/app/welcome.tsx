@@ -3,22 +3,26 @@ import { Image } from 'expo-image';
 import { router, type Href } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { useEffect, useState } from 'react';
-import { Alert, Platform, Pressable, StyleSheet, Text, View } from 'react-native';
+import { Alert, Animated, Platform, Pressable, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { LinearGradient } from 'expo-linear-gradient';
+
 import { Logo } from '@/components/ui';
-import { colors, fonts, radius, space, themed, useTheme } from '@/theme';
+import { colors, fonts, radius, space, themed } from '@/theme';
 
-// Welcome: logo and Log in at the top, a fanned stack of run photo cards,
-// "Find your running crew." and the Join button at the bottom.
+// Welcome, laid out like Hinge (Yana, 2026-11-15): a full-screen photo that
+// slowly changes, the logo and one line in the middle, and big buttons at the
+// bottom. Same look in light and dark (it's a photo screen).
 
-const CARDS = [
-  { photo: require('../../assets/images/photos/dusk.png'), title: 'Spa Sunday', style: { left: '6%', top: 36, transform: [{ rotate: '-10deg' }] } },
-  { photo: require('../../assets/images/photos/lake.png'), title: 'Coffee & chats', style: { right: '6%', top: 16, transform: [{ rotate: '9deg' }] } },
-] as const;
+const SLIDES = [
+  { photo: require('../../assets/images/photos/dusk.png'), tag: 'Evening plans' },
+  { photo: require('../../assets/images/photos/park.png'), tag: 'Workouts with new faces' },
+  { photo: require('../../assets/images/photos/lake.png'), tag: 'Swims, saunas & coffee' },
+  { photo: require('../../assets/images/photos/river.png'), tag: 'Walks that turn into friendships' },
+];
 
 export default function Welcome() {
-  const { isDark } = useTheme();
   const logIn = () => router.push('/login' as Href);
   const signUp = () => router.push('/signup');
   const [appleReady, setAppleReady] = useState(false);
@@ -51,50 +55,36 @@ export default function Welcome() {
   }
 
   return (
-    <SafeAreaView style={styles.screen}>
-      <StatusBar style={isDark ? "light" : "dark"} />
-      <View style={styles.top}>
-        <Logo size={34} />
-        <Pressable onPress={logIn} hitSlop={12}>
-          <Text style={styles.login}>Log in</Text>
-        </Pressable>
-      </View>
-
-      <View style={styles.stack}>
-        {CARDS.map((c) => (
-          <View key={c.title} style={[styles.card, styles.back, c.style]}>
-            <Image source={c.photo} style={StyleSheet.absoluteFill} contentFit="cover" />
-            <Text style={styles.cardTitle}>{c.title}</Text>
-          </View>
-        ))}
-        <View style={[styles.card, styles.front]}>
-          <Image source={require('../../assets/images/photos/park.png')} style={StyleSheet.absoluteFill} contentFit="cover" />
-          <View style={styles.going}>
-            <Text style={styles.goingText}>6 going</Text>
-          </View>
-          <View>
-            <Text style={[styles.cardTitle, { fontSize: 28 }]}>Park loop</Text>
-            <Text style={styles.cardMeta}>SAT · 08:00 · EASY</Text>
-          </View>
+    <View style={styles.screen}>
+      <StatusBar style="light" />
+      <Slideshow />
+      <LinearGradient
+        colors={['rgba(0,0,0,0.35)', 'rgba(0,0,0,0)', 'rgba(0,0,0,0.25)', 'rgba(0,0,0,0.85)']}
+        locations={[0, 0.25, 0.55, 1]}
+        style={StyleSheet.absoluteFill}
+      />
+      <SafeAreaView style={styles.safe}>
+        <View style={styles.middle}>
+          <Logo size={64} m="#FFFFFF" c={colors.peach} />
+          <Text style={styles.brand}>Mile Club</Text>
+          <Text style={styles.hero}>Plans worth leaving the house for.</Text>
         </View>
-      </View>
 
-      <View style={styles.bottom}>
-        <Text style={styles.hero}>
-          Find your <Text style={styles.heroItalic}>people.</Text>
-        </Text>
-        <View style={{ gap: space.md }}>
+        <View style={styles.bottom}>
           {appleReady ? (
             <AppleAuthentication.AppleAuthenticationButton
               buttonType={AppleAuthentication.AppleAuthenticationButtonType.CONTINUE}
-              buttonStyle={AppleAuthentication.AppleAuthenticationButtonStyle.BLACK}
-              cornerRadius={27}
+              buttonStyle={AppleAuthentication.AppleAuthenticationButtonStyle.WHITE}
+              cornerRadius={28}
               style={styles.appleButton}
               onPress={continueWithApple}
             />
           ) : null}
-          <Pressable onPress={signUp} style={({ pressed }) => [styles.join, pressed && { opacity: 0.8 }]}>
-            <Text style={styles.joinText}>Join Mile Club</Text>
+          <Pressable onPress={signUp} style={({ pressed }) => [styles.join, pressed && { opacity: 0.85 }]}>
+            <Text style={styles.joinText}>Create account</Text>
+          </Pressable>
+          <Pressable onPress={logIn} hitSlop={10} style={styles.loginWrap}>
+            <Text style={styles.login}>Sign in</Text>
           </Pressable>
           <Text style={styles.coach}>
             Are you a coach?{' '}
@@ -103,33 +93,64 @@ export default function Welcome() {
             </Text>
           </Text>
           <Text style={styles.terms}>
-            By joining, you agree to our Terms, Privacy Policy and Community Guidelines.
+            By continuing, you agree to our Terms. See how we use your data in our Privacy Policy.
           </Text>
         </View>
-      </View>
-    </SafeAreaView>
+      </SafeAreaView>
+    </View>
+  );
+}
+
+// Photos that gently fade into each other, with a small label at the top.
+function Slideshow() {
+  const [i, setI] = useState(0);
+  const [fade] = useState(() => new Animated.Value(1));
+  useEffect(() => {
+    const t = setInterval(() => {
+      Animated.timing(fade, { toValue: 0, duration: 450, useNativeDriver: true }).start(() => {
+        setI((n) => (n + 1) % SLIDES.length);
+        Animated.timing(fade, { toValue: 1, duration: 650, useNativeDriver: true }).start();
+      });
+    }, 4200);
+    return () => clearInterval(t);
+  }, [fade]);
+  const slide = SLIDES[i];
+  return (
+    <Animated.View style={[StyleSheet.absoluteFill, { opacity: fade, backgroundColor: '#111' }]}>
+      <Image source={slide.photo} style={StyleSheet.absoluteFill} contentFit="cover" />
+      <SafeAreaView edges={['top']} style={styles.tagWrap}>
+        <View style={styles.tag}>
+          <Text style={styles.tagText}>{slide.tag}</Text>
+        </View>
+        <View style={styles.dots}>
+          {SLIDES.map((_, k) => (
+            <View key={k} style={[styles.dot, k === i && styles.dotOn]} />
+          ))}
+        </View>
+      </SafeAreaView>
+    </Animated.View>
   );
 }
 
 const styles = themed(() => StyleSheet.create({
-  screen: { flex: 1, backgroundColor: colors.bg },
-  top: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 28, paddingTop: space.md },
-  login: { fontFamily: fonts.sansSemi, fontSize: 14, color: colors.ink },
-  stack: { flex: 1, minHeight: 320, marginTop: space.lg },
-  card: { position: 'absolute', borderRadius: 28, overflow: 'hidden', padding: 16, justifyContent: 'flex-end' },
-  back: { width: '52%', height: '72%' },
-  front: { width: '58%', height: '78%', left: '21%', top: 90, justifyContent: 'space-between', borderRadius: 30 },
-  cardTitle: { fontFamily: fonts.serifItalic, fontSize: 19, color: colors.onBrand },
-  cardMeta: { fontFamily: fonts.sansMedium, fontSize: 10, letterSpacing: 1.2, color: colors.onBrand, marginTop: 4 },
-  going: { alignSelf: 'flex-start', backgroundColor: colors.peach, borderRadius: radius.pill, paddingVertical: 5, paddingHorizontal: 10 },
-  goingText: { fontFamily: fonts.sansSemi, fontSize: 11, color: colors.onPeach },
-  bottom: { paddingHorizontal: 28, paddingBottom: space.lg, gap: space.xl },
-  hero: { fontFamily: fonts.serif, fontSize: 32, lineHeight: 42, color: colors.ink, textAlign: 'center' },
-  heroItalic: { fontFamily: fonts.serifItalic },
-  appleButton: { width: '100%', height: 54 },
-  join: { height: 54, borderRadius: radius.pill, backgroundColor: colors.olive, alignItems: 'center', justifyContent: 'center' },
-  joinText: { fontFamily: fonts.sansSemi, fontSize: 15, color: colors.onBrand },
-  coach: { fontFamily: fonts.sans, fontSize: 13, color: colors.muted, textAlign: 'center' },
-  coachLink: { fontFamily: fonts.sansSemi, color: colors.link },
-  terms: { fontFamily: fonts.sans, fontSize: 11, color: colors.muted, textAlign: 'center', lineHeight: 15 },
+  screen: { flex: 1, backgroundColor: '#111' },
+  safe: { flex: 1, justifyContent: 'space-between' },
+  tagWrap: { alignItems: 'center', paddingTop: space.md, gap: 10 },
+  tag: { backgroundColor: 'rgba(255,255,255,0.18)', borderRadius: radius.pill, paddingVertical: 7, paddingHorizontal: 14 },
+  tagText: { fontFamily: fonts.sansSemi, fontSize: 13, color: '#FFFFFF' },
+  dots: { flexDirection: 'row', gap: 6 },
+  dot: { width: 6, height: 6, borderRadius: 3, backgroundColor: 'rgba(255,255,255,0.45)' },
+  dotOn: { width: 18, backgroundColor: '#FFFFFF' },
+  middle: { flex: 1, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 32, paddingTop: 80, gap: 6 },
+  brand: { fontFamily: fonts.serif, fontSize: 30, color: '#FFFFFF', letterSpacing: -0.8 },
+  hero: { fontFamily: fonts.sansMedium, fontSize: 17, lineHeight: 24, color: 'rgba(255,255,255,0.9)', textAlign: 'center', marginTop: 4 },
+  bottom: { paddingHorizontal: 24, paddingBottom: space.lg, gap: space.md },
+  appleButton: { width: '100%', height: 56 },
+  join: { height: 56, borderRadius: radius.pill, backgroundColor: colors.olive, alignItems: 'center', justifyContent: 'center' },
+  joinText: { fontFamily: fonts.sansBold, fontSize: 16, color: '#FFFFFF' },
+  loginWrap: { alignSelf: 'center', paddingVertical: 6 },
+  login: { fontFamily: fonts.sansBold, fontSize: 16, color: '#FFFFFF' },
+  coach: { fontFamily: fonts.sans, fontSize: 13, color: 'rgba(255,255,255,0.75)', textAlign: 'center' },
+  coachLink: { fontFamily: fonts.sansBold, color: colors.peach },
+  terms: { fontFamily: fonts.sans, fontSize: 11, color: 'rgba(255,255,255,0.6)', textAlign: 'center', lineHeight: 15 },
 }));
