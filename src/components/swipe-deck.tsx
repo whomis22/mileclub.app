@@ -156,7 +156,7 @@ const PHOTOS: Partial<Record<ActivityId, string[]>> = {
   strength: ['https://images.unsplash.com/photo-1534438327276-14e5300c3a48?w=900&q=70'],
 };
 
-function photoFor(a: Activity) {
+export function photoFor(a: Pick<Activity, "id" | "type">) {
   const list = PHOTOS[a.type] ?? PHOTOS.running!;
   const n = [...a.id].reduce((sum, ch) => sum + ch.charCodeAt(0), 0);
   return list[n % list.length];

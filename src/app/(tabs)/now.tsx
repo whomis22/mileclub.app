@@ -1,10 +1,12 @@
 import Feather from '@expo/vector-icons/Feather';
+import { Image } from 'expo-image';
 import { Redirect, router, type Href } from 'expo-router';
 import { useRef, useState } from 'react';
 import { Modal, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { SwipeDeck, deckColors, type SwipeDeckHandle } from '@/components/swipe-deck';
+import { SwipeDeck, deckColors, photoFor, type SwipeDeckHandle } from '@/components/swipe-deck';
+import { INVITES } from '@/data/invites';
 import { Avatar, MenuButton } from '@/components/ui';
 import { ACTIVITIES, distanceKm, type ActivityId } from '@/data/options';
 import { PEOPLE, findPerson } from '@/data/people';
@@ -56,130 +58,129 @@ type Dist = (typeof DIST)[number]['id'];
 
 type Picker = 'what' | 'with' | 'when' | 'dist' | 'all' | null;
 
-// Home in the blend look (Yana, 2026-11-13/14): a friendly hub first, swiping one tap away.
-const VIBES: ActivityId[] = ['running', 'tennis', 'strength', 'spa', 'coffee', 'new'];
-const VIBE_NAMES: Partial<Record<ActivityId, string>> = { tennis: 'Padel & tennis', strength: 'Strength', spa: 'Spa', coffee: 'Coffee', new: 'New thing' };
-
-function greeting(h: number) {
-  if (h < 12) return 'Good morning';
-  if (h < 18) return 'Good afternoon';
-  return 'Good evening';
-}
-
-function whenLabel(a: Activity, now: number) {
-  const t = startsAt(a).getTime();
-  const hrs = Math.round((t - now) / HOUR);
-  if (hrs < 1) return 'starting soon';
-  if (hrs < 24) return `in ${hrs} hour${hrs === 1 ? '' : 's'}`;
-  const days = Math.round(hrs / 24);
-  return `in ${days} day${days === 1 ? '' : 's'}`;
-}
-
-function HomeHub({ now, openCount, onSwipe }: { now: number; openCount: number; onSwipe: (what?: ActivityId) => void }) {
-  const { profile, activities, notices } = useStore();
+// Home (Yana, 2026-11-15): busy at a glance. Group plans in a side-scrolling
+// row on top, then single people asking someone to join them and what they'll do.
+function HomeFeed({ now, open, onSwipe }: { now: number; open: Activity[]; onSwipe: () => void }) {
+  const { profile, notices } = useStore();
+  const [kind, setKind] = useState<ActivityId | 'all'>('all');
+  const [asked, setAsked] = useState<string[]>([]);
   const unread = (notices ?? []).filter((n) => !n.read).length;
   if (!profile) return null;
-  const mine = activities
-    .filter((a) => (a.hostId === 'me' || a.participants.includes('me')) && startsAt(a).getTime() > now)
-    .sort((a, b) => startsAt(a).getTime() - startsAt(b).getTime());
-  const next = mine[0];
-  const crew = next ? next.participants.map((id) => findPerson(id)).filter((p): p is NonNullable<typeof p> => !!p).slice(0, 4) : [];
-  const people = PEOPLE.filter((p) => fitsMeet(profile, p)).slice(0, 8);
-  const d = new Date(now);
-  const date = d.toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long' });
+  const types = ACTIVITIES.filter((x) => open.some((a) => a.type === x.id) || INVITES.some((i) => i.type === x.id));
+  const groups = open.filter((a) => kind === 'all' || a.type === kind);
+  const invites = INVITES.filter((i) => kind === 'all' || i.type === kind).filter((i) => findPerson(i.personId));
+  const total = open.length + INVITES.length;
+  const count = (id: ActivityId) => open.filter((a) => a.type === id).length + INVITES.filter((i) => i.type === id).length;
   return (
     <ScrollView contentContainerStyle={hub.scroll} showsVerticalScrollIndicator={false}>
       <View style={hub.top}>
         <MenuButton onPress={() => router.push('/menu')} />
-        <View style={{ flex: 1 }} />
+        <View style={{ flex: 1 }}>
+          <Text style={hub.brand}>Mile Club</Text>
+          <Text style={hub.count}>
+            <Text style={{ color: colors.link, fontFamily: fonts.sansBold }}>{total} things on</Text> this week
+          </Text>
+        </View>
         <Pressable style={hub.round} onPress={() => router.push('/notifications' as Href)} accessibilityLabel="Notifications">
           <Feather name="bell" size={19} color={colors.ink} />
           {unread ? <View style={hub.dot} /> : null}
         </Pressable>
-        <Pressable onPress={() => router.navigate('/profile' as Href)} accessibilityLabel="Your profile">
-          <View style={hub.ring}>
-            <Avatar name={profile.firstName} uri={profile.photoUri} size={40} />
-          </View>
-        </Pressable>
       </View>
 
-      <Text style={hub.date}>{date}</Text>
-      <Text style={hub.hello}>
-        {greeting(d.getHours())}, {profile.firstName}.{'\n'}
-        <Text style={{ color: colors.link }}>What are we trying today?</Text>
-      </Text>
-
-      {next ? (
-        <Pressable style={hub.next} onPress={() => router.push(`/activity/${next.id}`)}>
-          <View style={hub.nextRow}>
-            <Text style={hub.nextLabel}>YOUR NEXT PLAN</Text>
-            <Text style={hub.nextWhen}>{whenLabel(next, now)}</Text>
-          </View>
-          <Text style={hub.nextTitle} numberOfLines={2}>{next.title}</Text>
-          <View style={hub.nextRow}>
-            <View style={{ flexDirection: 'row' }}>
-              {crew.map((p, i) => (
-                <View key={p.id} style={[hub.crew, i > 0 && { marginLeft: -10 }]}>
-                  <Avatar name={p.firstName} color={p.color} size={28} />
-                </View>
-              ))}
-            </View>
-            <View style={hub.nextBtn}>
-              <Text style={hub.nextBtnText}>Open plan</Text>
-            </View>
-          </View>
-        </Pressable>
-      ) : (
-        <Pressable style={hub.next} onPress={() => onSwipe()}>
-          <Text style={hub.nextLabel}>NO PLANS YET</Text>
-          <Text style={hub.nextTitle}>Find your first plan this week</Text>
-          <View style={[hub.nextBtn, { alignSelf: 'flex-start' }]}>
-            <Text style={hub.nextBtnText}>Start swiping</Text>
-          </View>
-        </Pressable>
-      )}
-
-      <Pressable style={hub.swipe} onPress={() => onSwipe()}>
-        <View style={hub.swipeIcon}>
-          <Feather name="layers" size={22} color={colors.onPeach} />
-        </View>
-        <View style={{ flex: 1 }}>
-          <Text style={hub.swipeTitle}>Swipe plans near you</Text>
-          <Text style={hub.swipeSub}>{openCount} open this week · right to join, left to skip</Text>
-        </View>
-        <Feather name="arrow-right" size={20} color={colors.ink} />
+      <Pressable style={hub.search} onPress={() => router.push('/people')}>
+        <Feather name="search" size={18} color={colors.muted} />
+        <Text style={hub.searchText}>Find people, plans, coaches</Text>
       </Pressable>
 
-      <Text style={hub.h2}>Pick a vibe</Text>
-      <View style={hub.grid}>
-        {VIBES.map((id, i) => {
-          const a = ACTIVITIES.find((x) => x.id === id);
-          if (!a) return null;
-          return (
-            <Pressable key={id} style={[hub.vibe, { backgroundColor: i % 3 === 1 ? colors.peach : i % 3 === 0 ? colors.oliveSoft : colors.sand }]} onPress={() => onSwipe(id)}>
-              <Text style={hub.vibeEmoji}>{a.emoji}</Text>
-              <Text style={[hub.vibeText, { color: i % 3 === 1 ? colors.onPeach : colors.ink }]} numberOfLines={1}>{VIBE_NAMES[id] ?? a.label}</Text>
-            </Pressable>
-          );
-        })}
-      </View>
-
-      <View style={hub.rowHead}>
-        <Text style={hub.h2}>People you might click with</Text>
-        <Pressable onPress={() => router.push('/people')} hitSlop={8}>
-          <Text style={hub.link}>See all</Text>
-        </Pressable>
-      </View>
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginHorizontal: -22 }} contentContainerStyle={{ paddingHorizontal: 22, gap: 14 }}>
-        {people.map((p) => (
-          <Pressable key={p.id} style={hub.person} onPress={() => router.push(`/person/${p.id}`)}>
-            <Avatar name={p.firstName} color={p.color} size={60} />
-            <Text style={hub.personName} numberOfLines={1}>{p.firstName}</Text>
+      <ScrollView horizontal showsHorizontalScrollIndicator={false} style={hub.bleed} contentContainerStyle={hub.chips}>
+        {[{ id: 'all' as const, label: 'All', n: total }, ...types.map((x) => ({ id: x.id, label: VIBE_NAMES[x.id] ?? x.label, n: count(x.id) }))].map((c) => (
+          <Pressable key={c.id} onPress={() => setKind(c.id)} style={[hub.chip, kind === c.id && hub.chipOn]}>
+            <Text style={[hub.chipText, kind === c.id && { color: colors.bg }]}>
+              {c.label} <Text style={{ opacity: 0.55 }}>{c.n}</Text>
+            </Text>
           </Pressable>
         ))}
       </ScrollView>
+
+      <View style={hub.rowHead}>
+        <Text style={hub.h2}>Group plans</Text>
+        <Pressable onPress={onSwipe} hitSlop={8}>
+          <Text style={hub.link}>Swipe all</Text>
+        </Pressable>
+      </View>
+      {groups.length ? (
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} style={hub.bleed} contentContainerStyle={hub.cards}>
+          {groups.map((a) => {
+            const left = a.groupSize - a.participants.length;
+            return (
+              <Pressable key={a.id} style={hub.card} onPress={() => router.push(`/activity/${a.id}`)}>
+                <View style={hub.photo}>
+                  <Image source={{ uri: photoFor(a) }} style={StyleSheet.absoluteFill} contentFit="cover" />
+                  <View style={hub.tag}>
+                    <Text style={hub.tagText}>{dayTime(a, now)}</Text>
+                  </View>
+                </View>
+                <View style={{ padding: 12, gap: 3 }}>
+                  <Text style={hub.cardTitle} numberOfLines={1}>{a.title}</Text>
+                  <Text style={hub.cardMeta} numberOfLines={1}>
+                    {a.participants.length} going · {left === 1 ? '1 spot left' : `${left} spots left`}
+                  </Text>
+                </View>
+              </Pressable>
+            );
+          })}
+        </ScrollView>
+      ) : (
+        <Text style={hub.empty}>No group plans for this one yet.</Text>
+      )}
+
+      <Text style={hub.h2}>Want someone to join</Text>
+      {invites.map((i) => {
+        const p = findPerson(i.personId)!;
+        const done = asked.includes(i.id);
+        const info = ACTIVITIES.find((x) => x.id === i.type);
+        return (
+          <View key={i.id} style={hub.invite}>
+            <Pressable onPress={() => router.push(`/person/${p.id}`)}>
+              <Avatar name={p.firstName} color={p.color} size={50} />
+            </Pressable>
+            <View style={{ flex: 1, gap: 3 }}>
+              <Text style={hub.inviteWho}>
+                {p.firstName} · <Text style={{ color: colors.muted, fontFamily: fonts.sans }}>wants {i.spots === 1 ? '1 person' : `${i.spots} people`}</Text>
+              </Text>
+              <Text style={hub.inviteWhat}>{info?.emoji} {i.what}</Text>
+              <Text style={hub.cardMeta}>{i.day} {i.time} · {i.place}</Text>
+            </View>
+            <Pressable
+              onPress={() => {
+                if (done) return;
+                // Mock for now: a real request to the person needs the server.
+                setAsked([...asked, i.id]);
+              }}
+              style={[hub.inBtn, done && hub.inBtnDone]}
+              accessibilityLabel={`Join ${p.firstName}`}>
+              <Text style={[hub.inText, done && { color: colors.muted }]}>{done ? 'Asked ✓' : 'I’m in'}</Text>
+            </Pressable>
+          </View>
+        );
+      })}
+      {invites.length === 0 ? <Text style={hub.empty}>Nobody’s asking for this one yet. Be the first!</Text> : null}
+      <Pressable style={hub.post} onPress={() => router.push('/create-activity')}>
+        <Feather name="plus" size={18} color={colors.onBrand} />
+        <Text style={hub.postText}>Ask someone to join you</Text>
+      </Pressable>
     </ScrollView>
   );
+}
+
+const VIBE_NAMES: Partial<Record<ActivityId, string>> = { tennis: 'Padel & tennis', strength: 'Strength', spa: 'Spa', coffee: 'Coffee', new: 'New thing', networking: 'Meet people' };
+
+function dayTime(a: Activity, now: number) {
+  const d = startsAt(a);
+  const today = new Date(now);
+  const diff = Math.round((new Date(d).setHours(0, 0, 0, 0) - today.setHours(0, 0, 0, 0)) / (24 * HOUR));
+  const day = diff === 0 ? 'Today' : diff === 1 ? 'Tomorrow' : d.toLocaleDateString('en-GB', { weekday: 'short' });
+  return `${day} ${a.time}`;
 }
 
 export default function Now() {
@@ -265,14 +266,7 @@ export default function Now() {
   if (!swiping)
     return (
       <SafeAreaView style={styles.screen} edges={['top']}>
-        <HomeHub
-          now={now}
-          openCount={open.length}
-          onSwipe={(w) => {
-            if (w) setWhat(w);
-            setSwiping(true);
-          }}
-        />
+        <HomeFeed now={now} open={open} onSwipe={() => setSwiping(true)} />
       </SafeAreaView>
     );
 
@@ -516,32 +510,36 @@ const styles = themed(() => StyleSheet.create({
 }));
 
 const hub = themed(() => StyleSheet.create({
-  scroll: { paddingHorizontal: 22, paddingTop: 8, paddingBottom: 120, gap: 16 },
-  top: { flexDirection: 'row', alignItems: 'center', gap: 10 },
+  scroll: { paddingHorizontal: 22, paddingTop: 8, paddingBottom: 120, gap: 14 },
+  bleed: { marginHorizontal: -22, flexGrow: 0 },
+  top: { flexDirection: 'row', alignItems: 'center', gap: 12 },
+  brand: { fontFamily: fonts.serif, fontSize: 22, color: colors.ink, letterSpacing: -0.6 },
+  count: { fontFamily: fonts.sans, fontSize: 13, color: colors.muted, marginTop: 1 },
   round: { width: 44, height: 44, borderRadius: 22, borderWidth: 1, borderColor: colors.edge, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.card },
   dot: { position: 'absolute', top: 10, right: 11, width: 9, height: 9, borderRadius: 5, backgroundColor: colors.peachDeep },
-  ring: { padding: 2, borderRadius: 24, borderWidth: 2, borderColor: colors.olive },
-  date: { fontFamily: fonts.sansSemi, fontSize: 14, color: colors.muted, marginTop: 4 },
-  hello: { fontFamily: fonts.serif, fontSize: 28, lineHeight: 34, color: colors.ink, letterSpacing: -0.8, marginTop: -8 },
-  next: { backgroundColor: colors.olive, borderRadius: 24, padding: 18, gap: 10 },
-  nextRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
-  nextLabel: { fontFamily: fonts.sansBold, fontSize: 11, letterSpacing: 1.2, color: colors.peach },
-  nextWhen: { fontFamily: fonts.sans, fontSize: 13, color: colors.onBrand, opacity: 0.85 },
-  nextTitle: { fontFamily: fonts.serif, fontSize: 22, lineHeight: 27, color: colors.onBrand, letterSpacing: -0.6 },
-  crew: { borderWidth: 2, borderColor: colors.olive, borderRadius: 16 },
-  nextBtn: { backgroundColor: colors.peach, borderRadius: 999, paddingHorizontal: 16, paddingVertical: 10 },
-  nextBtnText: { fontFamily: fonts.sansBold, fontSize: 14, color: colors.onPeach },
-  swipe: { flexDirection: 'row', alignItems: 'center', gap: 14, backgroundColor: colors.card, borderRadius: 22, borderWidth: StyleSheet.hairlineWidth, borderColor: colors.line, padding: 14 },
-  swipeIcon: { width: 46, height: 46, borderRadius: 16, backgroundColor: colors.peach, alignItems: 'center', justifyContent: 'center' },
-  swipeTitle: { fontFamily: fonts.sansBold, fontSize: 16, color: colors.ink },
-  swipeSub: { fontFamily: fonts.sans, fontSize: 13, color: colors.muted, marginTop: 2 },
-  h2: { fontFamily: fonts.serif, fontSize: 20, color: colors.ink, letterSpacing: -0.5, marginTop: 6 },
-  grid: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
-  vibe: { width: '31.5%', height: 92, borderRadius: 20, padding: 12, justifyContent: 'space-between' },
-  vibeEmoji: { fontSize: 24 },
-  vibeText: { fontFamily: fonts.sansBold, fontSize: 14 },
-  rowHead: { flexDirection: 'row', alignItems: 'baseline', justifyContent: 'space-between' },
+  search: { flexDirection: 'row', alignItems: 'center', gap: 10, height: 48, borderRadius: 24, borderWidth: 1, borderColor: colors.edge, backgroundColor: colors.card, paddingHorizontal: 16 },
+  searchText: { fontFamily: fonts.sans, fontSize: 15, color: colors.muted },
+  chips: { paddingHorizontal: 22, gap: 8 },
+  chip: { borderRadius: 999, borderWidth: 1, borderColor: colors.edge, paddingVertical: 9, paddingHorizontal: 15 },
+  chipOn: { backgroundColor: colors.ink, borderColor: colors.ink },
+  chipText: { fontFamily: fonts.sansSemi, fontSize: 14, color: colors.ink },
+  rowHead: { flexDirection: 'row', alignItems: 'baseline', justifyContent: 'space-between', marginTop: 6 },
+  h2: { fontFamily: fonts.serif, fontSize: 22, color: colors.ink, letterSpacing: -0.6, marginTop: 6 },
   link: { fontFamily: fonts.sansBold, fontSize: 14, color: colors.link },
-  person: { alignItems: 'center', gap: 6, width: 64 },
-  personName: { fontFamily: fonts.sansSemi, fontSize: 13, color: colors.ink },
+  cards: { paddingHorizontal: 22, gap: 12 },
+  card: { width: 230, backgroundColor: colors.card, borderRadius: 20, borderWidth: StyleSheet.hairlineWidth, borderColor: colors.line, overflow: 'hidden' },
+  photo: { height: 140, backgroundColor: colors.oliveSoft },
+  tag: { position: 'absolute', top: 10, left: 10, backgroundColor: '#FFFFFF', borderRadius: 999, paddingVertical: 5, paddingHorizontal: 10 },
+  tagText: { fontFamily: fonts.sansBold, fontSize: 12, color: '#16190F' },
+  cardTitle: { fontFamily: fonts.sansBold, fontSize: 16, color: colors.ink },
+  cardMeta: { fontFamily: fonts.sans, fontSize: 13, color: colors.muted },
+  empty: { fontFamily: fonts.sans, fontSize: 14, color: colors.muted },
+  invite: { flexDirection: 'row', alignItems: 'center', gap: 12, backgroundColor: colors.card, borderRadius: 20, borderWidth: StyleSheet.hairlineWidth, borderColor: colors.line, padding: 12 },
+  inviteWho: { fontFamily: fonts.sansBold, fontSize: 14, color: colors.ink },
+  inviteWhat: { fontFamily: fonts.sansSemi, fontSize: 15, lineHeight: 20, color: colors.ink },
+  inBtn: { backgroundColor: colors.peach, borderRadius: 999, paddingVertical: 9, paddingHorizontal: 14 },
+  inBtnDone: { backgroundColor: 'transparent', borderWidth: 1, borderColor: colors.edge },
+  inText: { fontFamily: fonts.sansBold, fontSize: 13, color: colors.onPeach },
+  post: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, backgroundColor: colors.olive, borderRadius: 999, height: 52, marginTop: 6 },
+  postText: { fontFamily: fonts.sansBold, fontSize: 15, color: colors.onBrand },
 }));
