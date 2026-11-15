@@ -16,10 +16,9 @@ import { colors, fonts, radius, space, themed } from '@/theme';
 // bottom. Same look in light and dark (it's a photo screen).
 
 const SLIDES = [
-  { photo: require('../../assets/images/photos/dusk.png'), tag: 'Evening plans' },
-  { photo: require('../../assets/images/photos/park.png'), tag: 'Workouts with new faces' },
-  { photo: require('../../assets/images/photos/lake.png'), tag: 'Swims, saunas & coffee' },
-  { photo: require('../../assets/images/photos/river.png'), tag: 'Walks that turn into friendships' },
+  { photo: require('../../assets/images/photos/padel.jpg'), tag: 'Rooftop padel' },
+  { photo: require('../../assets/images/photos/football.jpg'), tag: '5-a-side under the lights' },
+  { photo: require('../../assets/images/photos/run-london.jpg'), tag: 'Sunset runs with new faces' },
 ];
 
 export default function Welcome() {
