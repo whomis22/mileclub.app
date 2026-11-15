@@ -13,7 +13,7 @@ import {
   MEET,
   GROUP_SIZES,
   LEVELS,
-  NEIGHBORHOOD_NAMES,
+  CITIES,
   SOCIAL,
 } from '@/data/options';
 import type { Profile } from '@/data/types';
@@ -87,7 +87,7 @@ export default function Onboarding() {
   const valid = [
     !!d.role,
     !!d.firstName?.trim() && !!d.age && d.age >= 18 && d.age <= 99 && !!d.gender,
-    !!d.neighborhood,
+    !!d.city && !!d.neighborhood,
     d.activities.length > 0 && !!d.level,
     d.goals.length > 0,
     d.availability.length > 0,
@@ -213,14 +213,31 @@ export default function Onboarding() {
 
           {step === 2 && (
             <>
-              <Text style={styles.q}>Which neighbourhood are you in?</Text>
-              <Body muted>We use this to find people and activities close by.</Body>
+              <Text style={styles.q}>Which city are you in?</Text>
+              <Body muted>We use this to find people and plans close by.</Body>
               <View style={{ height: space.lg }} />
               <Chips>
-                {NEIGHBORHOOD_NAMES.map((n) => (
-                  <Chip key={n} label={n} selected={d.neighborhood === n} onPress={() => set({ neighborhood: n })} />
+                {CITIES.map((c) => (
+                  <Chip
+                    key={c.id}
+                    label={c.label}
+                    selected={d.city === c.id}
+                    onPress={() => set({ city: c.id, neighborhood: d.city === c.id ? d.neighborhood : undefined })}
+                  />
                 ))}
               </Chips>
+              {d.city ? (
+                <>
+                  <View style={{ height: space.xl }} />
+                  <Text style={styles.q}>And which neighbourhood?</Text>
+                  <View style={{ height: space.md }} />
+                  <Chips>
+                    {(CITIES.find((c) => c.id === d.city)?.hoods ?? []).map((n) => (
+                      <Chip key={n} label={n} selected={d.neighborhood === n} onPress={() => set({ neighborhood: n })} />
+                    ))}
+                  </Chips>
+                </>
+              ) : null}
             </>
           )}
 

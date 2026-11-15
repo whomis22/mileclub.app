@@ -6,6 +6,7 @@ import type {
   Meet,
   GroupSize,
   Level,
+  City,
   Neighborhood,
   Slot,
   Social,
@@ -19,6 +20,7 @@ export type Profile = {
   gender?: Gender;
   meet?: Meet; // who they want to meet up with (missing = everyone)
   age: number;
+  city?: City; // missing on older profiles: work it out with cityOf(neighborhood)
   neighborhood: Neighborhood;
   activities: ActivityId[];
   level: Level;

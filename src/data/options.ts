@@ -66,9 +66,71 @@ export const NEIGHBORHOODS = {
   Noord: { lat: 52.3945, lng: 4.9180 },
   Watergraafsmeer: { lat: 52.3510, lng: 4.9420 },
   Zuidas: { lat: 52.3389, lng: 4.8730 },
+  // London
+  Shoreditch: { lat: 51.5265, lng: -0.0786 },
+  Soho: { lat: 51.5136, lng: -0.1365 },
+  Camden: { lat: 51.539, lng: -0.1426 },
+  Brixton: { lat: 51.4613, lng: -0.1156 },
+  'Notting Hill': { lat: 51.5094, lng: -0.1963 },
+  'Canary Wharf': { lat: 51.5054, lng: -0.0235 },
+  // New York
+  Williamsburg: { lat: 40.7081, lng: -73.9571 },
+  'West Village': { lat: 40.7358, lng: -74.0036 },
+  'Lower East Side': { lat: 40.715, lng: -73.9843 },
+  'Upper East Side': { lat: 40.7736, lng: -73.9566 },
+  Harlem: { lat: 40.8116, lng: -73.9465 },
+  DUMBO: { lat: 40.7033, lng: -73.9881 },
+  // San Francisco
+  Mission: { lat: 37.7599, lng: -122.4148 },
+  Marina: { lat: 37.8037, lng: -122.4368 },
+  SoMa: { lat: 37.7785, lng: -122.4056 },
+  'Hayes Valley': { lat: 37.7759, lng: -122.4245 },
+  'Noe Valley': { lat: 37.7502, lng: -122.4337 },
+  // Dubai
+  'Dubai Marina': { lat: 25.0805, lng: 55.1403 },
+  'Downtown Dubai': { lat: 25.1972, lng: 55.2744 },
+  'Business Bay': { lat: 25.185, lng: 55.265 },
+  Jumeirah: { lat: 25.2048, lng: 55.242 },
+  JLT: { lat: 25.0693, lng: 55.1413 },
+  // Doha, Qatar
+  'West Bay': { lat: 25.3238, lng: 51.5283 },
+  'The Pearl': { lat: 25.3686, lng: 51.551 },
+  Msheireb: { lat: 25.2867, lng: 51.5262 },
+  Lusail: { lat: 25.418, lng: 51.49 },
+  'Al Sadd': { lat: 25.2836, lng: 51.4995 },
+  // Oslo
+  'Grünerløkka': { lat: 59.9233, lng: 10.759 },
+  Frogner: { lat: 59.9206, lng: 10.7062 },
+  Majorstuen: { lat: 59.9295, lng: 10.7155 },
+  Sentrum: { lat: 59.9127, lng: 10.7461 },
+  'Gamle Oslo': { lat: 59.9056, lng: 10.774 },
+  'Aker Brygge': { lat: 59.911, lng: 10.727 },
+  // Stockholm
+  'Södermalm': { lat: 59.315, lng: 18.071 },
+  'Östermalm': { lat: 59.338, lng: 18.085 },
+  Vasastan: { lat: 59.345, lng: 18.048 },
+  Kungsholmen: { lat: 59.331, lng: 18.03 },
+  Norrmalm: { lat: 59.335, lng: 18.063 },
 } as const;
 export type Neighborhood = keyof typeof NEIGHBORHOODS;
 export const NEIGHBORHOOD_NAMES = Object.keys(NEIGHBORHOODS) as Neighborhood[];
+
+// Cities Mile Club is opening in (Yana, 2026-11-15), each with its neighbourhoods.
+export const CITIES = [
+  { id: 'London', label: 'London', hoods: ['Shoreditch', 'Soho', 'Camden', 'Brixton', 'Notting Hill', 'Canary Wharf'] },
+  { id: 'New York', label: 'New York', hoods: ['Williamsburg', 'West Village', 'Lower East Side', 'Upper East Side', 'Harlem', 'DUMBO'] },
+  { id: 'Amsterdam', label: 'Amsterdam', hoods: ['Centrum', 'Jordaan', 'De Pijp', 'Oud-West', 'Oud-Zuid', 'Oost', 'Indische Buurt', 'Westerpark', 'De Baarsjes', 'Noord', 'Watergraafsmeer', 'Zuidas'] },
+  { id: 'San Francisco', label: 'San Francisco', hoods: ['Mission', 'Marina', 'SoMa', 'Hayes Valley', 'Noe Valley'] },
+  { id: 'Dubai', label: 'Dubai', hoods: ['Dubai Marina', 'Downtown Dubai', 'Business Bay', 'Jumeirah', 'JLT'] },
+  { id: 'Doha', label: 'Doha, Qatar', hoods: ['West Bay', 'The Pearl', 'Msheireb', 'Lusail', 'Al Sadd'] },
+  { id: 'Oslo', label: 'Oslo', hoods: ['Grünerløkka', 'Frogner', 'Majorstuen', 'Sentrum', 'Gamle Oslo', 'Aker Brygge'] },
+  { id: 'Stockholm', label: 'Stockholm', hoods: ['Södermalm', 'Östermalm', 'Vasastan', 'Kungsholmen', 'Norrmalm'] },
+] as const satisfies readonly { id: string; label: string; hoods: readonly Neighborhood[] }[];
+export type City = (typeof CITIES)[number]['id'];
+
+export function cityOf(n: Neighborhood): City | undefined {
+  return CITIES.find((c) => (c.hoods as readonly Neighborhood[]).includes(n))?.id;
+}
 
 export function distanceKm(a: Neighborhood, b: Neighborhood) {
   const p = NEIGHBORHOODS[a];
