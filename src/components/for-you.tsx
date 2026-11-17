@@ -6,7 +6,7 @@ import { useRef, useState } from 'react';
 import { Dimensions, Pressable, ScrollView, StyleSheet, Text, View, type NativeScrollEvent, type NativeSyntheticEvent } from 'react-native';
 
 import { photoFor } from '@/components/swipe-deck';
-import { faceFor } from '@/data/faces';
+import { faceFor, nextWant } from '@/data/faces';
 import { activityInfo, cityOf, distanceKm, type Neighborhood } from '@/data/options';
 import { findPerson } from '@/data/people';
 import type { Activity, Person } from '@/data/types';
@@ -66,7 +66,9 @@ export function ForYou({
   const groups = plans.filter((a) => !a.solo);
   const solos = plans.filter((a) => a.solo);
   const top = solos.length ? solos : plans;
-  const total = mode === 'plans' ? top.length : people.length;
+  // People sorted by whose plan starts soonest (5:30 now? the 6pm gym buddy comes first).
+  const ppl = [...people].sort((x, y) => (nextWant(x.id)?.when.getTime() ?? Infinity) - (nextWant(y.id)?.when.getTime() ?? Infinity));
+  const total = mode === 'plans' ? top.length : ppl.length;
   const city = cityOf(home) ?? 'your city';
 
   function onEnd(e: NativeSyntheticEvent<NativeScrollEvent>) {
@@ -86,7 +88,7 @@ export function ForYou({
       <View style={styles.head}>
         <View style={{ flex: 1 }}>
           <Text style={styles.h1}>For you</Text>
-          <Text style={styles.sub}>{mode === 'plans' ? 'People looking for someone to join them' : 'Picked from what you like doing'}</Text>
+          <Text style={styles.sub}>{mode === 'plans' ? 'People looking for someone to join them' : 'Who wants company soonest, first'}</Text>
         </View>
         {total > 0 ? (
           <Text style={styles.count}>
@@ -105,7 +107,7 @@ export function ForYou({
         onMomentumScrollEnd={onEnd}>
         {mode === 'plans'
           ? top.map((a) => <PlanCard key={a.id} a={a} home={home} requested={requested(a.id)} onJoin={() => onJoin(a)} />)
-          : people.map((p) => <PersonCard key={p.id} p={p} added={following.includes(p.id)} onAdd={() => onAdd(p)} />)}
+          : ppl.map((p) => <PersonCard key={p.id} p={p} added={following.includes(p.id)} onAdd={() => onAdd(p)} />)}
       </ScrollView>
 
       {dots > 1 ? (
@@ -189,11 +191,22 @@ function PlanCard({ a, home, requested, onJoin }: { a: Activity; home: Neighborh
 
 function PersonCard({ p, added, onAdd }: { p: Person; added: boolean; onAdd: () => void }) {
   const f = faceFor(p.id);
+  const w = nextWant(p.id);
   const city = cityOf(p.neighborhood);
   return (
     <Pressable style={styles.card} onPress={() => router.push(`/person/${p.id}` as Href)}>
       {f ? <Image source={{ uri: f.photo }} style={StyleSheet.absoluteFill} contentFit="cover" transition={250} /> : <View style={[StyleSheet.absoluteFill, { backgroundColor: p.color }]} />}
-      <LinearGradient colors={['transparent', 'transparent', 'rgba(10,14,6,0.92)']} locations={[0, 0.4, 0.85]} style={StyleSheet.absoluteFill} />
+      <LinearGradient colors={['rgba(0,0,0,0.25)', 'transparent', 'rgba(10,14,6,0.92)']} locations={[0, 0.3, 0.8]} style={StyleSheet.absoluteFill} />
+      {w ? (
+        <View style={styles.chips}>
+          <View style={styles.chip}>
+            <Text style={styles.chipText}>{activityInfo(w.type).emoji} {activityInfo(w.type).label}</Text>
+          </View>
+          <View style={styles.chipDark}>
+            <Text style={styles.chipDarkText}>{w.label}</Text>
+          </View>
+        </View>
+      ) : null}
       <View style={styles.bottom}>
         <Text style={styles.name} numberOfLines={1}>
           {p.firstName}, {p.age}
@@ -205,9 +218,20 @@ function PersonCard({ p, added, onAdd }: { p: Person; added: boolean; onAdd: () 
         <Text style={styles.work} numberOfLines={1}>
           {f?.work ?? p.activities.map((x) => activityInfo(x).label).join(' · ')}
         </Text>
+        {w ? (
+          <View style={styles.wants}>
+            <Text style={styles.wantsLabel}>LOOKING FOR SOMEONE</Text>
+            <Text style={styles.wantsText} numberOfLines={1}>
+              {w.what} · {w.label}
+            </Text>
+          </View>
+        ) : null}
+        <Text style={styles.also} numberOfLines={1}>
+          Also into {p.activities.map((x) => `${activityInfo(x).emoji} ${activityInfo(x).label}`).join('  ')}
+        </Text>
         <View style={styles.actions}>
           <Pressable style={[styles.cta, added && styles.ctaDone]} onPress={onAdd}>
-            <Text style={styles.ctaText}>{added ? 'Added ✓' : `Add ${p.firstName}`}</Text>
+            <Text style={styles.ctaText}>{added ? 'Asked ✓' : `Join ${p.firstName}`}</Text>
           </Pressable>
           <Pressable style={styles.chat} onPress={() => router.push(`/chat/${p.id}` as Href)} accessibilityLabel={`Message ${p.firstName}`}>
             <Feather name="message-circle" size={20} color="#fff" />
@@ -240,6 +264,10 @@ const styles = themed(() =>
     ctaDone: { backgroundColor: 'rgba(255,255,255,0.85)' },
     ctaText: { fontFamily: fonts.sansBold, fontSize: 16, color: DARK },
     chat: { width: 52, height: 52, borderRadius: 26, borderWidth: 1.5, borderColor: 'rgba(255,255,255,0.6)', alignItems: 'center', justifyContent: 'center' },
+    wants: { backgroundColor: 'rgba(255,255,255,0.14)', borderRadius: 14, paddingVertical: 8, paddingHorizontal: 12, marginTop: 8 },
+    wantsLabel: { fontFamily: fonts.sansBold, fontSize: 10, letterSpacing: 1, color: MATCHA },
+    wantsText: { fontFamily: fonts.sansSemi, fontSize: 14, color: '#fff', marginTop: 2 },
+    also: { fontFamily: fonts.sans, fontSize: 12, color: 'rgba(255,255,255,0.8)', marginTop: 6 },
     dots: { flexDirection: 'row', justifyContent: 'center', gap: 5, marginTop: 14 },
     dot: { width: 5, height: 5, borderRadius: 3, backgroundColor: colors.edge },
     dotOn: { width: 18, backgroundColor: colors.ink },

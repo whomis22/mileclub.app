@@ -62,7 +62,7 @@ type Picker = 'what' | 'with' | 'when' | 'dist' | 'all' | null;
 export default function Now() {
   useTheme();
   const { profile, activities, skipped, runRequests, join, clearSkipped, notices, following, toggleFollow } = useStore();
-  const [mode, setMode] = useState<Mode>('people');
+  const [mode, setMode] = useState<Mode>('plans');
   const unread = (notices ?? []).filter((n) => !n.read).length;
   const [joinedMsg, setJoinedMsg] = useState<Activity | null>(null);
   const [now] = useState(() => Date.now());
@@ -138,7 +138,7 @@ export default function Now() {
           <MenuButton onPress={() => router.push('/menu')} />
           {/* People / Plans toggle */}
           <View style={styles.toggle}>
-            {(['people', 'plans'] as const).map((m) => (
+            {(['plans', 'people'] as const).map((m) => (
               <Pressable key={m} onPress={() => setMode(m)} style={[styles.toggleBtn, mode === m && styles.toggleOn]} accessibilityLabel={`Show ${m}`}>
                 <Text style={[styles.toggleText, mode === m && styles.toggleTextOn]}>{m === 'people' ? 'People' : 'Plans'}</Text>
               </Pressable>
