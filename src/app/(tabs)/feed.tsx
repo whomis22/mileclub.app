@@ -313,6 +313,12 @@ export default function Explore() {
           style={styles.searchInput}
           autoCorrect={false}
           returnKeyType="search"
+          inputMode="search"
+          clearButtonMode="while-editing"
+          enablesReturnKeyAutomatically
+          autoComplete="name"
+          textContentType="name"
+          autoCapitalize="words"
           autoFocus
         />
         {query ? (

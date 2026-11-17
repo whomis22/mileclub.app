@@ -178,6 +178,8 @@ export default function Onboarding() {
                 placeholderTextColor={colors.muted}
                 style={styles.input}
                 autoCapitalize="words"
+                autoComplete="given-name"
+                textContentType="givenName"
               />
               <Label>Age</Label>
               <TextInput
@@ -352,6 +354,8 @@ export default function Onboarding() {
                 value={d.emergencyContact ?? ''}
                 onChangeText={(emergencyContact) => set({ emergencyContact })}
                 placeholder="Name and phone number"
+                autoComplete="tel"
+                textContentType="telephoneNumber"
                 placeholderTextColor={colors.muted}
                 style={styles.input}
               />

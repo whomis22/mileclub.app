@@ -104,7 +104,13 @@ function CountryPicker({ visible, onPick, onClose }: { visible: boolean; onPick:
           placeholder="Search country or code"
           placeholderTextColor="#A39C8C"
           style={styles.search}
+          autoComplete="country"
+          textContentType="countryName"
           autoCorrect={false}
+          returnKeyType="search"
+          inputMode="search"
+          clearButtonMode="while-editing"
+          enablesReturnKeyAutomatically
         />
         <FlatList
           data={list}
@@ -296,7 +302,7 @@ export default function SignUp() {
               <Text style={styles.title}>
                 Create your <Text style={styles.titleItalic}>account</Text>
               </Text>
-              <Field label="Name" value={name} onChangeText={(t) => setName(t.slice(0, 50))} counter={`${name.length} / 50`} autoCapitalize="words" autoFocus />
+              <Field label="Name" value={name} onChangeText={(t) => setName(t.slice(0, 50))} counter={`${name.length} / 50`} autoCapitalize="words" autoComplete="name" textContentType="name" autoFocus />
               {viaApple ? (
                 <View style={styles.appleNote}>
                   <Text style={styles.appleNoteText}> Signed in with Apple{contact ? ` · ${contact}` : ''}</Text>
@@ -320,6 +326,8 @@ export default function SignUp() {
                           value={contact}
                           onChangeText={(t) => setContact(t.replace(/[^0-9 ]/g, '').slice(0, 18))}
                           keyboardType="phone-pad"
+                          autoComplete="tel"
+                          textContentType="telephoneNumber"
                           autoCorrect={false}
                           error={contact.length > 4 && !contactOk ? 'Please enter a valid phone number.' : undefined}
                         />
@@ -331,6 +339,8 @@ export default function SignUp() {
                       value={contact}
                       onChangeText={setContact}
                       keyboardType="email-address"
+                      autoComplete="email"
+                      textContentType="emailAddress"
                       autoCapitalize="none"
                       autoCorrect={false}
                       error={contact.length > 4 && !contactOk ? 'Please enter a valid email.' : undefined}
@@ -369,6 +379,7 @@ export default function SignUp() {
                     }}
                     keyboardType="number-pad"
                     maxLength={2}
+                    autoComplete="birthdate-day"
                     placeholder="DD"
                   />
                 </View>
@@ -388,6 +399,7 @@ export default function SignUp() {
                     }}
                     keyboardType="number-pad"
                     maxLength={2}
+                    autoComplete="birthdate-month"
                     placeholder="MM"
                   />
                 </View>
@@ -402,6 +414,7 @@ export default function SignUp() {
                     }}
                     keyboardType="number-pad"
                     maxLength={4}
+                    autoComplete="birthdate-year"
                     placeholder="YYYY"
                   />
                 </View>
@@ -436,7 +449,7 @@ export default function SignUp() {
                 You’ll need a <Text style={styles.titleItalic}>password</Text>
               </Text>
               <Text style={styles.help}>Make sure it’s 8 characters or more.</Text>
-              <Field label="Password" value={password} onChangeText={setPassword} secureTextEntry={!showPassword} autoCapitalize="none" autoCorrect={false} autoFocus />
+              <Field label="Password" value={password} onChangeText={setPassword} secureTextEntry={!showPassword} autoCapitalize="none" autoCorrect={false} autoComplete="new-password" textContentType="newPassword" passwordRules="minlength: 8;" autoFocus />
               <Pressable onPress={() => setShowPassword(!showPassword)}>
                 <Text style={styles.link}>{showPassword ? 'Hide password' : 'Show password'}</Text>
               </Pressable>
@@ -466,6 +479,8 @@ export default function SignUp() {
                 value={username ? `@${username}` : ''}
                 placeholder={`@${suggested}`}
                 onChangeText={(t) => setUsername(t.replace(/^@/, '').replace(/[^a-zA-Z0-9_]/g, '').slice(0, 15))}
+                autoComplete="username-new"
+                textContentType="username"
                 autoCapitalize="none"
                 autoCorrect={false}
               />

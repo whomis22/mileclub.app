@@ -27,6 +27,11 @@ export default function Messages() {
           value={query}
           onChangeText={setQuery}
           placeholder="Search messages"
+          returnKeyType="search"
+          inputMode="search"
+          clearButtonMode="while-editing"
+          enablesReturnKeyAutomatically
+          autoCapitalize="none"
           placeholderTextColor={colors.muted}
           style={styles.searchInput}
         />
