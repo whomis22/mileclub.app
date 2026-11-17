@@ -62,7 +62,11 @@ export function ForYou({
 }) {
   const [index, setIndex] = useState(0);
   const seen = useRef({ people: 0, plans: 0 });
-  const total = mode === 'plans' ? plans.length : people.length;
+  // Bottom row is always group activities; the Plans cards up top are single people looking for someone.
+  const groups = plans.filter((a) => !a.solo);
+  const solos = plans.filter((a) => a.solo);
+  const top = solos.length ? solos : plans;
+  const total = mode === 'plans' ? top.length : people.length;
   const city = cityOf(home) ?? 'your city';
 
   function onEnd(e: NativeSyntheticEvent<NativeScrollEvent>) {
@@ -82,7 +86,7 @@ export function ForYou({
       <View style={styles.head}>
         <View style={{ flex: 1 }}>
           <Text style={styles.h1}>For you</Text>
-          <Text style={styles.sub}>{mode === 'plans' ? 'Group plans and people looking for one more' : 'Picked from what you like doing'}</Text>
+          <Text style={styles.sub}>{mode === 'plans' ? 'People looking for someone to join them' : 'Picked from what you like doing'}</Text>
         </View>
         {total > 0 ? (
           <Text style={styles.count}>
@@ -100,7 +104,7 @@ export function ForYou({
         contentContainerStyle={{ paddingHorizontal: PAD, gap: GAP }}
         onMomentumScrollEnd={onEnd}>
         {mode === 'plans'
-          ? plans.map((a) => <PlanCard key={a.id} a={a} home={home} requested={requested(a.id)} onJoin={() => onJoin(a)} />)
+          ? top.map((a) => <PlanCard key={a.id} a={a} home={home} requested={requested(a.id)} onJoin={() => onJoin(a)} />)
           : people.map((p) => <PersonCard key={p.id} p={p} added={following.includes(p.id)} onAdd={() => onAdd(p)} />)}
       </ScrollView>
 
@@ -115,31 +119,15 @@ export function ForYou({
 
       <View style={styles.rowHead}>
         <View style={{ flex: 1 }}>
-          <Text style={styles.h2}>{mode === 'plans' ? `Free in ${city}` : `Happening in ${city}`}</Text>
-          <Text style={styles.sub}>{mode === 'plans' ? 'Near you and up for something right now' : 'Plans you can still join this week'}</Text>
+          <Text style={styles.h2}>{`Group activities in ${city}`}</Text>
+          <Text style={styles.sub}>{'Join a group this week'}</Text>
         </View>
-        <Pressable onPress={() => router.push((mode === 'plans' ? '/people' : '/activities') as Href)} hitSlop={8}>
+        <Pressable onPress={() => router.push('/activities' as Href)} hitSlop={8}>
           <Text style={styles.seeAll}>See all</Text>
         </Pressable>
       </View>
       <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: PAD, gap: 10 }}>
-        {mode === 'plans'
-          ? people.map((p) => {
-              const f = faceFor(p.id);
-              const added = following.includes(p.id);
-              return (
-                <Pressable key={p.id} style={styles.mini} onPress={() => router.push(`/person/${p.id}` as Href)}>
-                  {f ? <Image source={{ uri: f.photo }} style={StyleSheet.absoluteFill} contentFit="cover" transition={200} /> : <View style={[StyleSheet.absoluteFill, { backgroundColor: p.color }]} />}
-                  <LinearGradient colors={['transparent', 'rgba(0,0,0,0.7)']} style={styles.miniShade} />
-                  <Pressable style={[styles.plus, added && styles.plusOn]} onPress={() => onAdd(p)} accessibilityLabel={`Add ${p.firstName}`}>
-                    <Feather name={added ? 'check' : 'plus'} size={16} color={DARK} />
-                  </Pressable>
-                  <Text style={styles.miniName}>{p.firstName}</Text>
-                  <Text style={styles.miniMeta} numberOfLines={1}>{p.neighborhood}</Text>
-                </Pressable>
-              );
-            })
-          : plans.map((a) => {
+        {(groups.length ? groups : plans).map((a) => {
               const on = requested(a.id);
               return (
                 <Pressable key={a.id} style={styles.mini} onPress={() => router.push(`/activity/${a.id}` as Href)}>
@@ -149,7 +137,7 @@ export function ForYou({
                     <Feather name={on ? 'check' : 'plus'} size={16} color={DARK} />
                   </Pressable>
                   <Text style={styles.miniName} numberOfLines={2}>{a.title}</Text>
-                  <Text style={styles.miniMeta} numberOfLines={1}>{whenLabel(a)}</Text>
+                  <Text style={styles.miniMeta} numberOfLines={1}>{whenLabel(a)} · {a.participants.length}/{a.groupSize} going</Text>
                 </Pressable>
               );
             })}
