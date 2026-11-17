@@ -1,11 +1,12 @@
 import Feather from '@expo/vector-icons/Feather';
 import { Redirect, router, type Href } from 'expo-router';
-import { useRef, useState } from 'react';
+import { useState } from 'react';
 import { Modal, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { OutOfSwipes } from '@/components/out-of-swipes';
-import { SwipeDeck, deckColors, type SwipeDeckHandle } from '@/components/swipe-deck';
+import { ForYou, type Mode } from '@/components/for-you';
+import { deckColors } from '@/components/swipe-deck';
 import { Avatar, MenuButton } from '@/components/ui';
 import { ACTIVITIES, distanceKm, type ActivityId } from '@/data/options';
 import { PEOPLE, findPerson } from '@/data/people';
@@ -60,9 +61,9 @@ type Picker = 'what' | 'with' | 'when' | 'dist' | 'all' | null;
 
 export default function Now() {
   useTheme();
-  const { profile, activities, skipped, runRequests, join, skip, clearSkipped, notices } = useStore();
+  const { profile, activities, skipped, runRequests, join, clearSkipped, notices, following, toggleFollow } = useStore();
+  const [mode, setMode] = useState<Mode>('people');
   const unread = (notices ?? []).filter((n) => !n.read).length;
-  const deck = useRef<SwipeDeckHandle | null>(null);
   const [joinedMsg, setJoinedMsg] = useState<Activity | null>(null);
   const [now] = useState(() => Date.now());
   const [what, setWhat] = useState<ActivityId | 'any'>('any');
@@ -83,8 +84,7 @@ export default function Now() {
         a.hostId !== 'me' &&
         !a.participants.includes('me') &&
         a.participants.length < a.groupSize &&
-        !skipped.includes(a.id) &&
-        !runRequests[a.id]
+        !skipped.includes(a.id)
       );
     })
     .sort((a, b) => startsAt(a).getTime() - startsAt(b).getTime());
@@ -106,13 +106,6 @@ export default function Now() {
   const freePeople = PEOPLE.filter((p) => fitsMeet({ ...profile, meet: withWho }, p) && (what === 'any' || p.activities.includes(what)));
   const people = freePeople.length ? freePeople : PEOPLE.filter((p) => fitsMeet(profile, p));
 
-  const whatInfo = ACTIVITIES.find((x) => x.id === what);
-  const pills: { id: Exclude<Picker, null>; label: string }[] = [
-    { id: 'what', label: whatInfo ? `${whatInfo.emoji} ${whatInfo.label}` : '✨ Any activity' },
-    { id: 'with', label: `👥 ${WITH.find((x) => x.id === withWho)!.label}` },
-    { id: 'when', label: `🕒 ${WHEN.find((x) => x.id === when)!.label}` },
-    { id: 'dist', label: `📍 ${DIST.find((x) => x.id === dist)!.label}` },
-  ];
   const clearAll = () => {
     setWhat('any');
     setWithWho('everyone');
@@ -143,9 +136,17 @@ export default function Now() {
       <View style={styles.wrap}>
         <View style={styles.header}>
           <MenuButton onPress={() => router.push('/menu')} />
-          <Text style={styles.title} numberOfLines={1} adjustsFontSizeToFit>
-            Swipe plans
-          </Text>
+          {/* People / Plans toggle */}
+          <View style={styles.toggle}>
+            {(['people', 'plans'] as const).map((m) => (
+              <Pressable key={m} onPress={() => setMode(m)} style={[styles.toggleBtn, mode === m && styles.toggleOn]} accessibilityLabel={`Show ${m}`}>
+                <Text style={[styles.toggleText, mode === m && styles.toggleTextOn]}>{m === 'people' ? 'People' : 'Plans'}</Text>
+              </Pressable>
+            ))}
+          </View>
+          <Pressable style={[styles.notif, nFilters > 0 && styles.pillOn]} onPress={() => setPicker('all')} accessibilityLabel="Filters">
+            <Sliders color={nFilters > 0 ? colors.onBrand : colors.ink} />
+          </Pressable>
           <Pressable style={styles.notif} onPress={() => router.push('/notifications' as Href)} accessibilityLabel="Notifications">
             <Feather name="bell" size={19} color={colors.ink} />
             {unread ? (
@@ -154,23 +155,7 @@ export default function Now() {
               </View>
             ) : null}
           </Pressable>
-          <Pressable style={styles.bell} onPress={() => router.push('/messages')} accessibilityLabel="Messages">
-            <View style={styles.bubble} />
-            <View style={styles.badge} />
-          </Pressable>
         </View>
-        {/* Filters, like Hinge: a scrollable row of pills under the header */}
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.pillScroll} contentContainerStyle={styles.pills}>
-          <Pressable style={[styles.pill, styles.slidersPill, nFilters > 0 && styles.pillOn]} onPress={() => setPicker('all')} accessibilityLabel="All filters">
-            <Sliders color={nFilters > 0 ? colors.onBrand : colors.ink} />
-            {nFilters > 0 ? <Text style={[styles.pillText, { color: colors.onBrand }]}>{nFilters}</Text> : null}
-          </Pressable>
-          {pills.map((p) => (
-            <Pressable key={p.id} style={styles.pill} onPress={() => setPicker(p.id)} accessibilityLabel={`Choose ${p.id}`}>
-              <Text style={styles.pillText}>{p.label} ▾</Text>
-            </Pressable>
-          ))}
-        </ScrollView>
         {filtered && noMatch ? (
           <View style={styles.note}>
             <Text style={styles.noteText}>Nothing matches yet, so here’s everyone who’s available.</Text>
@@ -190,41 +175,24 @@ export default function Now() {
 
         {swipes.outOfSwipes ? (
           <OutOfSwipes onPlus={swipes.buyPlus} onBonus={swipes.addBonus} />
-        ) : soon.length > 0 ? (
-          <>
-            <SwipeDeck
-              items={soon}
+        ) : soon.length > 0 || people.length > 0 ? (
+          <View style={styles.bleed}>
+            <ForYou
+              mode={mode}
+              plans={soon}
+              people={people}
               home={profile.neighborhood}
-              deckRef={deck}
+              requested={(id) => !!runRequests[id]}
+              following={following}
               onJoin={(a) => {
-                swipes.use();
                 join(a.id);
                 setJoinedMsg(a);
               }}
-              onSkip={(a) => {
-                swipes.use();
-                skip(a.id);
-                setJoinedMsg(null);
-              }}
+              onAdd={(p) => toggleFollow(p.id)}
+              onNewCard={swipes.use}
+              swipesLeft={swipes.plus ? 'Plus: unlimited swipes' : `${swipes.left} free ${swipes.left === 1 ? 'swipe' : 'swipes'} left today`}
             />
-            <View style={styles.choices}>
-              <Pressable
-                onPress={() => deck.current?.swipe('left')}
-                style={({ pressed }) => [styles.choice, styles.skipBtn, pressed && { opacity: 0.7 }]}
-                accessibilityLabel="Skip this plan">
-                <Text style={styles.skipBtnText}>← ✕ Skip</Text>
-              </Pressable>
-              <Pressable
-                onPress={() => deck.current?.swipe('right')}
-                style={({ pressed }) => [styles.choice, styles.joinBtn, pressed && { opacity: 0.8 }]}
-                accessibilityLabel="Join this plan">
-                <Text style={styles.joinBtnText}>Join ✓ →</Text>
-              </Pressable>
-            </View>
-            <Text style={styles.hint}>
-              {swipes.plus ? 'Plus: unlimited swipes' : `${swipes.left} free ${swipes.left === 1 ? 'swipe' : 'swipes'} left today`} · swipe left to skip, right to join
-            </Text>
-          </>
+          </View>
         ) : (
           <ScrollView style={{ flex: 1 }} contentContainerStyle={{ gap: 10, paddingVertical: 12 }}>
             <Text style={styles.emptyTitle}>Who’s free to move</Text>
@@ -333,6 +301,12 @@ const styles = themed(() => StyleSheet.create({
   notifIcon: { fontSize: 18 },
   notifBadge: { position: 'absolute', top: -2, right: -2, minWidth: 18, height: 18, borderRadius: 9, backgroundColor: colors.peachDeep, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 4 },
   notifBadgeText: { fontFamily: fonts.sansBold, fontSize: 11, color: '#fff' },
+  toggle: { flex: 1, flexDirection: 'row', backgroundColor: colors.card, borderRadius: 999, borderWidth: 1, borderColor: colors.edge, padding: 4 },
+  toggleBtn: { flex: 1, height: 36, borderRadius: 18, alignItems: 'center', justifyContent: 'center' },
+  toggleOn: { backgroundColor: colors.olive },
+  toggleText: { fontFamily: fonts.sansSemi, fontSize: 14, color: colors.muted },
+  toggleTextOn: { color: colors.onBrand },
+  bleed: { flex: 1, marginHorizontal: -22, marginBottom: -12 },
   pillScroll: { marginHorizontal: -22, marginTop: 14, flexGrow: 0 },
   pills: { gap: 8, paddingHorizontal: 22, alignItems: 'center' },
   pill: { borderRadius: 999, borderWidth: 1, borderColor: colors.edge, paddingVertical: 9, paddingHorizontal: 12, backgroundColor: colors.card },
