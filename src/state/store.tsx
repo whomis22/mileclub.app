@@ -9,6 +9,7 @@ import type { Activity, Profile } from '@/data/types';
 import { canSeeRun } from '@/lib/meet';
 import { pushProfile, supabase } from '@/lib/supabase';
 
+import { useTheme } from '@/theme';
 export type RequestStatus = 'pending' | 'accepted' | 'declined';
 
 // Someone asking to book one of the user's own coach sessions.
@@ -108,6 +109,7 @@ const samples = sampleActivities();
 const sampleCoachSessions = sampleSessions();
 
 export function StoreProvider({ children }: { children: ReactNode }) {
+  useTheme();
   const [state, setState] = useState<State>(load);
 
   const update = (fn: (s: State) => State) =>

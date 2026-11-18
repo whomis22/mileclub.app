@@ -9,7 +9,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 
 import { Logo } from '@/components/ui';
-import { colors, fonts, radius, space, themed } from '@/theme';
+import { colors, fonts, radius, space, themed, useTheme } from '@/theme';
 
 // Welcome, laid out like Hinge (Yana, 2026-11-15): a full-screen photo that
 // slowly changes, the logo and one line in the middle, and big buttons at the
@@ -22,6 +22,7 @@ const SLIDES = [
 ];
 
 export default function Welcome() {
+  useTheme();
   const logIn = () => router.push('/login' as Href);
   const signUp = () => router.push('/signup');
   const [appleReady, setAppleReady] = useState(false);
@@ -102,6 +103,7 @@ export default function Welcome() {
 
 // Photos that gently fade into each other, with a small label at the top.
 function Slideshow() {
+  useTheme();
   const [i, setI] = useState(0);
   const [fade] = useState(() => new Animated.Value(1));
   useEffect(() => {

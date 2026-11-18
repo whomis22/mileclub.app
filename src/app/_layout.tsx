@@ -12,6 +12,7 @@ import { StatusBar } from 'expo-status-bar';
 
 import { LaunchScreen } from '@/components/launch-screen';
 import { NoticeBanner } from '@/components/notice-banner';
+import { ThemeFade } from '@/components/theme-fade';
 import { StoreProvider } from '@/state/store';
 import { colors, useTheme } from '@/theme';
 
@@ -62,6 +63,7 @@ export default function RootLayout() {
         <Stack.Screen name="group-settings" options={{ headerShown: true, title: 'Group settings' }} />
       </Stack>
       <NoticeBanner />
+      <ThemeFade />
       <LaunchScreen />
     </StoreProvider>
   );

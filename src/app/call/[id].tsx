@@ -12,7 +12,7 @@ import { findCoach } from '@/data/coaches';
 import { findPerson } from '@/data/people';
 import { friendlyDate } from '@/lib/format';
 import { useStore } from '@/state/store';
-import { fonts } from '@/theme';
+import { fonts, useTheme } from '@/theme';
 
 // iPhone-style call screen, always dark whatever the app's light/dark setting.
 const C = {
@@ -36,6 +36,7 @@ type Phase = 'ringing' | 'live' | 'ended';
 // Your own camera shows for real in video calls; the other person is pretend
 // until Mile Club has a calling service and a server.
 export default function Call() {
+  useTheme();
   const { id, video, incoming: inc } = useLocalSearchParams<{ id: string; video?: string; incoming?: string }>();
   const incoming = inc === '1';
   // Mile Club's own ringtone (soft marimba chimes), only when someone calls you.
@@ -229,6 +230,7 @@ export default function Call() {
 function Round({ icon, label, onPress, on, red, accept, big, small, disabled }: {
   icon: string; label: string; onPress: () => void; on?: boolean; red?: boolean; accept?: boolean; big?: boolean; small?: boolean; disabled?: boolean;
 }) {
+  useTheme();
   const size = big ? 74 : small ? 48 : 76;
   const bg = red ? C.red : accept ? C.green : on ? '#FFFFFF' : 'rgba(255,255,255,0.18)';
   return (

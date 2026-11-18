@@ -4,8 +4,10 @@ import MapView, { Marker, Polyline } from 'react-native-maps';
 
 import type { LatLng } from '@/lib/route';
 
+import { useTheme } from '@/theme';
 // The map on the directions screen: you, the pin, and the walking route between.
 export function RouteMap({ from, dest, path }: { from: LatLng | null; dest: LatLng; path: LatLng[] }) {
+  useTheme();
   const map = useRef<MapView>(null);
   useEffect(() => {
     const pts = path.length ? path : from ? [from, dest] : [dest];

@@ -5,11 +5,12 @@ import { activityInfo } from '@/data/options';
 import type { Activity } from '@/data/types';
 import { friendlyDate } from '@/lib/format';
 import { useStore } from '@/state/store';
-import { colors, space, themed } from '@/theme';
+import { colors, space, themed, useTheme } from '@/theme';
 
 import { Badge, Card } from './ui';
 
 export function ActivityCard({ activity }: { activity: Activity }) {
+  useTheme();
   const info = activityInfo(activity.type);
   const filled = activity.participants.length;
   const { runStatus } = useStore();

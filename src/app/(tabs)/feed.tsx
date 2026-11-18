@@ -90,6 +90,7 @@ const FRESH: Omit<FeedPost, "id" | "hoursAgo">[] = [
 ];
 
 function CommentButton({ postId }: { postId: string }) {
+  useTheme();
   const n = useComments(postId).length;
   return (
     <Pressable
@@ -125,6 +126,7 @@ function TextPostCard({
   onOpenPerson?: () => void;
   onMore?: () => void;
 }) {
+  useTheme();
   const { kudos, toggleKudos } = useStore();
   const liked = kudos.includes(id);
   return (
@@ -161,6 +163,7 @@ function TextPostCard({
 }
 
 function SampleTextPost({ post }: { post: TextPost }) {
+  useTheme();
   const person = findPerson(post.personId);
   if (!person) return null;
   return (

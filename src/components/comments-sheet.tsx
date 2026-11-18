@@ -16,6 +16,7 @@ import { colors, fonts, radius, space, themed, useTheme } from '@/theme';
 // TikTok-style comments: a sheet over the bottom of the screen while the post
 // stays visible above it, even with the keyboard open.
 export function CommentsSheet() {
+  useTheme();
   const id = useOpenComments();
   return (
     <Modal visible={!!id} transparent animationType="slide" onRequestClose={() => openComments(null)}>

@@ -33,6 +33,7 @@ const ICONS: Record<string, keyof typeof Feather.glyphMap> = {
 // Floating dark pill at the bottom (light pill in dark mode). The open tab is an olive pill that slides:
 // tap a tab, or drag the pill along the bar and let go on the page you want.
 function PillTabBar({ state, descriptors, isCoach }: TabBarProps & { isCoach: boolean }) {
+  useTheme();
   const insets = useSafeAreaInsets();
   const order = isCoach ? COACH_TABS : MEMBER_TABS;
   const routes = order.map((name) => state.routes.find((r) => r.name === name)).filter((r): r is { key: string; name: string } => !!r);

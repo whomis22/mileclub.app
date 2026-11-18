@@ -1,7 +1,7 @@
 import { router, type Href } from 'expo-router';
 import { Linking, Platform, Pressable, StyleSheet, Text, View } from 'react-native';
 
-import { colors, fonts, themed } from '@/theme';
+import { colors, fonts, themed, useTheme } from '@/theme';
 
 export function googleMapsUrl(lat: number, lng: number) {
   return `https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}&travelmode=walking`;
@@ -12,6 +12,7 @@ export function appleMapsUrl(lat: number, lng: number, name = 'Pin') {
 
 // A shared location in a chat: a little map with a pin, plus ways to get there.
 export function LocationCard({ mine, name, lat, lng }: { mine: boolean; name: string; lat: number; lng: number }) {
+  useTheme();
   const open = (url: string) => Linking.openURL(url).catch(() => {});
   return (
     <View style={[styles.card, mine ? styles.mine : styles.theirs]}>

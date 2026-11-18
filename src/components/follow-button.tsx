@@ -1,11 +1,12 @@
 import { Pressable, StyleSheet, Text } from 'react-native';
 
 import { useStore } from '@/state/store';
-import { colors, fonts, radius, themed } from '@/theme';
+import { colors, fonts, radius, themed, useTheme } from '@/theme';
 
 // Follow / Following pill. Who you follow is private: nobody else sees it, and
 // there are no public follower counts.
 export function FollowButton({ id, name }: { id: string; name: string }) {
+  useTheme();
   const { following, toggleFollow } = useStore();
   const on = following.includes(id);
   return (

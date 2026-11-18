@@ -53,6 +53,7 @@ function Field({
   inputRef,
   ...props
 }: TextInputProps & { label: string; counter?: string; error?: string; inputRef?: Ref<ComponentRef<typeof TextInput>> }) {
+  useTheme();
   const [focused, setFocused] = useState(false);
   return (
     <View style={{ marginBottom: space.lg }}>
@@ -83,6 +84,7 @@ function Field({
 }
 
 function CountryPicker({ visible, onPick, onClose }: { visible: boolean; onPick: (c: Country) => void; onClose: () => void }) {
+  useTheme();
   const [q, setQ] = useState('');
   const list = useMemo(() => {
     const s = q.trim().toLowerCase().replace(/^\+/, '');

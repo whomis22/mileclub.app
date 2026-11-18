@@ -219,6 +219,7 @@ export default function PersonDetail() {
 }
 
 function Count({ n, label, c }: { n: string; label: string; c: { ink: string; muted: string } }) {
+  useTheme();
   return (
     <View style={s.count}>
       <Text style={[s.countN, { color: c.ink }]}>{n}</Text>

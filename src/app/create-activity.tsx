@@ -131,6 +131,7 @@ export default function CreateActivity() {
 }
 
 function TextInputSpacer({ big }: { big?: boolean }) {
+  useTheme();
   return <View style={{ height: big ? space.xl : space.sm }} />;
 }
 

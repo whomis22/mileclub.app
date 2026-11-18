@@ -3,7 +3,7 @@ import { Animated, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Logo } from '@/components/ui';
-import { colors, fonts, themed } from '@/theme';
+import { colors, fonts, themed, useTheme } from '@/theme';
 
 // Opening screen shown while the app starts: logo in the middle,
 // "Mile Club" at the bottom, then it fades away.
@@ -11,6 +11,7 @@ const SHOW_MS = 1600;
 const FADE_MS = 350;
 
 export function LaunchScreen() {
+  useTheme();
   const insets = useSafeAreaInsets();
   const [opacity] = useState(() => new Animated.Value(1));
   const [visible, setVisible] = useState(true);

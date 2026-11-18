@@ -32,6 +32,7 @@ const STEPS = ['Join as', 'You', 'Where', 'Move', 'Goals', 'When', 'Vibe', 'Look
 
 // A small drawing of the Home screen in light or dark, for the "Light or dark?" step.
 function LookPreview({ mode, selected, onPress }: { mode: ThemePref; selected: boolean; onPress: () => void }) {
+  useTheme();
   const p = palettes[mode];
   return (
     <Pressable

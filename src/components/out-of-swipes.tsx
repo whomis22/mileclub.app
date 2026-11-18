@@ -6,7 +6,7 @@ import { Pressable, ScrollView, Share, StyleSheet, Text, View } from 'react-nati
 import { Avatar } from '@/components/ui';
 import { PEOPLE } from '@/data/people';
 import { FREE_PER_DAY, untilReset } from '@/lib/swipes';
-import { colors, fonts, themed } from '@/theme';
+import { colors, fonts, themed, useTheme } from '@/theme';
 
 // Shown when someone has used today's free swipes (Yana, 2026-11-15): never an
 // empty page. Premium packages first, then free ways to keep going.
@@ -20,6 +20,7 @@ const PACKAGES = [
 const PERKS = ['Unlimited swipes, every day', 'See who wants to join your plans', 'Get seen first by hosts', 'Plans in other cities when you travel'];
 
 export function OutOfSwipes({ onPlus, onBonus }: { onPlus: () => void; onBonus: (n: number) => void }) {
+  useTheme();
   const [picked, setPicked] = useState<(typeof PACKAGES)[number]['id']>('quarter');
   const [done, setDone] = useState<string | null>(null);
   const free = PEOPLE.slice(0, 5);

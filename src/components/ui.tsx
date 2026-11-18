@@ -3,7 +3,7 @@ import { useState, type ReactNode } from 'react';
 import { Pressable, RefreshControl, ScrollView, StyleSheet, Text, View, type ViewStyle } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { colors, getThemeMode, fonts, radius, space, themed } from '@/theme';
+import { colors, getThemeMode, fonts, radius, space, themed, useTheme } from '@/theme';
 
 // Every scrolling page can be pulled down to refresh. onRefresh returns how many
 // new things arrived; with none, a small "No new feed" pill shows and the page
@@ -16,6 +16,7 @@ export function Screen({ children, scroll = true, edges = ['top'], onRefresh, no
   nothingNew?: string;
   newLabel?: string;
 }) {
+  useTheme();
   const insets = useSafeAreaInsets();
   const [refreshing, setRefreshing] = useState(false);
   const [toast, setToast] = useState<string | null>(null);
@@ -50,6 +51,7 @@ export function Screen({ children, scroll = true, edges = ['top'], onRefresh, no
 }
 
 export function Title({ children, sub }: { children: ReactNode; sub?: ReactNode }) {
+  useTheme();
   return (
     <View style={{ marginBottom: space.lg }}>
       <Text style={styles.title}>{children}</Text>
@@ -59,10 +61,12 @@ export function Title({ children, sub }: { children: ReactNode; sub?: ReactNode 
 }
 
 export function Label({ children }: { children: ReactNode }) {
+  useTheme();
   return <Text style={styles.label}>{children}</Text>;
 }
 
 export function Body({ children, muted, style }: { children: ReactNode; muted?: boolean; style?: object }) {
+  useTheme();
   return <Text style={[styles.body, muted && { color: colors.muted }, style]}>{children}</Text>;
 }
 
@@ -73,6 +77,7 @@ export function Button({ title, onPress, variant = 'primary', disabled, style }:
   disabled?: boolean;
   style?: ViewStyle;
 }) {
+  useTheme();
   const bg = { primary: colors.olive, secondary: colors.peach, ghost: 'transparent', danger: 'transparent' }[variant];
   const fg = { primary: colors.onBrand, secondary: colors.onPeach, ghost: colors.ink, danger: colors.danger }[variant];
   return (
@@ -91,6 +96,7 @@ export function Button({ title, onPress, variant = 'primary', disabled, style }:
 }
 
 export function Chip({ label, selected, onPress }: { label: string; selected?: boolean; onPress?: () => void }) {
+  useTheme();
   return (
     <Pressable
       onPress={onPress}
@@ -102,10 +108,12 @@ export function Chip({ label, selected, onPress }: { label: string; selected?: b
 }
 
 export function Chips({ children }: { children: ReactNode }) {
+  useTheme();
   return <View style={styles.chips}>{children}</View>;
 }
 
 export function Card({ children, onPress, style }: { children: ReactNode; onPress?: () => void; style?: ViewStyle }) {
+  useTheme();
   if (!onPress) return <View style={[styles.card, style]}>{children}</View>;
   return (
     <Pressable onPress={onPress} style={({ pressed }) => [styles.card, pressed && { opacity: 0.85 }, style]}>
@@ -115,6 +123,7 @@ export function Card({ children, onPress, style }: { children: ReactNode; onPres
 }
 
 export function Avatar({ name, color, uri, size = 48 }: { name: string; color?: string; uri?: string; size?: number }) {
+  useTheme();
   const box = { width: size, height: size, borderRadius: size / 2 };
   if (uri) return <Image source={{ uri }} style={box} />;
   return (
@@ -125,6 +134,7 @@ export function Avatar({ name, color, uri, size = 48 }: { name: string; color?: 
 }
 
 export function Badge({ label, tone = 'accent' }: { label: string; tone?: 'accent' | 'green' | 'plain' }) {
+  useTheme();
   const bg = { accent: colors.peach, green: colors.oliveSoft, plain: colors.sand }[tone];
   const fg = { accent: colors.onPeach, green: colors.link, plain: colors.muted }[tone];
   return (
@@ -163,6 +173,7 @@ const styles = themed(() => StyleSheet.create({
 
 // The Mile Club mark: an olive "m" with a peach "c" tucked over its last leg.
 export function Logo({ size = 40, m, c = colors.peachDeep }: { size?: number; m?: string; c?: string }) {
+  useTheme();
   const mColor = m ?? (getThemeMode() === 'dark' ? colors.onBrand : colors.olive);
   return (
     <View style={{ flexDirection: 'row' }} accessibilityLabel="Mile Club" accessible>
@@ -174,6 +185,7 @@ export function Logo({ size = 40, m, c = colors.peachDeep }: { size?: number; m?
 
 // Round outline button that opens the side menu.
 export function MenuButton({ onPress }: { onPress: () => void }) {
+  useTheme();
   return (
     <Pressable onPress={onPress} accessibilityLabel="Open menu" style={({ pressed }) => [shared.iconBtn, pressed && { opacity: 0.6 }]}>
       <View style={{ gap: 4 }}>
@@ -186,6 +198,7 @@ export function MenuButton({ onPress }: { onPress: () => void }) {
 }
 
 export function IconButton({ label, onPress, children, filled }: { label: string; onPress: () => void; children: ReactNode; filled?: boolean }) {
+  useTheme();
   return (
     <Pressable
       onPress={onPress}

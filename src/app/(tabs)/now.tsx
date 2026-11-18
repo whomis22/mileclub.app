@@ -282,6 +282,7 @@ export default function Now() {
 
 // Little "sliders" filter icon.
 function Sliders({ color }: { color: string }) {
+  useTheme();
   return (
     <View style={{ width: 16, gap: 3 }}>
       {[4, 10, 6].map((x, i) => (

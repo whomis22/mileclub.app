@@ -2,8 +2,10 @@ import { StyleSheet, Text, View } from 'react-native';
 
 import type { LatLng } from '@/lib/route';
 
+import { useTheme } from '@/theme';
 // Web fallback: the real map only runs on phones.
 export function RouteMap({ dest }: { from: LatLng | null; dest: LatLng; path: LatLng[] }) {
+  useTheme();
   return (
     <View style={[StyleSheet.absoluteFill, { backgroundColor: '#DCE3CF', alignItems: 'center', justifyContent: 'center' }]}>
       <Text style={{ color: '#3A4A1F' }}>

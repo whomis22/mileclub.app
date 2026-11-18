@@ -4,7 +4,7 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { sampleComments } from '@/data/comments';
 import { findPerson } from '@/data/people';
 import { useStore } from '@/state/store';
-import { colors, fonts, space, themed } from '@/theme';
+import { colors, fonts, space, themed, useTheme } from '@/theme';
 
 // Which post's comment sheet is open (TikTok-style: the post stays visible above it).
 let openId: string | null = null;
@@ -34,6 +34,7 @@ export function authorName(authorId: string, myName?: string) {
 
 // Under each Explore post: the last two comments and a way into the full comment section.
 export function CommentPreview({ postId }: { postId: string }) {
+  useTheme();
   const { profile } = useStore();
   const all = useComments(postId);
   const open = () => openComments(postId);

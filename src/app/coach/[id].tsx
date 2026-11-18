@@ -46,6 +46,7 @@ export default function CoachProfile() {
 }
 
 function Stat({ value, label }: { value: string; label: string }) {
+  useTheme();
   return (
     <View style={{ flex: 1, alignItems: 'center' }}>
       <Text style={styles.statValue}>{value}</Text>

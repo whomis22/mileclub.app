@@ -9,7 +9,7 @@ import type { Activity } from '@/data/types';
 import { Avatar } from '@/components/ui';
 import { formatKm } from '@/lib/matching';
 import { startsAt, startsIn } from '@/lib/time';
-import { colors, fonts, themed } from '@/theme';
+import { colors, fonts, themed, useTheme } from '@/theme';
 
 
 const W = Dimensions.get('window').width;
@@ -30,6 +30,7 @@ export function SwipeDeck({
   onSkip: (a: Activity) => void;
   deckRef?: Ref<SwipeDeckHandle>;
 }) {
+  useTheme();
   const [pos] = useState(() => new Animated.ValueXY());
   const top = items[0];
   const latest = useRef({ top, onJoin, onSkip });
@@ -167,6 +168,7 @@ export function photoFor(a: Pick<Activity, "id" | "type">) {
 // what and where, then the "seats": a row of spots for groups, or "Name + you"
 // when one person is asking someone to join them.
 function DeckCard({ a, home, onJoin, onOpen }: { a: Activity; home: Neighborhood; onJoin?: () => void; onOpen?: () => void }) {
+  useTheme();
   const info = activityInfo(a.type);
   const d = startsAt(a);
   const left = Math.max(0, a.groupSize - a.participants.length);

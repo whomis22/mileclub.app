@@ -1,4 +1,5 @@
 import { Storage } from 'expo-sqlite/kv-store';
+import { Appearance } from 'react-native';
 import { useSyncExternalStore } from 'react';
 
 // Mile Club 'blend' look (Yana picked 2026-11-13): cream + matcha olive + blush in light,
@@ -83,6 +84,13 @@ function readPref(): ThemePref {
 }
 
 let mode: ThemePref = readPref();
+// Native parts (keyboard, alerts, switches, sheets) follow the app's choice too.
+function applyNative(m: ThemePref) {
+  try {
+    Appearance.setColorScheme(m);
+  } catch {}
+}
+applyNative(mode);
 
 // One shared colour object. Switching light/dark swaps its values in place and
 // tells every screen to redraw, so the change is instant (no restart).
@@ -105,8 +113,9 @@ export function setThemeMode(next: ThemePref) {
   if (next === mode) return;
   mode = next;
   Object.assign(colors, palettes[next]);
-  saveThemePref(next);
+  applyNative(next);
   listeners.forEach((fn) => fn());
+  saveThemePref(next);
 }
 
 // Screens call this so they redraw when the theme changes.

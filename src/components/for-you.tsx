@@ -12,7 +12,7 @@ import { findPerson } from '@/data/people';
 import type { Activity, Person } from '@/data/types';
 import { formatKm } from '@/lib/matching';
 import { startsAt } from '@/lib/time';
-import { colors, fonts, themed } from '@/theme';
+import { colors, fonts, themed, useTheme } from '@/theme';
 
 // "For you" first page (Yana, 2026-11-17): a People / Plans toggle, big photo cards
 // you swipe through sideways, page dots, then a row of smaller "near you" cards.
@@ -60,6 +60,7 @@ export function ForYou({
   onNewCard: () => void;
   swipesLeft: string;
 }) {
+  useTheme();
   const [index, setIndex] = useState(0);
   const seen = useRef({ people: 0, plans: 0 });
   // Bottom row is always group activities; the Plans cards up top are single people looking for someone.
@@ -149,6 +150,7 @@ export function ForYou({
 }
 
 function PlanCard({ a, home, requested, onJoin }: { a: Activity; home: Neighborhood; requested: boolean; onJoin: () => void }) {
+  useTheme();
   const info = activityInfo(a.type);
   const host = findPerson(a.hostId);
   const left = Math.max(0, a.groupSize - a.participants.length);
@@ -190,6 +192,7 @@ function PlanCard({ a, home, requested, onJoin }: { a: Activity; home: Neighborh
 }
 
 function PersonCard({ p, added, onAdd }: { p: Person; added: boolean; onAdd: () => void }) {
+  useTheme();
   const f = faceFor(p.id);
   const w = nextWant(p.id);
   const city = cityOf(p.neighborhood);
