@@ -48,7 +48,7 @@ export function CommentPreview({ postId }: { postId: string }) {
       {all.slice(-2).map((c) => (
         <Text key={c.id} style={styles.line} numberOfLines={2} onPress={open}>
           <Text style={styles.who}>{authorName(c.authorId, profile?.firstName)} </Text>
-          {c.text}
+          {c.text || (c.gif ? 'sent a GIF' : '')}
         </Text>
       ))}
       <Pressable onPress={open} style={styles.add}>

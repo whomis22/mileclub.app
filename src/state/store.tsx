@@ -22,7 +22,7 @@ export type RunRequest = { id: string; activityId: string; personId: string; sta
 export type MyPost = { id: string; uri?: string; caption: string; at: number; archived?: boolean; edited?: boolean }; // no uri = text-only post
 
 // A comment under any Explore post. authorId is 'me' or a sample person id.
-export type PostComment = { id: string; authorId: string; text: string; at: number };
+export type PostComment = { id: string; authorId: string; text: string; at: number; gif?: string };
 
 // A call the user made, shown as a line in the chat with that person.
 export type CallLog = { id: string; personId: string; video: boolean; secs: number; answered: boolean; at: number; incoming?: boolean };
@@ -82,7 +82,7 @@ type Store = State & {
   deletePost: (id: string) => void;
   editPost: (id: string, caption: string, uri?: string) => void;
   archivePost: (id: string, archived: boolean) => void;
-  addComment: (postId: string, text: string) => void;
+  addComment: (postId: string, text: string, gif?: string) => void;
   deleteComment: (postId: string, commentId: string) => void;
   cancelBooking: (sessionId: string) => void;
   block: (personId: string) => void;
@@ -268,12 +268,12 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     archivePost: (id, archived) =>
       update((s) => ({ ...s, myPosts: s.myPosts.map((p) => (p.id === id ? { ...p, archived } : p)) })),
     deletePost: (id) => update((s) => ({ ...s, myPosts: s.myPosts.filter((p) => p.id !== id) })),
-    addComment: (postId, text) =>
+    addComment: (postId, text, gif) =>
       update((s) => ({
         ...s,
         comments: {
           ...s.comments,
-          [postId]: [...(s.comments[postId] ?? []), { id: `c${Date.now()}`, authorId: 'me', text: text.trim(), at: Date.now() }],
+          [postId]: [...(s.comments[postId] ?? []), { id: `c${Date.now()}`, authorId: 'me', text: text.trim(), at: Date.now(), ...(gif ? { gif } : {}) }],
         },
       })),
     deleteComment: (postId, cid) =>
