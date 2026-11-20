@@ -27,9 +27,9 @@
       [
         "expo-splash-screen",
         {
-          "backgroundColor": "#FCF9F3",
-          "image": "./assets/images/logo-mark.png",
-          "imageWidth": 140
+          "backgroundColor": "#000000",
+          "image": "./assets/images/logo-white.png",
+          "imageWidth": 150
         }
       ],
       "expo-sqlite",

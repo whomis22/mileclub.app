@@ -1,13 +1,13 @@
 import * as Haptics from 'expo-haptics';
 import { useEffect, useState } from 'react';
 import { Animated, Platform, StyleSheet, Text, View } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { StatusBar } from 'expo-status-bar';
 
 import { Logo } from '@/components/ui';
-import { colors, fonts, themed, useTheme } from '@/theme';
+import { fonts, themed, useTheme } from '@/theme';
 
-// Opening screen shown while the app starts: logo in the middle,
-// "Mile Club" at the bottom, then it fades away.
+// Opening screen (Yana, 2026-11-20, Kulmo style): pure black, a big white mc
+// logo in the centre with "Mile Club" right under it, nothing else. Then it fades away.
 const SHOW_MS = 1600;
 const FADE_MS = 350;
 
@@ -23,7 +23,6 @@ const BEATS: [number, Haptics.ImpactFeedbackStyle][] = [
 
 export function LaunchScreen() {
   useTheme();
-  const insets = useSafeAreaInsets();
   const [opacity] = useState(() => new Animated.Value(1));
   const [visible, setVisible] = useState(true);
   const [scale] = useState(() => new Animated.Value(1));
@@ -58,10 +57,11 @@ export function LaunchScreen() {
 
   return (
     <Animated.View style={[StyleSheet.absoluteFill, styles.screen, { opacity }]}>
-      <Animated.View style={[styles.center, { transform: [{ scale }] }]}>
-        <Logo size={96} />
-      </Animated.View>
-      <View style={[styles.bottom, { paddingBottom: insets.bottom + 28 }]}>
+      <StatusBar style="light" />
+      <View style={styles.center}>
+        <Animated.View style={{ transform: [{ scale }] }}>
+          <Logo size={120} m="#FFFFFF" c="#F4CFC6" />
+        </Animated.View>
         <Text style={styles.name}>Mile Club</Text>
       </View>
     </Animated.View>
@@ -69,8 +69,7 @@ export function LaunchScreen() {
 }
 
 const styles = themed(() => StyleSheet.create({
-  screen: { backgroundColor: colors.bg, zIndex: 100 },
-  center: { flex: 1, alignItems: 'center', justifyContent: 'center' },
-  bottom: { alignItems: 'center' },
-  name: { color: colors.link, fontSize: 20, fontFamily: fonts.sansSemi },
+  screen: { backgroundColor: '#000000', zIndex: 100 },
+  center: { flex: 1, alignItems: 'center', justifyContent: 'center', paddingBottom: 40 },
+  name: { color: '#FFFFFF', fontSize: 34, fontFamily: fonts.serifItalic, letterSpacing: -0.5, marginTop: 14 },
 }));
