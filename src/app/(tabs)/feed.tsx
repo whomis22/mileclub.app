@@ -128,12 +128,12 @@ export default function Home() {
   return (
     <Screen onRefresh={() => { setPulls(pulls + 1); return 0; }}>
       <View style={styles.top}>
+        <View style={styles.logoMid} pointerEvents="none">
+          <Logo size={38} m={isDark ? '#9CB561' : '#556B2F'} c="#F4B595" />
+        </View>
         <Round label="Open menu" onPress={() => router.push('/menu')}>
           <Ionicons name="menu" size={20} color={colors.ink} />
         </Round>
-        <View style={styles.logo}>
-          <Logo size={38} m={isDark ? '#9CB561' : '#556B2F'} c="#F4B595" />
-        </View>
         <View style={{ flex: 1 }} />
         <Round label="Notifications" onPress={() => router.push('/notifications' as Href)}>
           <Ionicons name="notifications-outline" size={19} color={colors.ink} />
@@ -199,6 +199,7 @@ const styles = themed(() => StyleSheet.create({
   top: { flexDirection: 'row', alignItems: 'center', gap: 10, height: 44, marginBottom: space.md },
   round: { width: 40, height: 40, borderRadius: 20, backgroundColor: colors.card, alignItems: 'center', justifyContent: 'center' },
   logo: { height: 44, justifyContent: 'center', marginTop: -6 },
+  logoMid: { position: 'absolute', left: 0, right: 0, top: -6, bottom: 0, alignItems: 'center', justifyContent: 'center' },
   hello: { marginBottom: space.md, gap: 3 },
   helloText: { fontFamily: fonts.serif, fontSize: 24, color: colors.ink, letterSpacing: -0.4 },
   cityRow: { flexDirection: 'row', alignItems: 'center', gap: 4, alignSelf: 'flex-start' },
