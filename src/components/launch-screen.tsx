@@ -4,9 +4,10 @@ import { Animated, Platform, StyleSheet, View } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 
 import { Logo } from '@/components/ui';
-import { themed, useTheme } from '@/theme';
+import { colors, themed, useTheme } from '@/theme';
 
-// Opening screen (Yana, 2026-11-20, Kulmo style): pure black, a big white mc
+// Opening screen (Yana, 2026-11-20, Kulmo style): cream in light mode (everyone
+// starts there), black once they switch to dark mode (2026-11-21), a big white mc
 // logo in the centre and nothing else (2026-11-21: logo only, no wordmark). Then it fades away.
 const SHOW_MS = 1600;
 const FADE_MS = 350;
@@ -22,7 +23,7 @@ const BEATS: [number, Haptics.ImpactFeedbackStyle][] = [
 ];
 
 export function LaunchScreen() {
-  useTheme();
+  const { isDark } = useTheme();
   const [opacity] = useState(() => new Animated.Value(1));
   const [visible, setVisible] = useState(true);
   const [scale] = useState(() => new Animated.Value(1));
@@ -57,10 +58,10 @@ export function LaunchScreen() {
 
   return (
     <Animated.View style={[StyleSheet.absoluteFill, styles.screen, { opacity }]}>
-      <StatusBar style="light" />
+      <StatusBar style={isDark ? 'light' : 'dark'} />
       <View style={styles.center}>
         <Animated.View style={{ transform: [{ scale }] }}>
-          <Logo size={140} m="#FFFFFF" c="#F4CFC6" />
+          <Logo size={140} c={colors.peach} />
         </Animated.View>
       </View>
     </Animated.View>
@@ -68,6 +69,6 @@ export function LaunchScreen() {
 }
 
 const styles = themed(() => StyleSheet.create({
-  screen: { backgroundColor: '#000000', zIndex: 100 },
+  screen: { backgroundColor: colors.bg, zIndex: 100 },
   center: { flex: 1, alignItems: 'center', justifyContent: 'center', paddingBottom: 20 },
 }));
