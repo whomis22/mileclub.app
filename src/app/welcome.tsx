@@ -7,7 +7,7 @@ import { useRef, useState } from 'react';
 import { Animated, Dimensions, Pressable, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { Logo, Wordmark } from '@/components/ui';
+import { BrandMark } from '@/components/ui';
 import { fonts, radius, space, themed, useTheme } from '@/theme';
 
 // Welcome, copied from Yana's design board (2026-11-21): splash with the mc logo,
@@ -49,8 +49,7 @@ export default function Welcome() {
         </View>
         <SafeAreaView style={styles.safe}>
           <View style={styles.posterMid}>
-            <Logo size={110} m={LIME} c="#0A0A0A" />
-            <Wordmark size={46} color="#0A0A0A" />
+            <BrandMark height={64} tone="black" />
             <Text style={styles.posterTag}>A COMMUNITY{'\n'}IN MOTION.</Text>
             <Text style={styles.posterSub}>Find your people.{'\n'}Find your place.{'\n'}Get moving.</Text>
             <View style={styles.swoosh} />
@@ -76,8 +75,7 @@ export default function Welcome() {
         <LinearGradient colors={['rgba(0,0,0,0.2)', 'rgba(0,0,0,0.45)', 'rgba(0,0,0,0.95)']} locations={[0, 0.5, 1]} style={StyleSheet.absoluteFill} />
         <SafeAreaView style={styles.safe}>
           <View style={styles.splashMid}>
-            <Logo size={90} m={LIME} c="#FFFFFF" />
-            <Wordmark size={36} color="#FFFFFF" />
+            <BrandMark height={60} tone="white" />
           </View>
           <View style={styles.bottom}>
             <Pressable onPress={() => go(1)} style={({ pressed }) => [styles.lime, pressed && { opacity: 0.85 }]}>

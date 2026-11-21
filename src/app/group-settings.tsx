@@ -1,6 +1,6 @@
 import { StyleSheet, Switch, Text, View } from 'react-native';
 
-import { Avatar, Logo, Screen } from '@/components/ui';
+import { Avatar, BrandTile, Screen } from '@/components/ui';
 import { setGroupSetting, useGroupSettings, type GroupSettings } from '@/lib/group-settings';
 import { useStore } from '@/state/store';
 import { colors, fonts, radius, space, themed, useTheme } from '@/theme';
@@ -19,9 +19,7 @@ export default function GroupSettingsScreen() {
   return (
     <Screen edges={[]}>
       <View style={styles.top}>
-        <View style={styles.icon}>
-          <Logo size={44} m={colors.bg} />
-        </View>
+        <BrandTile size={84} radius={24} />
         <Text style={styles.title}>Mile Club Members</Text>
         <Text style={styles.sub}>Everyone who signs up joins this chat automatically.</Text>
       </View>

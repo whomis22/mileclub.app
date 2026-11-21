@@ -18,7 +18,7 @@ import {
 } from "react-native-safe-area-context";
 
 import { LocationCard } from "@/components/location-card";
-import { Avatar, Logo } from "@/components/ui";
+import { Avatar, BrandTile } from "@/components/ui";
 import { faceFor } from "@/data/faces";
 import Feather from "@expo/vector-icons/Feather";
 import { findThread, MEMBERS_GROUP_ID, type ChatMessage } from "@/data/messages";
@@ -402,9 +402,7 @@ export default function Chat() {
           <Feather name="arrow-left" size={22} color={colors.ink} />
         </Pressable>
         {isGroup ? (
-          <View style={styles.groupIcon}>
-            <Logo size={18} m={colors.bg} />
-          </View>
+          <BrandTile size={40} radius={12} />
         ) : (
           <Avatar name={thread.name} color={person?.color} uri={person ? faceFor(person.id)?.photo : undefined} size={40} />
         )}

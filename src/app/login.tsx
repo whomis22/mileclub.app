@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { ActivityIndicator, KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { Logo } from '@/components/ui';
+import { BrandMark } from '@/components/ui';
 import { homeFor } from '@/lib/home';
 import { fetchMyProfile, friendlyError, supabase } from '@/lib/supabase';
 import { useStore } from '@/state/store';
@@ -99,7 +99,7 @@ export default function LogIn() {
         <Pressable onPress={() => router.back()} hitSlop={8} style={styles.backBtn} accessibilityLabel="Back">
           <Text style={styles.backIcon}>‹</Text>
         </Pressable>
-        <Logo size={28} />
+        <BrandMark height={22} />
         <View style={{ width: 44 }} />
       </View>
       <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>

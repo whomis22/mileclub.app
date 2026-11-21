@@ -8,7 +8,7 @@ import { Animated, Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { CommentPreview, openComments, useComments } from '@/components/comment-preview';
 import { CommentsSheet } from '@/components/comments-sheet';
-import { Avatar, Logo, Screen } from '@/components/ui';
+import { Avatar, BrandMark, Screen } from '@/components/ui';
 import { useCity } from '@/lib/use-city';
 import { agoLabel } from '@/data/comments';
 import { faceFor } from '@/data/faces';
@@ -120,7 +120,7 @@ function PostCard({
 }
 
 export default function Home() {
-  const { isDark } = useTheme();
+  useTheme();
   const here = useCity();
   const { profile, blocked, myPosts, archivePost, deletePost } = useStore();
   const [pulls, setPulls] = useState(0);
@@ -132,7 +132,7 @@ export default function Home() {
     <Screen onRefresh={() => { setPulls(pulls + 1); return 0; }}>
       <View style={styles.top}>
         <View style={styles.logoMid} pointerEvents="none">
-          <Logo size={38} m={isDark ? '#9CB561' : '#556B2F'} c="#F4B595" />
+          <BrandMark height={24} />
         </View>
         <Round label="Open menu" onPress={() => router.push('/menu')}>
           <Ionicons name="menu" size={20} color={colors.ink} />

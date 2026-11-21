@@ -2,7 +2,7 @@ import { Image } from 'expo-image';
 import { router, type Href } from 'expo-router';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
-import { Logo } from '@/components/ui';
+import { BrandMark } from '@/components/ui';
 import { colors, fonts, radius, space, themed, useTheme } from '@/theme';
 
 // About Mile Club: the team photo, what the club is and how it works.
@@ -20,7 +20,7 @@ export default function About() {
     <ScrollView style={styles.screen} contentContainerStyle={{ paddingBottom: 48 }}>
       <Image source={require('../../assets/images/team.jpg')} style={styles.hero} contentFit="cover" contentPosition="top" />
       <View style={styles.body}>
-        <Logo size={34} />
+        <BrandMark height={30} />
         <Text style={styles.title}>Meet the club</Text>
         <Text style={styles.lead}>
           Mile Club is a lifestyle, not just a club. Meet new people, including people in your field, and do things together:

@@ -199,6 +199,23 @@ export function Logo({ size = 40, m, c = colors.peachDeep }: { size?: number; m?
   );
 }
 
+// The MILE CLUB wordmark (Yana's new logo, 2026-11-21). Black in light mode, white in dark.
+const MARKS = {
+  black: require('../../assets/images/brand/wordmark-black.png'),
+  white: require('../../assets/images/brand/wordmark-white.png'),
+  lime: require('../../assets/images/brand/wordmark-lime.png'),
+};
+export function BrandMark({ height = 28, tone }: { height?: number; tone?: keyof typeof MARKS }) {
+  useTheme();
+  const t = tone ?? (getThemeMode() === 'dark' ? 'white' : 'black');
+  return <Image source={MARKS[t]} style={{ height, width: height * (1200 / 293) }} contentFit="contain" accessibilityLabel="Mile Club" />;
+}
+
+// Small square app icon, used for Mile Club group chats.
+export function BrandTile({ size = 50, radius: r = 16 }: { size?: number; radius?: number }) {
+  return <Image source={require('../../assets/images/brand/tile.png')} style={{ width: size, height: size, borderRadius: r }} contentFit="cover" accessibilityLabel="Mile Club" />;
+}
+
 // Round outline button that opens the side menu.
 export function MenuButton({ onPress }: { onPress: () => void }) {
   useTheme();

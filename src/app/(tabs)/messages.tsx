@@ -3,7 +3,7 @@ import { router } from 'expo-router';
 import { useState } from 'react';
 import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 
-import { Avatar, Logo, MenuButton, Screen } from '@/components/ui';
+import { Avatar, BrandTile, MenuButton, Screen } from '@/components/ui';
 import { THREADS } from '@/data/messages';
 import { findPerson } from '@/data/people';
 import { useStore } from '@/state/store';
@@ -51,9 +51,7 @@ export default function Messages() {
                 <Feather name="users" size={20} color={colors.onMine} />
               </View>
             ) : t.kind === 'group' ? (
-              <View style={styles.groupIcon}>
-                <Logo size={22} m={colors.bg} />
-              </View>
+              <BrandTile size={50} />
             ) : (
               <Avatar name={t.name} color={person?.color} size={50} />
             )}

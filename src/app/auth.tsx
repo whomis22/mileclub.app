@@ -7,7 +7,7 @@ import { useState } from 'react';
 import { ActivityIndicator, Alert, KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View, type TextInputProps } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { Logo, Wordmark } from '@/components/ui';
+import { BrandMark } from '@/components/ui';
 import { homeFor } from '@/lib/home';
 import { fetchMyProfile, friendlyError, supabase } from '@/lib/supabase';
 import { useStore } from '@/state/store';
@@ -109,8 +109,7 @@ export default function Auth() {
       <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
         <ScrollView contentContainerStyle={styles.body} keyboardShouldPersistTaps="handled">
           <View style={styles.logo}>
-            <Logo size={64} m="#B9E769" c={isDark ? '#FFFFFF' : '#0A0A0A'} />
-            <Wordmark size={24} color={colors.ink} />
+            <BrandMark height={44} />
           </View>
 
           <View style={styles.tabs}>
