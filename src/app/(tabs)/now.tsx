@@ -12,6 +12,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Avatar } from '@/components/ui';
 import { faceFor } from '@/data/faces';
 import { findPerson } from '@/data/people';
+import { hasPremium } from '@/lib/swipes';
 import { useStore } from '@/state/store';
 import { colors, fonts, themed, useTheme } from '@/theme';
 
@@ -24,19 +25,21 @@ const LIME = '#B9E769';
 type Plan = {
   id: string; kind: string; emoji: string; title: string; when: string; place: string; km: number;
   level: string; spots: number; hostId: string; going: string[]; about: string; photo: string | number; pos?: ImageContentPosition;
+  free?: string; // what makes it free for everyone, e.g. 'bring your own bike'
+  venue?: string; // paid place: its members join free, everyone else joins with Premium (Yana, 2026-11-21)
 };
 
 // Sample plans until real members post their own. Photos get swapped for Yana's as they come in.
 const PLANS: Plan[] = [
-  { id: 'x-football', kind: 'Football', emoji: '⚽', title: 'Sunset 5-a-side', when: 'Tonight 19:00', place: 'Westerpark', km: 1.2, level: 'All levels', spots: 3, hostId: 'tom', going: ['tom', 'lucas', 'mateo', 'noah', 'daan', 'sanne', 'lotte'], about: 'Friendly 5-a-side, mixed teams, no keepers. Drinks after for whoever’s up for it.', photo: require('../../../assets/images/photos/explore-football.jpg') },
-  { id: 'x-padel', kind: 'Padel', emoji: '🎾', title: 'After-work padel', when: 'Tomorrow 18:30', place: 'Padel Club Oost', km: 2.4, level: 'Intermediate', spots: 1, hostId: 'noah', going: ['noah', 'mateo', 'amira'], about: 'Doubles, one spot left. Rackets to borrow if you don’t have one.', photo: require('../../../assets/images/photos/explore-padel.jpg') },
-  { id: 'x-run', kind: 'Running', emoji: '🏃', title: 'Track night intervals', when: 'Tomorrow 18:30', place: 'Olympic Stadium track', km: 0.8, level: 'All paces', spots: 6, hostId: 'sanne', going: ['sanne', 'daan', 'lotte', 'tom'], about: 'Warm-up lap, 6 x 400m in pace groups, cool-down together. Every pace has a group.', photo: require('../../../assets/images/photos/explore-running.jpg') },
-  { id: 'x-cycling', kind: 'Cycling', emoji: '🚴', title: 'Golden hour ride', when: 'Sun 17:00', place: 'Start at Amstel', km: 1.7, level: 'Easy pace', spots: 5, hostId: 'daan', going: ['daan', 'sanne', 'mateo', 'femke'], about: '20 km along the river at a chatty pace, then drinks by the water.', photo: require('../../../assets/images/photos/explore-cycling.jpg'), pos: { left: '68%' } },
-  { id: 'x-basketball', kind: 'Basketball', emoji: '🏀', title: 'Pickup ball at sunset', when: 'Sat 18:00', place: 'Museumplein courts', km: 2.0, level: 'All levels', spots: 4, hostId: 'lucas', going: ['lucas', 'daan', 'mateo', 'tom', 'noah'], about: 'Run-ins to 21, teams picked on the spot. Lights come on when it gets dark.', photo: require('../../../assets/images/photos/explore-basketball.jpg') },
-  { id: 'x-pilates', kind: 'Pilates', emoji: '🤸', title: 'Reformer Pilates', when: 'Sat 10:00', place: 'Core Studio, Oud-West', km: 1.4, level: 'All levels', spots: 2, hostId: 'yasmin', going: ['yasmin', 'amira', 'lotte', 'femke', 'sanne'], about: '50-minute reformer class, small group. Brunch next door after if you’re hungry.', photo: require('../../../assets/images/photos/explore-pilates.jpg') },
-  { id: 'x-yoga', kind: 'Yoga', emoji: '🧘', title: 'Golden hour yoga', when: 'Sun 19:00', place: 'Sarphatipark', km: 1.9, level: 'Beginner friendly', spots: 4, hostId: 'amira', going: ['amira', 'yasmin', 'femke'], about: 'Slow flow on the grass as the sun goes down. Bring a mat, or borrow one of ours.', photo: require('../../../assets/images/photos/explore-yoga.jpg') },
-  { id: 'x-gym', kind: 'Gym', emoji: '🏋️', title: 'Group workout', when: 'Mon 18:00', place: 'The Gym Club, Centrum', km: 1.5, level: 'All levels', spots: 3, hostId: 'lotte', going: ['lotte', 'tom', 'lucas', 'yasmin', 'sanne', 'daan'], about: '45 minutes of circuits in teams. Hard work, loud music, high fives at the end.', photo: require('../../../assets/images/photos/explore-gym.jpg') },
-  { id: 'x-spa', kind: 'Spa', emoji: '🧖', title: 'Long walk + sauna', when: 'Sun 11:00', place: 'Amsterdamse Bos', km: 4.1, level: 'Easy', spots: 5, hostId: 'femke', going: ['femke', 'yasmin', 'amira', 'sanne'], about: 'An hour’s walk in the woods, then the sauna. The best way to end the week.', photo: require('../../../assets/images/photos/lake.png') },
+  { id: 'x-football', kind: 'Football', emoji: '⚽', title: 'Sunset 5-a-side', when: 'Tonight 19:00', place: 'Westerpark', km: 1.2, level: 'All levels', spots: 3, hostId: 'tom', going: ['tom', 'lucas', 'mateo', 'noah', 'daan', 'sanne', 'lotte'], about: 'Friendly 5-a-side, mixed teams, no keepers. Drinks after for whoever’s up for it.', photo: require('../../../assets/images/photos/explore-football.jpg'), free: 'park activity' },
+  { id: 'x-padel', kind: 'Padel', emoji: '🎾', title: 'After-work padel', when: 'Tomorrow 18:30', place: 'Padel Club Oost', km: 2.4, level: 'Intermediate', spots: 1, hostId: 'noah', going: ['noah', 'mateo', 'amira'], about: 'Doubles, one spot left. Rackets to borrow if you don’t have one.', photo: require('../../../assets/images/photos/explore-padel.jpg'), venue: 'Padel Club Oost' },
+  { id: 'x-run', kind: 'Running', emoji: '🏃', title: 'Track night intervals', when: 'Tomorrow 18:30', place: 'Olympic Stadium track', km: 0.8, level: 'All paces', spots: 6, hostId: 'sanne', going: ['sanne', 'daan', 'lotte', 'tom'], about: 'Warm-up lap, 6 x 400m in pace groups, cool-down together. Every pace has a group.', photo: require('../../../assets/images/photos/explore-running.jpg'), free: 'runs are open to everyone' },
+  { id: 'x-cycling', kind: 'Cycling', emoji: '🚴', title: 'Golden hour ride', when: 'Sun 17:00', place: 'Start at Amstel', km: 1.7, level: 'Easy pace', spots: 5, hostId: 'daan', going: ['daan', 'sanne', 'mateo', 'femke'], about: '20 km along the river at a chatty pace, then drinks by the water.', photo: require('../../../assets/images/photos/explore-cycling.jpg'), pos: { left: '68%' }, free: 'bring your own bike' },
+  { id: 'x-basketball', kind: 'Basketball', emoji: '🏀', title: 'Pickup ball at sunset', when: 'Sat 18:00', place: 'Museumplein courts', km: 2.0, level: 'All levels', spots: 4, hostId: 'lucas', going: ['lucas', 'daan', 'mateo', 'tom', 'noah'], about: 'Run-ins to 21, teams picked on the spot. Lights come on when it gets dark.', photo: require('../../../assets/images/photos/explore-basketball.jpg'), free: 'park activity' },
+  { id: 'x-pilates', kind: 'Pilates', emoji: '🤸', title: 'Reformer Pilates', when: 'Sat 10:00', place: 'Core Studio, Oud-West', km: 1.4, level: 'All levels', spots: 2, hostId: 'yasmin', going: ['yasmin', 'amira', 'lotte', 'femke', 'sanne'], about: '50-minute reformer class, small group. Brunch next door after if you’re hungry.', photo: require('../../../assets/images/photos/explore-pilates.jpg'), venue: 'Core Studio' },
+  { id: 'x-yoga', kind: 'Yoga', emoji: '🧘', title: 'Sunday park yoga', when: 'Every Sun 19:00', place: 'Sarphatipark', km: 1.9, level: 'Beginner friendly', spots: 12, hostId: 'amira', going: ['amira', 'yasmin', 'femke', 'sanne', 'lotte'], about: 'Our weekly park yoga, hosted by Mile Club. Slow flow on the grass as the sun goes down. Bring a mat, or borrow one of ours.', photo: require('../../../assets/images/photos/explore-yoga.jpg'), free: 'weekly, hosted by Mile Club' },
+  { id: 'x-gym', kind: 'Gym', emoji: '🏋️', title: 'Group workout', when: 'Mon 18:00', place: 'The Gym Club, Centrum', km: 1.5, level: 'All levels', spots: 3, hostId: 'lotte', going: ['lotte', 'tom', 'lucas', 'yasmin', 'sanne', 'daan'], about: '45 minutes of circuits in teams. Hard work, loud music, high fives at the end.', photo: require('../../../assets/images/photos/explore-gym.jpg'), venue: 'The Gym Club' },
+  { id: 'x-sauna', kind: 'Sauna', emoji: '🧖', title: 'Sauna after gym', when: 'Mon 19:15', place: 'The Gym Club, Centrum', km: 1.5, level: 'Everyone', spots: 4, hostId: 'femke', going: ['femke', 'lotte', 'tom', 'lucas', 'yasmin'], about: 'Straight from the group workout into the sauna. 30 minutes of heat, cold shower, good chats.', photo: require('../../../assets/images/photos/explore-sauna.jpg'), venue: 'The Gym Club' },
 ];
 
 function nameOf(id: string) {
@@ -126,6 +129,17 @@ function PlanPage({
                 Hosted by <Text style={{ fontFamily: fonts.sansBold }}>{nameOf(plan.hostId)}</Text>{hostFace?.work ? ` · ${hostFace.work}` : ''}
               </Text>
             </Pressable>
+            {plan.venue ? (
+              <View style={styles.access}>
+                <Feather name="star" size={13} color={LIME} />
+                <Text style={styles.accessText} numberOfLines={2}>{plan.venue} members join free · Not a member? Join with Premium</Text>
+              </View>
+            ) : (
+              <View style={styles.access}>
+                <Feather name="check-circle" size={13} color={LIME} />
+                <Text style={styles.accessText}>Free for everyone · {plan.free ?? 'open to all'}</Text>
+              </View>
+            )}
             <View style={styles.buttons}>
               {joinBtn}
               <Pressable style={styles.round} onPress={() => router.push(`/chat/${plan.hostId}` as Href)} accessibilityLabel={`Message ${nameOf(plan.hostId)}`}>
@@ -144,6 +158,14 @@ function PlanPage({
           <Text style={styles.dTitle}>{plan.title}</Text>
           <Text style={styles.dSub}>{plan.when} · {plan.place} · {plan.level}</Text>
           <Text style={styles.dBody}>{plan.about}</Text>
+          {plan.venue ? (
+            <View style={styles.dAccess}>
+              <Feather name="star" size={16} color={colors.ink} />
+              <Text style={styles.dAccessText}>
+                This one costs money at {plan.venue}. If you’re a member there, you join free. If not, Mile Club Premium gets you in free.
+              </Text>
+            </View>
+          ) : null}
           <View style={{ marginTop: 18, flexDirection: 'row' }}>{joinBtn}</View>
 
           <Text style={styles.dLabel}>Who’s going · {count}</Text>
@@ -185,6 +207,8 @@ export default function Explore() {
   const [what, setWhat] = useState('any');
   const [picking, setPicking] = useState(false);
   const [starting, setStarting] = useState(false);
+  const [asking, setAsking] = useState<Plan | null>(null); // paid plan: are you a member there?
+  const [memberOf, setMemberOf] = useState<string[]>([]); // venues the user said they're a member of
   const [joined, setJoined] = useState<string[]>([]);
   const [toast, setToast] = useState('');
   const [fade] = useState(() => new Animated.Value(0));
@@ -210,6 +234,10 @@ export default function Explore() {
       Haptics.selectionAsync().catch(() => {});
       setJoined((x) => x.filter((id) => id !== p.id));
       say('You left this plan');
+      return;
+    }
+    if (p.venue && !memberOf.includes(p.venue) && !hasPremium()) {
+      setAsking(p);
       return;
     }
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => {});
@@ -261,6 +289,45 @@ export default function Explore() {
       <Animated.View pointerEvents="none" style={[styles.toast, { top: insets.top + 120, opacity: fade }]}>
         <Text style={styles.toastText}>{toast}</Text>
       </Animated.View>
+
+      <Modal visible={!!asking} transparent animationType="fade" onRequestClose={() => setAsking(null)}>
+        <Pressable style={styles.backdrop} onPress={() => setAsking(null)}>
+          <View style={styles.sheet}>
+            <Text style={styles.sheetTitle}>Are you a member of {asking?.venue}?</Text>
+            <Text style={styles.startSub}>{asking?.kind} here costs money. Members of {asking?.venue} join free. Not a member? Premium gets you into the {asking?.kind.toLowerCase()} for free.</Text>
+            <View style={{ height: 16 }} />
+            <Pressable
+              style={styles.start}
+              onPress={() => {
+                const p = asking!;
+                setMemberOf((x) => [...x, p.venue!]);
+                setAsking(null);
+                Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => {});
+                setJoined((x) => [...x, p.id]);
+                say(`You’re in. See you ${p.when.replace(/^(Tonight|Tomorrow)/, (m) => m.toLowerCase())} 💪`);
+              }}>
+              <View style={styles.startIcon}><Feather name="check" size={20} color={colors.onMine} /></View>
+              <View style={{ flex: 1 }}>
+                <Text style={styles.startTitle}>Yes, I’m a member</Text>
+                <Text style={styles.startSub}>Join free</Text>
+              </View>
+            </Pressable>
+            <Pressable
+              style={styles.start}
+              onPress={() => {
+                setAsking(null);
+                router.push('/premium' as Href);
+              }}>
+              <View style={styles.startIcon}><Feather name="star" size={20} color={colors.onMine} /></View>
+              <View style={{ flex: 1 }}>
+                <Text style={styles.startTitle}>Join with Premium</Text>
+                <Text style={styles.startSub}>Padel, gym, sauna, pilates and more, free</Text>
+              </View>
+              <Feather name="chevron-right" size={18} color={colors.muted} />
+            </Pressable>
+          </View>
+        </Pressable>
+      </Modal>
 
       <Modal visible={starting} transparent animationType="fade" onRequestClose={() => setStarting(false)}>
         <Pressable style={styles.backdrop} onPress={() => setStarting(false)}>
@@ -339,6 +406,10 @@ const styles = themed(() =>
     statText: { fontFamily: fonts.sansSemi, fontSize: 13.5, color: '#FFFFFF' },
     host: { flexDirection: 'row', alignItems: 'center', gap: 10, marginTop: 14 },
     hostText: { flex: 1, fontFamily: fonts.sans, fontSize: 13.5, color: 'rgba(255,255,255,0.9)' },
+    access: { flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 12 },
+    accessText: { flex: 1, fontFamily: fonts.sansSemi, fontSize: 12.5, color: 'rgba(255,255,255,0.92)' },
+    dAccess: { flexDirection: 'row', gap: 10, backgroundColor: colors.card, borderRadius: 16, padding: 14, marginTop: 14 },
+    dAccessText: { flex: 1, fontFamily: fonts.sans, fontSize: 13.5, lineHeight: 19, color: colors.ink },
     buttons: { flexDirection: 'row', alignItems: 'center', gap: 10, marginTop: 16 },
     join: { flex: 1, flexDirection: 'row', gap: 6, height: 54, borderRadius: 27, backgroundColor: LIME, alignItems: 'center', justifyContent: 'center' },
     joinOn: { backgroundColor: 'rgba(255,255,255,0.18)', borderWidth: 1.5, borderColor: LIME },

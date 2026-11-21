@@ -10,6 +10,11 @@ type SwipeState = { day: string; used: number; bonus: number; plus: boolean };
 
 const today = () => new Date().toDateString();
 
+// Premium right now, read fresh (e.g. after coming back from the Premium page).
+export function hasPremium() {
+  return read().plus;
+}
+
 function read(): SwipeState {
   try {
     const raw = Storage.getItemSync(KEY);

@@ -12,7 +12,10 @@ import { useSwipes } from '@/lib/swipes';
 import { colors, fonts, space, themed, useTheme } from '@/theme';
 
 // Premium page (design board, 2026-11-21). Pretend checkout only: no payment provider yet.
-const PERKS = ['Join unlimited plans, every day', 'See who wants to join your plans', 'Padel, gym & coaching discounts', 'Team runs & marathons', 'Advanced filters'];
+// Paid activities (Yana, 2026-11-21): members of that place join free, everyone else needs Premium.
+const PERKS = ['Padel, sauna & pilates plans, free', 'Gyms you’re not a member of, free', 'Join unlimited plans, every day', 'See who wants to join your plans', 'Advanced filters'];
+// Always free, no Premium needed.
+const FREE = ['The gym with people from your own gym', 'Runs and marathons', 'Cycling (bring your own bike)', 'Weekly park yoga, hosted by Mile Club', 'Park activities like football and basketball', 'Coach sessions (you pay the coach per session)'];
 
 export default function Premium() {
   useTheme();
@@ -44,6 +47,16 @@ export default function Premium() {
                 <Feather name="check" size={13} color={colors.onMine} />
               </View>
               <Text style={styles.perkTitle}>{p}</Text>
+            </View>
+          ))}
+        </View>
+
+        <View style={styles.freeBox}>
+          <Text style={styles.freeTitle}>Free for everyone</Text>
+          {FREE.map((f) => (
+            <View key={f} style={styles.freeRow}>
+              <Feather name="check" size={14} color={colors.muted} />
+              <Text style={styles.freeText}>{f}</Text>
             </View>
           ))}
         </View>
@@ -82,6 +95,10 @@ const styles = themed(() => StyleSheet.create({
   perk: { flexDirection: 'row', alignItems: 'center', gap: 12 },
   check: { width: 22, height: 22, borderRadius: 11, backgroundColor: colors.mine, alignItems: 'center', justifyContent: 'center' },
   perkTitle: { fontFamily: fonts.sansMedium, fontSize: 15, color: colors.ink },
+  freeBox: { backgroundColor: colors.card, borderRadius: 20, padding: 16, marginTop: space.xl, gap: 8 },
+  freeTitle: { fontFamily: fonts.sansBold, fontSize: 14, color: colors.ink, marginBottom: 2 },
+  freeRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  freeText: { flex: 1, fontFamily: fonts.sans, fontSize: 13.5, color: colors.muted },
   box: { backgroundColor: colors.card, borderRadius: 20, padding: 6, marginVertical: space.xl, gap: 4 },
   pack: { borderRadius: 16, paddingVertical: 14, alignItems: 'center', borderWidth: 2, borderColor: 'transparent' },
   packOn: { borderColor: colors.cta },
