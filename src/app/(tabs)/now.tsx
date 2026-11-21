@@ -1,7 +1,7 @@
 import Feather from '@expo/vector-icons/Feather';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import * as Haptics from 'expo-haptics';
-import { Image, type ImageContentPosition } from 'expo-image';
+import { Image } from 'expo-image';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Redirect, router, useFocusEffect, type Href } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
@@ -12,6 +12,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Avatar } from '@/components/ui';
 import { faceFor } from '@/data/faces';
 import { findPerson } from '@/data/people';
+import { PLANS, type Plan } from '@/data/plans';
 import { hasPremium } from '@/lib/swipes';
 import { useStore } from '@/state/store';
 import { colors, fonts, themed, useTheme } from '@/theme';
@@ -21,26 +22,6 @@ import { colors, fonts, themed, useTheme } from '@/theme';
 // and a bubble shows everyone who's joining. Swipe up for the next plan,
 // swipe sideways for the details and the full list of who's going.
 const LIME = '#B9E769';
-
-type Plan = {
-  id: string; kind: string; emoji: string; title: string; when: string; place: string; km: number;
-  level: string; spots: number; hostId: string; going: string[]; about: string; photo: string | number; pos?: ImageContentPosition;
-  free?: string; // what makes it free for everyone, e.g. 'bring your own bike'
-  venue?: string; // paid place: its members join free, everyone else joins with Premium (Yana, 2026-11-21)
-};
-
-// Sample plans until real members post their own. Photos get swapped for Yana's as they come in.
-const PLANS: Plan[] = [
-  { id: 'x-football', kind: 'Football', emoji: '⚽', title: 'Sunset 5-a-side', when: 'Tonight 19:00', place: 'Westerpark', km: 1.2, level: 'All levels', spots: 3, hostId: 'tom', going: ['tom', 'lucas', 'mateo', 'noah', 'daan', 'sanne', 'lotte'], about: 'Friendly 5-a-side, mixed teams, no keepers. Drinks after for whoever’s up for it.', photo: require('../../../assets/images/photos/explore-football.jpg'), free: 'park activity' },
-  { id: 'x-padel', kind: 'Padel', emoji: '🎾', title: 'After-work padel', when: 'Tomorrow 18:30', place: 'Padel Club Oost', km: 2.4, level: 'Intermediate', spots: 1, hostId: 'noah', going: ['noah', 'mateo', 'amira'], about: 'Doubles, one spot left. Rackets to borrow if you don’t have one.', photo: require('../../../assets/images/photos/explore-padel.jpg'), venue: 'Padel Club Oost' },
-  { id: 'x-run', kind: 'Running', emoji: '🏃', title: 'Track night intervals', when: 'Tomorrow 18:30', place: 'Olympic Stadium track', km: 0.8, level: 'All paces', spots: 6, hostId: 'sanne', going: ['sanne', 'daan', 'lotte', 'tom'], about: 'Warm-up lap, 6 x 400m in pace groups, cool-down together. Every pace has a group.', photo: require('../../../assets/images/photos/explore-running.jpg'), free: 'runs are open to everyone' },
-  { id: 'x-cycling', kind: 'Cycling', emoji: '🚴', title: 'Golden hour ride', when: 'Sun 17:00', place: 'Start at Amstel', km: 1.7, level: 'Easy pace', spots: 5, hostId: 'daan', going: ['daan', 'sanne', 'mateo', 'femke'], about: '20 km along the river at a chatty pace, then drinks by the water.', photo: require('../../../assets/images/photos/explore-cycling.jpg'), pos: { left: '68%' }, free: 'bring your own bike' },
-  { id: 'x-basketball', kind: 'Basketball', emoji: '🏀', title: 'Pickup ball at sunset', when: 'Sat 18:00', place: 'Museumplein courts', km: 2.0, level: 'All levels', spots: 4, hostId: 'lucas', going: ['lucas', 'daan', 'mateo', 'tom', 'noah'], about: 'Run-ins to 21, teams picked on the spot. Lights come on when it gets dark.', photo: require('../../../assets/images/photos/explore-basketball.jpg'), free: 'park activity' },
-  { id: 'x-pilates', kind: 'Pilates', emoji: '🤸', title: 'Reformer Pilates', when: 'Sat 10:00', place: 'Core Studio, Oud-West', km: 1.4, level: 'All levels', spots: 2, hostId: 'yasmin', going: ['yasmin', 'amira', 'lotte', 'femke', 'sanne'], about: '50-minute reformer class, small group. Brunch next door after if you’re hungry.', photo: require('../../../assets/images/photos/explore-pilates.jpg'), venue: 'Core Studio' },
-  { id: 'x-yoga', kind: 'Yoga', emoji: '🧘', title: 'Sunday park yoga', when: 'Every Sun 19:00', place: 'Sarphatipark', km: 1.9, level: 'Beginner friendly', spots: 12, hostId: 'amira', going: ['amira', 'yasmin', 'femke', 'sanne', 'lotte'], about: 'Our weekly park yoga, hosted by Mile Club. Slow flow on the grass as the sun goes down. Bring a mat, or borrow one of ours.', photo: require('../../../assets/images/photos/explore-yoga.jpg'), free: 'weekly, hosted by Mile Club' },
-  { id: 'x-gym', kind: 'Gym', emoji: '🏋️', title: 'Group workout', when: 'Mon 18:00', place: 'The Gym Club, Centrum', km: 1.5, level: 'All levels', spots: 3, hostId: 'lotte', going: ['lotte', 'tom', 'lucas', 'yasmin', 'sanne', 'daan'], about: '45 minutes of circuits in teams. Hard work, loud music, high fives at the end.', photo: require('../../../assets/images/photos/explore-gym.jpg'), venue: 'The Gym Club' },
-  { id: 'x-sauna', kind: 'Sauna', emoji: '🧖', title: 'Sauna after gym', when: 'Mon 19:15', place: 'The Gym Club, Centrum', km: 1.5, level: 'Everyone', spots: 4, hostId: 'femke', going: ['femke', 'lotte', 'tom', 'lucas', 'yasmin'], about: 'Straight from the group workout into the sauna. 30 minutes of heat, cold shower, good chats.', photo: require('../../../assets/images/photos/explore-sauna.jpg'), venue: 'The Gym Club' },
-];
 
 function nameOf(id: string) {
   return findPerson(id)?.firstName ?? id[0]!.toUpperCase() + id.slice(1);
@@ -202,14 +183,14 @@ export default function Explore() {
   }, []));
   const insets = useSafeAreaInsets();
   const { width } = useWindowDimensions();
-  const { profile, blocked } = useStore();
+  const { profile, blocked, planJoins, togglePlan } = useStore();
+  const joined = planJoins ?? [];
   const [h, setH] = useState(0);
   const [what, setWhat] = useState('any');
   const [picking, setPicking] = useState(false);
   const [starting, setStarting] = useState(false);
   const [asking, setAsking] = useState<Plan | null>(null); // paid plan: are you a member there?
   const [memberOf, setMemberOf] = useState<string[]>([]); // venues the user said they're a member of
-  const [joined, setJoined] = useState<string[]>([]);
   const [toast, setToast] = useState('');
   const [fade] = useState(() => new Animated.Value(0));
   const list = useRef<FlatList<Plan>>(null);
@@ -232,7 +213,7 @@ export default function Explore() {
   function toggleJoin(p: Plan) {
     if (joined.includes(p.id)) {
       Haptics.selectionAsync().catch(() => {});
-      setJoined((x) => x.filter((id) => id !== p.id));
+      togglePlan(p.id);
       say('You left this plan');
       return;
     }
@@ -241,7 +222,7 @@ export default function Explore() {
       return;
     }
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => {});
-    setJoined((x) => [...x, p.id]);
+    togglePlan(p.id);
     say(`You’re in. See you ${p.when.replace(/^(Tonight|Tomorrow)/, (m) => m.toLowerCase())} 💪`);
   }
 
@@ -303,7 +284,7 @@ export default function Explore() {
                 setMemberOf((x) => [...x, p.venue!]);
                 setAsking(null);
                 Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => {});
-                setJoined((x) => [...x, p.id]);
+                togglePlan(p.id);
                 say(`You’re in. See you ${p.when.replace(/^(Tonight|Tomorrow)/, (m) => m.toLowerCase())} 💪`);
               }}>
               <View style={styles.startIcon}><Feather name="check" size={20} color={colors.onMine} /></View>

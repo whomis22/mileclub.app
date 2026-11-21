@@ -66,6 +66,7 @@ type State = {
   admin: boolean; // Mile Club admin (mock switch in the side menu): can call anyone
   privateSessions: PrivateSession[]; // invite-only sessions the user made, newest first
   corners: ChatThread[]; // group chats made for private sessions
+  planJoins: string[]; // Explore plans the user joined (ids from data/plans)
 };
 
 type Store = State & {
@@ -101,11 +102,12 @@ type Store = State & {
   block: (personId: string) => void;
   createPrivate: (input: Omit<PrivateSession, 'id' | 'answers' | 'at' | 'chatId'>) => PrivateSession;
   cancelPrivate: (id: string) => void;
+  togglePlan: (id: string) => void;
   reset: () => void;
 };
 
 const KEY = 'mileclub-state-v1';
-const empty: State = { profile: null, myActivities: [], joined: [], blocked: [], skipped: [], kudos: [], mySessions: [], booked: [], requests: {}, incoming: [], runRequests: {}, runIncoming: [], following: [], myPosts: [], comments: {}, calls: [], notices: [], admin: false, privateSessions: [], corners: [] };
+const empty: State = { profile: null, myActivities: [], joined: [], blocked: [], skipped: [], kudos: [], mySessions: [], booked: [], requests: {}, incoming: [], runRequests: {}, runIncoming: [], following: [], myPosts: [], comments: {}, calls: [], notices: [], admin: false, privateSessions: [], corners: [], planJoins: [] };
 
 function load(): State {
   try {
@@ -322,6 +324,11 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       update((s) => ({ ...s, privateSessions: [ps, ...(s.privateSessions ?? [])] }));
       return ps;
     },
+    togglePlan: (id) =>
+      update((s) => {
+        const list = s.planJoins ?? [];
+        return { ...s, planJoins: list.includes(id) ? list.filter((x) => x !== id) : [...list, id] };
+      }),
     cancelPrivate: (id) =>
       update((s) => ({
         ...s,

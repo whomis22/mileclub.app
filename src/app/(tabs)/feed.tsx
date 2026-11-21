@@ -1,3 +1,4 @@
+import Feather from '@expo/vector-icons/Feather';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { Image } from 'expo-image';
 import { Redirect, router, type Href } from 'expo-router';
@@ -29,6 +30,8 @@ const POSTS: Post[] = [
   { id: 'b2', personId: 'mateo', handle: 'mateo.padel', hoursAgo: 3, text: 'Padel later? 7pm', photo: require('../../../assets/images/photos/padel.jpg'), likes: 86 },
   { id: 'b3', personId: 'amira', handle: 'amira.flow', hoursAgo: 5, text: 'Lunchtime yoga is the reset I needed. Who wants to join tomorrow? 🧘‍♀️', photo: un('1544367567-0f2fcb009e0b'), likes: 132 },
   { id: 'b4', personId: 'lucas', handle: 'lucas.lifts', hoursAgo: 6, text: 'Leg day done. Looking for a gym buddy at 6pm this week 💪', photo: un('1534438327276-14e5300c3a48'), likes: 64 },
+  { id: 't1', personId: 'amira', handle: 'amira.flow', hoursAgo: 1, text: 'Unpopular opinion: the best part of any workout is the coffee after. Who agrees? ☕', likes: 58 },
+  { id: 't2', personId: 'noah', handle: 'noah.serves', hoursAgo: 4, text: 'Moved here 3 months ago and still don’t know many people. Today I said hi to my whole padel group. Small wins 🙌', likes: 112 },
   { id: 'b5', personId: 'femke', handle: 'femke.outdoors', hoursAgo: 8, text: 'Long walk then sauna this Sunday. Who’s in?', likes: 41 },
   { id: 'b6', personId: 'tom', handle: 'tom.sunrise', hoursAgo: 11, text: 'Sunrise run + coffee tomorrow 06:30. All paces welcome ☕', photo: require('../../../assets/images/photos/football.jpg'), likes: 158 },
 ];
@@ -94,7 +97,7 @@ function PostCard({
           <Ionicons name="ellipsis-horizontal" size={18} color={colors.muted} />
         </Pressable>
       </View>
-      <Text style={styles.text}>{text}</Text>
+      <Text style={[styles.text, !photo && styles.thought]}>{text}</Text>
       {photo ? (
         <View style={styles.photo}>
           <Image source={typeof photo === 'string' ? { uri: photo } : photo} style={StyleSheet.absoluteFill} contentFit="cover" transition={250} cachePolicy="memory-disk" recyclingKey={id} />
@@ -153,7 +156,8 @@ export default function Home() {
 
       <Pressable style={styles.create} onPress={() => router.push('/new-post' as Href)} accessibilityLabel="Create a post">
         <Avatar name={profile.firstName} uri={profile.photoUri} size={32} />
-        <Text style={styles.createText}>Create a post...</Text>
+        <Text style={styles.createText}>What’s on your mind?</Text>
+        <Feather name="image" size={18} color={colors.muted} style={{ marginRight: 8 }} />
       </Pressable>
 
       {myPosts.filter((p) => !p.archived).map((mp) => (
@@ -171,7 +175,7 @@ export default function Home() {
         />
       ))}
 
-      {POSTS.filter((p) => !blocked.includes(p.personId)).map((p) => {
+      {[...POSTS].sort((a, b) => a.hoursAgo - b.hoursAgo).filter((p) => !blocked.includes(p.personId)).map((p) => {
         const person = findPerson(p.personId);
         return (
           <PostCard
@@ -211,6 +215,7 @@ const styles = themed(() => StyleSheet.create({
   handle: { fontFamily: fonts.sansBold, fontSize: 14, color: colors.ink },
   meta: { fontFamily: fonts.sans, fontSize: 12, color: colors.muted, marginTop: 1 },
   text: { fontFamily: fonts.sansMedium, fontSize: 15, lineHeight: 21, color: colors.ink, marginTop: 10 },
+  thought: { fontSize: 17, lineHeight: 24 },
   photo: { height: 210, borderRadius: 16, overflow: 'hidden', marginTop: 10, backgroundColor: colors.card },
   actions: { flexDirection: 'row', alignItems: 'center', gap: 18, marginTop: 10 },
   action: { flexDirection: 'row', alignItems: 'center', gap: 5 },
