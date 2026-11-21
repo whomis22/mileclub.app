@@ -72,7 +72,7 @@ export default function Welcome() {
       <View style={styles.screen}>
         <StatusBar style="light" />
         <Image source={require('../../assets/images/photos/board-splash.jpg')} style={StyleSheet.absoluteFill} contentFit="cover" />
-        <LinearGradient colors={['rgba(0,0,0,0.2)', 'rgba(0,0,0,0.45)', 'rgba(0,0,0,0.95)']} locations={[0, 0.5, 1]} style={StyleSheet.absoluteFill} />
+        <LinearGradient colors={['rgba(0,0,0,0.6)', 'rgba(0,0,0,0.15)', 'rgba(0,0,0,0.45)', 'rgba(0,0,0,0.95)']} locations={[0, 0.25, 0.55, 1]} style={StyleSheet.absoluteFill} />
         <SafeAreaView style={styles.safe}>
           <View style={styles.splashMid}>
             <BrandMark height={60} tone="white" />
@@ -133,7 +133,7 @@ export default function Welcome() {
 const styles = themed(() => StyleSheet.create({
   screen: { flex: 1, backgroundColor: '#000' },
   safe: { flex: 1, justifyContent: 'space-between' },
-  splashMid: { flex: 1, alignItems: 'center', justifyContent: 'center', paddingTop: H * 0.22 },
+  splashMid: { flex: 1, alignItems: 'center', justifyContent: 'flex-start', paddingTop: 28 }, // logo at the top (Yana, 2026-11-22)
   city: { position: 'absolute', left: 0, right: 0, bottom: 0, height: H * 0.48 },
   posterMid: { flex: 1, alignItems: 'center', justifyContent: 'center', paddingBottom: H * 0.12 },
   posterTag: { fontFamily: fonts.logo, fontStyle: 'italic', fontSize: 22, lineHeight: 24, color: '#0A0A0A', textAlign: 'center', marginTop: 26 },
