@@ -98,7 +98,7 @@ function readPref(): ThemePref {
     const v = Storage.getItemSync(PREF_KEY);
     if (v === 'light' || v === 'dark') return v;
   } catch {}
-  return 'light'; // everyone starts in light mode (Yana, 2026-11-21)
+  return 'dark'; // everyone starts in dark mode, light is a switch away (Yana, 2026-11-22)
 }
 
 let mode: ThemePref = readPref();

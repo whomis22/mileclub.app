@@ -27,8 +27,8 @@
       [
         "expo-splash-screen",
         {
-          "backgroundColor": "#FFFFFF",
-          "image": "./assets/images/brand/wordmark-black.png",
+          "backgroundColor": "#000000",
+          "image": "./assets/images/brand/wordmark-white.png",
           "imageWidth": 240
         }
       ],
