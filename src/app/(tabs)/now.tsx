@@ -7,7 +7,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { OutOfSwipes } from '@/components/out-of-swipes';
 import { ForYou, type Mode } from '@/components/for-you';
 import { deckColors } from '@/components/swipe-deck';
-import { Avatar, MenuButton } from '@/components/ui';
+import { Avatar, BgGlow, MenuButton } from '@/components/ui';
 import { ACTIVITIES, distanceKm, type ActivityId } from '@/data/options';
 import { PEOPLE, findPerson } from '@/data/people';
 import type { Activity } from '@/data/types';
@@ -133,6 +133,7 @@ export default function Now() {
 
   return (
     <SafeAreaView style={styles.screen} edges={['top']}>
+      <BgGlow />
       <View style={styles.wrap}>
         <View style={styles.header}>
           <MenuButton onPress={() => router.push('/menu')} />

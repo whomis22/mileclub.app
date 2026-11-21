@@ -58,9 +58,9 @@ export default function PersonDetail() {
   if (!p || !profile) return null;
 
   const c = isDark
-    ? { bg: '#000000', ink: '#F5F5F5', muted: '#A8A8A8', line: '#262626', pill: '#262626', tile: '#121212' }
-    : { bg: '#FFFFFF', ink: '#000000', muted: '#737373', line: '#DBDBDB', pill: '#EFEFEF', tile: '#F2F2F2' };
-  const olive = isDark ? '#8FA567' : '#5E7A2F';
+    ? { bg: '#050D0C', ink: '#F7F7F2', muted: '#9AA29C', line: '#1B2C29', pill: '#152523', tile: '#0F1D1B' }
+    : { bg: '#F7F7F2', ink: '#102A27', muted: '#777F79', line: '#E3E6DF', pill: '#ECEEE7', tile: '#ECEEE7' };
+  const olive = isDark ? '#B9E769' : '#102A27';
 
   const score = matchScore(profile, p);
   const theirs = activities.filter((a) => a.participants.includes(p.id) || a.hostId === p.id);
@@ -132,7 +132,7 @@ export default function PersonDetail() {
         <View style={s.btnRow}>
           <Pressable
             onPress={() => toggleFollow(p.id)}
-            style={[s.btn, { backgroundColor: follows ? c.pill : '#5E7A2F' }]}
+            style={[s.btn, { backgroundColor: follows ? c.pill : '#102A27' }]}
             accessibilityLabel={follows ? `Unfollow ${p.firstName}` : `Follow ${p.firstName}`}>
             <Text style={[s.btnText, { color: follows ? c.ink : '#FFFFFF' }]}>{follows ? 'Following' : 'Follow'}</Text>
           </Pressable>

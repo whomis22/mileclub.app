@@ -21,8 +21,8 @@ export function RouteMap({ from, dest, path }: { from: LatLng | null; dest: LatL
       style={StyleSheet.absoluteFill}
       showsUserLocation
       initialRegion={{ ...dest, latitudeDelta: 0.03, longitudeDelta: 0.03 }}>
-      <Marker coordinate={dest} pinColor="#E8956F" />
-      {path.length > 1 ? <Polyline coordinates={path} strokeColor="#5E7A2F" strokeWidth={5} /> : null}
+      <Marker coordinate={dest} pinColor="#102A27" />
+      {path.length > 1 ? <Polyline coordinates={path} strokeColor="#B9E769" strokeWidth={5} /> : null}
     </MapView>
   );
 }

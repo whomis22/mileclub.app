@@ -21,8 +21,8 @@ const W = Dimensions.get('window').width;
 const PAD = 20;
 const GAP = 12;
 const CARD = W - PAD * 2 - 28; // leaves the next card peeking in
-const MATCHA = '#C9DD9A';
-const DARK = '#16190F';
+const MATCHA = '#B9E769';
+const DARK = '#102A27';
 
 export type Mode = 'people' | 'plans';
 
@@ -154,7 +154,8 @@ function PlanCard({ a, home, requested, onJoin }: { a: Activity; home: Neighborh
   const info = activityInfo(a.type);
   const host = findPerson(a.hostId);
   const left = Math.max(0, a.groupSize - a.participants.length);
-  const km = formatKm(distanceKm(home, a.neighborhood));
+  const d = distanceKm(home, a.neighborhood);
+  const km = d > 50 ? (cityOf(a.neighborhood) ?? a.neighborhood) : formatKm(d);
   const action = requested ? 'Requested ✓' : a.solo ? `I’m in` : 'Ask to join';
   return (
     <Pressable style={styles.card} onPress={() => router.push(`/activity/${a.id}` as Href)}>

@@ -2,71 +2,78 @@ import { Storage } from 'expo-sqlite/kv-store';
 import { Appearance } from 'react-native';
 import { useSyncExternalStore } from 'react';
 
-// Mile Club 'blend' look (Yana picked 2026-11-13): cream + matcha olive + blush in light,
-// true black + olive + blush in dark. Older note (2026-11-02): backgrounds are always light cream in light mode
-// and black in dark mode. The logo's colours do the rest: Rich Olive (the m:
-// brand, buttons) and Soft Peach (the c: highlights, likes, social bits).
+// Mile Club colours (Yana, 2026-11-21): Midnight Forest #102A27 (main brand),
+// Fresh Lime #B9E769 (signature accent), Cloud White #F7F7F2 (light background),
+// Slate Grey #777F79 (secondary text). Dark mode is a near-black forest with a green glow,
+// lime buttons (Dribbble fitness look Yana sent). Older names (olive, peach) are kept
+// so every screen picks the new colours up: olive = forest, peach = lime.
 const light = {
-  bg: '#FAF6EE', // light cream (Yana: 'use a light cream as the white')
+  bg: '#F7F7F2', // Cloud White
   card: '#FFFFFF',
-  sand: '#F2ECE1', // fields and chat bubbles
-  ink: '#16190F',
-  muted: '#6B6A5E',
-  line: '#ECE4D6',
-  edge: '#E0D6C6', // outlines of round buttons and fields
-  track: '#EEE7DA', // empty part of progress bars
-  dashed: '#B5B5B0',
-  off: '#D6D6D2', // disabled button
-  offText: '#FAF6EE',
-  inkBg: '#111111', // dark panels (earnings, coach dashboard)
-  link: '#5E7A2F', // olive text and links
-  olive: '#5E7A2F',
-  oliveDark: '#2F3D29',
-  oliveSoft: '#E4EAD5',
-  peach: '#F4CFC6',
-  peachDeep: '#EDB5AA',
-  black: '#111111',
-  onBrand: '#FFFFFF', // text on olive, photos and dark panels
-  onPeach: '#111111', // text on peach
-  overlay: 'rgba(0,0,0,0.55)',
+  sand: '#ECEEE7', // fields and chat bubbles
+  ink: '#102A27', // Midnight Forest text
+  muted: '#777F79', // Slate Grey
+  line: '#E3E6DF',
+  edge: '#D6DAD3', // outlines of round buttons and fields
+  track: '#E6E9E2', // empty part of progress bars
+  dashed: '#AEB4AF',
+  off: '#D3D7D2', // disabled button
+  offText: '#F7F7F2',
+  inkBg: '#102A27', // dark panels (earnings, coach dashboard)
+  link: '#102A27',
+  olive: '#102A27', // main brand: Midnight Forest
+  oliveDark: '#0A1D1B',
+  oliveSoft: '#E6F4D2', // pale lime tint
+  peach: '#B9E769', // Fresh Lime accent
+  peachDeep: '#A5D951',
+  black: '#0A1D1B',
+  onBrand: '#FFFFFF', // text on forest, photos and dark panels
+  onPeach: '#102A27', // text on lime
+  cta: '#B9E769', // main action buttons: lime pill with forest text
+  onCta: '#102A27',
+  glow: 'rgba(185,231,105,0.16)', // soft lime glow at the top of screens
+  overlay: 'rgba(5,15,13,0.55)',
   // Older names still used around the app, mapped onto the new palette.
-  accent: '#5E7A2F',
-  accentSoft: '#E3E6D3',
-  green: '#5E7A2F',
-  greenSoft: '#E3E6D3',
-  purple: '#9A5B3C', // warm brown, used for the coach share in the 80/20 split
-  danger: '#A1402A',
+  accent: '#102A27',
+  accentSoft: '#E6F4D2',
+  green: '#102A27',
+  greenSoft: '#E6F4D2',
+  purple: '#5E8C7A', // coach share in the 80/20 split
+  danger: '#B4442E',
 };
 
 const dark: typeof light = {
-  bg: '#000000',
-  card: '#141414',
-  sand: '#1C1C1C',
-  ink: '#F5F3EE',
-  muted: '#9C998E',
-  line: '#262626',
-  edge: '#333333',
-  track: '#262626',
-  dashed: '#555555',
-  off: '#2A2A2A',
-  offText: '#777777',
-  inkBg: '#2F3D29',
-  link: '#B5CB7E',
-  olive: '#6A8636',
-  oliveDark: '#2F3D29',
-  oliveSoft: '#1F2618',
-  peach: '#F2C2B8',
-  peachDeep: '#E9A99C',
-  black: '#111111',
+  bg: '#050D0C', // near-black forest
+  card: '#0F1D1B',
+  sand: '#152523',
+  ink: '#F7F7F2',
+  muted: '#9AA29C',
+  line: '#1B2C29',
+  edge: '#253B37',
+  track: '#1B2C29',
+  dashed: '#41544F',
+  off: '#1B2C29',
+  offText: '#6B7A75',
+  inkBg: '#12332E',
+  link: '#B9E769',
+  olive: '#1F4F47', // forest, lifted so it shows on black
+  oliveDark: '#102A27',
+  oliveSoft: '#16302B',
+  peach: '#B9E769',
+  peachDeep: '#A5D951',
+  black: '#050D0C',
   onBrand: '#FFFFFF',
-  onPeach: '#111111',
+  onPeach: '#102A27',
+  cta: '#B9E769',
+  onCta: '#102A27',
+  glow: 'rgba(46,110,86,0.55)', // forest-green glow like the Dribbble screens
   overlay: 'rgba(0,0,0,0.7)',
-  accent: '#6A8636',
-  accentSoft: '#1F2618',
-  green: '#6A8636',
-  greenSoft: '#1F2618',
-  purple: '#C98B68',
-  danger: '#E8956F',
+  accent: '#1F4F47',
+  accentSoft: '#16302B',
+  green: '#1F4F47',
+  greenSoft: '#16302B',
+  purple: '#8FB8A8',
+  danger: '#F08A6E',
 };
 
 // Light or dark, switched from the side menu. The app always starts in light

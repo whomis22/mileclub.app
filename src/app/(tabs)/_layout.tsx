@@ -2,12 +2,11 @@ import Feather from '@expo/vector-icons/Feather';
 import { router, type Href } from 'expo-router';
 import { Tabs } from 'expo-router/js-tabs';
 import * as Haptics from 'expo-haptics';
-import { useEffect, useMemo, useState } from 'react';
-import { Animated, PanResponder, Platform, Pressable, StyleSheet, View } from 'react-native';
+import { Platform, Pressable, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { useStore } from '@/state/store';
-import { colors, themed, useTheme } from '@/theme';
+import { colors, fonts, getThemeMode, themed, useTheme } from '@/theme';
 
 type TabBarProps = {
   state: { index: number; routes: { key: string; name: string }[] };
@@ -15,91 +14,55 @@ type TabBarProps = {
   navigation?: unknown;
 };
 
-// Members and coaches get different tab bars. Coaches open on their Studio and
-// still have a Join tab to swipe into other people's runs.
-const MEMBER_TABS = ['now', 'feed', 'activities', 'messages', 'profile'];
-const COACH_TABS = ['now', 'feed', 'studio', 'messages', 'profile'];
+// Bottom bar (Yana, 2026-11-21): Home - Explore - Connect - Chats - Profile.
+// Coaches swap Home for their Studio. Plans and Coaches stay reachable from the menu.
+const MEMBER_TABS = ['now', 'explore', 'feed', 'messages', 'profile'];
+const COACH_TABS = ['studio', 'explore', 'feed', 'messages', 'profile'];
 const COACH_TITLES: Record<string, string> = {};
-// Blend look (Yana, 2026-11-13): icons instead of words in a floating pill.
 const ICONS: Record<string, keyof typeof Feather.glyphMap> = {
   now: 'home',
-  feed: 'layers',
-  activities: 'calendar',
+  explore: 'map',
+  feed: 'users',
   studio: 'star',
-  messages: 'message-square',
+  messages: 'message-circle',
   profile: 'user',
 };
 
-// Floating dark pill at the bottom (light pill in dark mode). The open tab is an olive pill that slides:
-// tap a tab, or drag the pill along the bar and let go on the page you want.
+// Dark rounded bar like the Dribbble look: icon + label, the open tab in lime with a dot,
+// and the middle tab (Connect) as a raised lime button.
 function PillTabBar({ state, descriptors, isCoach }: TabBarProps & { isCoach: boolean }) {
   useTheme();
   const insets = useSafeAreaInsets();
   const order = isCoach ? COACH_TABS : MEMBER_TABS;
   const routes = order.map((name) => state.routes.find((r) => r.name === name)).filter((r): r is { key: string; name: string } => !!r);
   const current = state.routes[state.index]?.name;
-  const index = Math.max(0, routes.findIndex((r) => r.name === current));
-  const names = routes.map((r) => r.name).join(',');
-  const [width, setWidth] = useState(0);
-  const itemW = routes.length ? (width - 12) / routes.length : 0;
-  const [x] = useState(() => new Animated.Value(0));
-  const [hover, setHover] = useState<number | null>(null);
-
-  // Slide the pill to the open tab.
-  useEffect(() => {
-    if (!itemW) return;
-    Animated.spring(x, { toValue: index * itemW, useNativeDriver: true, speed: 18, bounciness: 6 }).start();
-  }, [index, itemW, x]);
-
-  const pan = useMemo(() => {
-    const list = names.split(',');
-    const last = list.length - 1;
-    const clamp = (v: number) => Math.min(last * itemW, Math.max(0, v));
-    const nearest = (v: number) => Math.round(clamp(v) / (itemW || 1));
-    return PanResponder.create({
-      // Only take over for sideways drags, so taps still go to the tabs.
-      onMoveShouldSetPanResponderCapture: (_e, g) => itemW > 0 && Math.abs(g.dx) > 8 && Math.abs(g.dx) > Math.abs(g.dy),
-      onPanResponderTerminationRequest: () => false,
-      onPanResponderMove: (_e, g) => {
-        const v = clamp(index * itemW + g.dx);
-        x.setValue(v);
-        setHover(nearest(v));
-        if (Platform.OS !== 'web') Haptics.selectionAsync().catch(() => {});
-      },
-      onPanResponderRelease: (_e, g) => {
-        const to = nearest(index * itemW + g.dx);
-        setHover(null);
-        Animated.spring(x, { toValue: to * itemW, useNativeDriver: true, speed: 18, bounciness: 6 }).start();
-        if (to !== index) router.navigate(`/${list[to]}` as Href);
-      },
-      onPanResponderTerminate: () => {
-        setHover(null);
-        Animated.spring(x, { toValue: index * itemW, useNativeDriver: true }).start();
-      },
-    });
-    // eslint-disable-next-line react-hooks/preserve-manual-memoization
-  }, [names, itemW, index, x]);
-
-  const lit = hover ?? index;
+  const mid = Math.floor(routes.length / 2);
   return (
-    <View style={[styles.wrap, { paddingBottom: Math.max(insets.bottom, 12) }]}>
-      <View style={styles.bar} onLayout={(e) => setWidth(e.nativeEvent.layout.width)} {...pan.panHandlers}>
-        {itemW ? <Animated.View pointerEvents="none" style={[styles.pill, { width: itemW, transform: [{ translateX: x }] }]} /> : null}
+    <View style={[styles.wrap, { paddingBottom: Math.max(insets.bottom - 6, 10) }]}>
+      <View style={styles.bar}>
         {routes.map((r, i) => {
           const focused = r.name === current;
           const title = (isCoach && COACH_TITLES[r.name]) || descriptors[r.key]?.options.title || r.name;
+          const go = () => {
+            if (Platform.OS !== 'web') Haptics.selectionAsync().catch(() => {});
+            // Go through the router: the tab bar's own navigation prop is not always passed in.
+            if (!focused) router.navigate(`/${r.name}` as Href);
+          };
+          if (i === mid) {
+            return (
+              <Pressable key={r.key} onPress={go} accessibilityRole="tab" accessibilityLabel={title} accessibilityState={{ selected: focused }} style={styles.item}>
+                <View style={[styles.centre, focused && styles.centreOn]}>
+                  <Feather name={ICONS[r.name] ?? 'circle'} size={22} color={colors.onCta} />
+                </View>
+                <Text style={[styles.label, focused && styles.labelOn]}>{title}</Text>
+              </Pressable>
+            );
+          }
           return (
-            <Pressable
-              key={r.key}
-              accessibilityRole="tab"
-              accessibilityLabel={title}
-              accessibilityState={{ selected: focused }}
-              onPress={() => {
-                // Go through the router: the tab bar's own navigation prop is not always passed in.
-                if (!focused) router.navigate(`/${r.name}` as Href);
-              }}
-              style={styles.item}>
-              <Feather name={ICONS[r.name] ?? 'circle'} size={21} color={i === lit ? colors.onBrand : colors.bg} style={{ opacity: i === lit ? 1 : 0.75 }} />
+            <Pressable key={r.key} onPress={go} accessibilityRole="tab" accessibilityLabel={title} accessibilityState={{ selected: focused }} style={styles.item}>
+              <Feather name={ICONS[r.name] ?? 'circle'} size={21} color={focused ? colors.cta : BAR_ICON} />
+              <Text style={[styles.label, focused && styles.labelOn]}>{title}</Text>
+              <View style={[styles.dot, !focused && { opacity: 0 }]} />
             </Pressable>
           );
         })}
@@ -107,6 +70,8 @@ function PillTabBar({ state, descriptors, isCoach }: TabBarProps & { isCoach: bo
     </View>
   );
 }
+
+const BAR_ICON = 'rgba(247,247,242,0.55)';
 
 export default function TabsLayout() {
   useTheme();
@@ -116,24 +81,33 @@ export default function TabsLayout() {
     <Tabs
       tabBar={(props) => <PillTabBar {...(props as unknown as TabBarProps)} isCoach={isCoach} />}
       screenOptions={{ headerShown: false, sceneStyle: { backgroundColor: colors.bg } }}>
-      <Tabs.Screen name="feed" options={{ title: 'For You' }} />
       <Tabs.Screen name="now" options={{ title: 'Home' }} />
+      <Tabs.Screen name="explore" options={{ title: 'Explore' }} />
+      <Tabs.Screen name="feed" options={{ title: 'Connect' }} />
       <Tabs.Screen name="studio" options={{ title: 'Studio' }} />
-      <Tabs.Screen name="activities" options={{ title: 'Plans' }} />
-      <Tabs.Screen name="messages" options={{ title: 'Messages' }} />
-      <Tabs.Screen name="profile" options={{ title: 'You' }} />
+      <Tabs.Screen name="messages" options={{ title: 'Chats' }} />
+      <Tabs.Screen name="profile" options={{ title: 'Profile' }} />
+      <Tabs.Screen name="activities" options={{ title: 'Plans', href: null }} />
       <Tabs.Screen name="train" options={{ title: 'Coaches', href: null }} />
     </Tabs>
   );
 }
 
 const styles = themed(() => StyleSheet.create({
-  wrap: { backgroundColor: colors.bg, paddingHorizontal: 40, paddingTop: 6, alignItems: 'center' },
+  wrap: { backgroundColor: colors.bg, paddingHorizontal: 14, paddingTop: 6 },
   bar: {
-    height: 62, width: '100%', maxWidth: 340, borderRadius: 31, backgroundColor: colors.ink, flexDirection: 'row', alignItems: 'center',
-    paddingHorizontal: 6,
-    shadowColor: '#000', shadowOpacity: 0.18, shadowRadius: 16, shadowOffset: { width: 0, height: 6 }, elevation: 8,
+    height: 66, borderRadius: 30, backgroundColor: getThemeMode() === 'dark' ? '#0F1D1B' : colors.ink, flexDirection: 'row', alignItems: 'center',
+    paddingHorizontal: 6, borderWidth: getThemeMode() === 'dark' ? 1 : 0, borderColor: colors.edge,
+    shadowColor: '#000', shadowOpacity: 0.22, shadowRadius: 18, shadowOffset: { width: 0, height: 8 }, elevation: 10,
   },
-  pill: { position: 'absolute', left: 6, top: 7, height: 48, borderRadius: 24, backgroundColor: colors.olive },
-  item: { flex: 1, height: 48, borderRadius: 24, alignItems: 'center', justifyContent: 'center' },
+  item: { flex: 1, height: 66, alignItems: 'center', justifyContent: 'center', gap: 3 },
+  label: { fontFamily: fonts.sansSemi, fontSize: 10, color: BAR_ICON },
+  labelOn: { color: colors.cta },
+  dot: { width: 4, height: 4, borderRadius: 2, backgroundColor: colors.cta },
+  centre: {
+    width: 52, height: 52, borderRadius: 26, backgroundColor: colors.cta, alignItems: 'center', justifyContent: 'center', marginTop: -26,
+    borderWidth: 4, borderColor: colors.bg,
+    shadowColor: '#B9E769', shadowOpacity: 0.45, shadowRadius: 14, shadowOffset: { width: 0, height: 4 }, elevation: 8,
+  },
+  centreOn: { transform: [{ scale: 1.06 }] },
 }));

@@ -1,9 +1,22 @@
+import { LinearGradient } from 'expo-linear-gradient';
 import { Image } from 'expo-image';
 import { useState, type ReactNode } from 'react';
 import { Pressable, RefreshControl, ScrollView, StyleSheet, Text, View, type ViewStyle } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { colors, getThemeMode, fonts, radius, space, themed, useTheme } from '@/theme';
+
+// Soft glow at the top of a screen: forest green in dark mode, a hint of lime in light.
+export function BgGlow({ height = 360 }: { height?: number }) {
+  useTheme();
+  return (
+    <LinearGradient
+      pointerEvents="none"
+      colors={[colors.glow, 'transparent']}
+      style={{ position: 'absolute', top: 0, left: 0, right: 0, height }}
+    />
+  );
+}
 
 // Every scrolling page can be pulled down to refresh. onRefresh returns how many
 // new things arrived; with none, a small "No new feed" pill shows and the page
@@ -31,6 +44,7 @@ export function Screen({ children, scroll = true, edges = ['top'], onRefresh, no
   }
   return (
     <SafeAreaView style={styles.screen} edges={edges}>
+      <BgGlow />
       {scroll ? (
         <ScrollView
           contentContainerStyle={styles.scroll}
@@ -78,8 +92,9 @@ export function Button({ title, onPress, variant = 'primary', disabled, style }:
   style?: ViewStyle;
 }) {
   useTheme();
-  const bg = { primary: colors.olive, secondary: colors.peach, ghost: 'transparent', danger: 'transparent' }[variant];
-  const fg = { primary: colors.onBrand, secondary: colors.onPeach, ghost: colors.ink, danger: colors.danger }[variant];
+  // Lime pill for the main action, forest for the second one (2026-11-21 look).
+  const bg = { primary: colors.cta, secondary: colors.olive, ghost: 'transparent', danger: 'transparent' }[variant];
+  const fg = { primary: colors.onCta, secondary: colors.onBrand, ghost: colors.ink, danger: colors.danger }[variant];
   return (
     <Pressable
       onPress={onPress}
