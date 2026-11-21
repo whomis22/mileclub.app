@@ -13,6 +13,9 @@ import { CITIES, type City } from '@/data/options';
 
 export const WAITLIST_GOAL = 1000;
 
+// Cities that are Live unless an admin switches them off (Oslo opened by Yana, 2026-11-21).
+const LIVE_BY_DEFAULT: City[] = ['Amsterdam', 'Oslo'];
+
 // Sample numbers so the waitlist bars and leaderboard have life before real sign-ups.
 const SAMPLE: Record<City, { users: number; waitlist: number; referrers: { name: string; count: number }[] }> = {
   Amsterdam: { users: 1840, waitlist: 0, referrers: [{ name: 'Sanne', count: 41 }, { name: 'Daan', count: 27 }, { name: 'Amira', count: 19 }] },
@@ -20,13 +23,13 @@ const SAMPLE: Record<City, { users: number; waitlist: number; referrers: { name:
   'New York': { users: 61, waitlist: 618, referrers: [{ name: 'Maya', count: 49 }, { name: 'Chris', count: 30 }, { name: 'Dani', count: 12 }] },
   Dubai: { users: 44, waitlist: 455, referrers: [{ name: 'Omar', count: 37 }, { name: 'Lina', count: 22 }, { name: 'Sara', count: 9 }] },
   Stockholm: { users: 23, waitlist: 342, referrers: [{ name: 'Elsa', count: 26 }, { name: 'Viktor', count: 14 }, { name: 'Maja', count: 8 }] },
-  Oslo: { users: 19, waitlist: 297, referrers: [{ name: 'Ingrid', count: 24 }, { name: 'Jonas', count: 11 }, { name: 'Nora', count: 7 }] },
+  Oslo: { users: 412, waitlist: 0, referrers: [{ name: 'Ingrid', count: 24 }, { name: 'Jonas', count: 11 }, { name: 'Nora', count: 7 }] },
   'San Francisco': { users: 15, waitlist: 263, referrers: [{ name: 'Alex', count: 18 }, { name: 'Sam', count: 10 }, { name: 'Taylor', count: 6 }] },
   Doha: { users: 12, waitlist: 188, referrers: [{ name: 'Fatima', count: 15 }, { name: 'Khalid', count: 9 }, { name: 'Noor', count: 4 }] },
 };
 
 export type CityState = {
-  live: Record<string, boolean>; // admin switch; missing = only Amsterdam is live
+  live: Record<string, boolean>; // admin switch; missing = LIVE_BY_DEFAULT
   waitlist: string[]; // cities this user joined the waitlist for
   invited: Record<string, number>; // demo: friends who signed up with this user's link, by city
 };
@@ -55,7 +58,7 @@ function save(next: CityState) {
 // Pass the value from useCities() so screens update when it changes.
 export function isLive(city: City | undefined, st: CityState = state) {
   if (!city) return true;
-  return st.live[city] ?? city === 'Amsterdam';
+  return st.live[city] ?? LIVE_BY_DEFAULT.includes(city);
 }
 
 export function cityStats(city: City, st: CityState = state) {
