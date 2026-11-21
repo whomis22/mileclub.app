@@ -1,3 +1,4 @@
+import Feather from '@expo/vector-icons/Feather';
 import { router } from 'expo-router';
 import { useState } from 'react';
 import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
@@ -10,9 +11,9 @@ import { colors, fonts, radius, space, themed, useTheme } from '@/theme';
 
 export default function Messages() {
   useTheme();
-  const { blocked } = useStore();
+  const { blocked, corners } = useStore();
   const [query, setQuery] = useState('');
-  const list = THREADS.filter((t) => !t.personId || !blocked.includes(t.personId)).filter((t) =>
+  const list = [...(corners ?? []), ...THREADS].filter((t) => !t.personId || !blocked.includes(t.personId)).filter((t) =>
     t.name.toLowerCase().includes(query.trim().toLowerCase()),
   );
 
@@ -45,7 +46,11 @@ export default function Messages() {
             key={t.id}
             onPress={() => router.push(`/chat/${t.id}`)}
             style={({ pressed }) => [styles.row, i < list.length - 1 && styles.rowLine, pressed && { opacity: 0.6 }]}>
-            {t.kind === 'group' ? (
+            {t.sessionId ? (
+              <View style={[styles.groupIcon, { backgroundColor: colors.mine }]}>
+                <Feather name="users" size={20} color={colors.onMine} />
+              </View>
+            ) : t.kind === 'group' ? (
               <View style={styles.groupIcon}>
                 <Logo size={22} m={colors.bg} />
               </View>
@@ -55,7 +60,7 @@ export default function Messages() {
             <View style={{ flex: 1 }}>
               <Text style={styles.name}>{t.name}</Text>
               <Text style={[styles.last, t.unread && styles.lastUnread]} numberOfLines={1}>
-                {last.from === 'me' ? 'You: ' : t.kind === 'group' ? 'Mile Club: ' : ''}
+                {last.from === 'me' ? 'You: ' : t.kind === 'group' && last.from === 'admin' ? 'Mile Club: ' : ''}
                 {last.text}
               </Text>
             </View>

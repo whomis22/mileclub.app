@@ -3,6 +3,8 @@ import { createContext, useContext, useEffect, useState, type ReactNode } from '
 
 import { sampleActivities } from '@/data/activities';
 import { sampleSessions, type CoachSession } from '@/data/coaches';
+import type { ChatThread } from '@/data/messages';
+import type { ActivityId } from '@/data/options';
 import type { Role } from '@/data/roles';
 import { PEOPLE } from '@/data/people';
 import type { Activity, Profile } from '@/data/types';
@@ -30,8 +32,17 @@ export type CallLog = { id: string; personId: string; video: boolean; secs: numb
 // A heads-up for the user: a host answered their request to join.
 export type Notice = { id: string; kind: 'accepted' | 'declined'; activityId?: string; sessionId?: string; at: number; read?: boolean };
 
+// A private session: only the friends the user invites can see it (Yana, 2026-11-21).
+// Once everyone says yes and there are 4+ people, a group chat "<Host>'s Corner" opens.
+export type PrivateSession = {
+  id: string; type: ActivityId; title: string; date: string; time: string; place: string;
+  invited: string[]; answers: Record<string, RequestStatus>; at: number; chatId?: string;
+};
+export const CORNER_MIN = 4; // people incl. the host
+
 // Demo: sample coaches and hosts answer a request after this long.
 const DEMO_REPLY_MS = 20000;
+const PRIVATE_REPLY_MS = 4000; // demo: each invited friend says yes a few seconds after the last
 
 type State = {
   profile: Profile | null;
@@ -53,6 +64,8 @@ type State = {
   calls: CallLog[]; // call history, shown in chats
   notices: Notice[]; // newest first
   admin: boolean; // Mile Club admin (mock switch in the side menu): can call anyone
+  privateSessions: PrivateSession[]; // invite-only sessions the user made, newest first
+  corners: ChatThread[]; // group chats made for private sessions
 };
 
 type Store = State & {
@@ -86,11 +99,13 @@ type Store = State & {
   deleteComment: (postId: string, commentId: string) => void;
   cancelBooking: (sessionId: string) => void;
   block: (personId: string) => void;
+  createPrivate: (input: Omit<PrivateSession, 'id' | 'answers' | 'at' | 'chatId'>) => PrivateSession;
+  cancelPrivate: (id: string) => void;
   reset: () => void;
 };
 
 const KEY = 'mileclub-state-v1';
-const empty: State = { profile: null, myActivities: [], joined: [], blocked: [], skipped: [], kudos: [], mySessions: [], booked: [], requests: {}, incoming: [], runRequests: {}, runIncoming: [], following: [], myPosts: [], comments: {}, calls: [], notices: [], admin: false };
+const empty: State = { profile: null, myActivities: [], joined: [], blocked: [], skipped: [], kudos: [], mySessions: [], booked: [], requests: {}, incoming: [], runRequests: {}, runIncoming: [], following: [], myPosts: [], comments: {}, calls: [], notices: [], admin: false, privateSessions: [], corners: [] };
 
 function load(): State {
   try {
@@ -141,7 +156,9 @@ export function StoreProvider({ children }: { children: ReactNode }) {
         const runDue = Object.entries(prev.runRequests ?? {}).filter(
           ([, r]) => r.status === 'pending' && Date.now() - r.at > DEMO_REPLY_MS,
         );
-        if (!due.length && !runDue.length) return prev;
+        const privDue = (prev.privateSessions ?? []).some((ps) =>
+          ps.invited.some((pid, i) => ps.answers[pid] === 'pending' && Date.now() - ps.at > PRIVATE_REPLY_MS * (i + 1)));
+        if (!due.length && !runDue.length && !privDue) return prev;
         const now = Date.now();
         const notices = [...(prev.notices ?? [])];
         const requests = { ...prev.requests };
@@ -159,7 +176,29 @@ export function StoreProvider({ children }: { children: ReactNode }) {
           if (!declined && !joined.includes(id)) joined.push(id);
           notices.unshift({ id: `n${now}${id}`, kind: declined ? 'declined' : 'accepted', activityId: id, at: now });
         }
-        const next = { ...prev, requests, runRequests, joined, notices };
+        // Demo: invited friends say yes one by one. When everyone has, and there are 4+ people,
+        // the session gets its own group chat with a welcome message.
+        let corners = prev.corners ?? [];
+        const privateSessions = (prev.privateSessions ?? []).map((ps) => {
+          const answers = { ...ps.answers };
+          ps.invited.forEach((pid, i) => {
+            if (answers[pid] === 'pending' && now - ps.at > PRIVATE_REPLY_MS * (i + 1)) answers[pid] = 'accepted';
+          });
+          const next: PrivateSession = { ...ps, answers };
+          const allIn = ps.invited.every((pid) => answers[pid] === 'accepted');
+          if (allIn && !ps.chatId && ps.invited.length + 1 >= CORNER_MIN) {
+            const host = prev.profile?.firstName ?? 'Your';
+            const chat: ChatThread = {
+              id: `corner-${ps.id}`, kind: 'group', name: `${host}’s Corner`, time: 'Now', unread: true,
+              sessionId: ps.id, members: ps.invited,
+              messages: [{ id: `w${now}`, from: 'admin', text: `Welcome to ${host}’s Corner! Here you can plan and update each other before and after the session.`, at: now }],
+            };
+            corners = [chat, ...corners];
+            next.chatId = chat.id;
+          }
+          return next;
+        });
+        const next = { ...prev, requests, runRequests, joined, notices, privateSessions, corners };
         try {
           Storage.setItemSync(KEY, JSON.stringify(next));
         } catch {}
@@ -278,6 +317,17 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       })),
     deleteComment: (postId, cid) =>
       update((s) => ({ ...s, comments: { ...s.comments, [postId]: (s.comments[postId] ?? []).filter((c) => c.id !== cid) } })),
+    createPrivate: (input) => {
+      const ps: PrivateSession = { ...input, id: `ps${Date.now()}`, at: Date.now(), answers: Object.fromEntries(input.invited.map((p) => [p, 'pending' as const])) };
+      update((s) => ({ ...s, privateSessions: [ps, ...(s.privateSessions ?? [])] }));
+      return ps;
+    },
+    cancelPrivate: (id) =>
+      update((s) => ({
+        ...s,
+        privateSessions: (s.privateSessions ?? []).filter((p) => p.id !== id),
+        corners: (s.corners ?? []).filter((c) => c.sessionId !== id),
+      })),
     block: (personId) => update((s) => ({ ...s, blocked: [...s.blocked, personId] })),
     reset: () => {
       update(() => empty);

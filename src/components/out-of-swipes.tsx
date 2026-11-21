@@ -13,11 +13,11 @@ import { colors, fonts, themed, useTheme } from '@/theme';
 // Prices are placeholders and nothing is charged (no payment provider yet).
 export const PACKAGES = [
   // Prices from Yana (2026-11-21): $14.99 a month, or $149.99 a year.
-  { id: 'month', name: 'Premium monthly', price: '$14.99', per: 'a month', note: 'Unlimited swipes', best: false },
+  { id: 'month', name: 'Premium monthly', price: '$14.99', per: 'a month', note: 'Unlimited plans', best: false },
   { id: 'year', name: 'Premium yearly', price: '$149.99', per: 'a year', note: 'Save 17% · 2 months free', best: true },
 ] as const;
 
-export const PERKS = ['Unlimited swipes, every day', 'See who wants to join your plans', 'Get seen first by hosts', 'Plans in other cities when you travel'];
+export const PERKS = ['Join unlimited plans, every day', 'See who wants to join your plans', 'Get seen first by hosts', 'Plans in other cities when you travel'];
 
 export function OutOfSwipes({ onPlus, onBonus }: { onPlus: () => void; onBonus: (n: number) => void }) {
   useTheme();

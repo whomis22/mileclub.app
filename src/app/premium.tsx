@@ -12,7 +12,7 @@ import { useSwipes } from '@/lib/swipes';
 import { colors, fonts, space, themed, useTheme } from '@/theme';
 
 // Premium page (design board, 2026-11-21). Pretend checkout only: no payment provider yet.
-const PERKS = ['Unlimited swipes, every day', 'See who liked you', 'Padel, gym & coaching discounts', 'Team runs & marathons', 'Advanced filters'];
+const PERKS = ['Join unlimited plans, every day', 'See who wants to join your plans', 'Padel, gym & coaching discounts', 'Team runs & marathons', 'Advanced filters'];
 
 export default function Premium() {
   useTheme();

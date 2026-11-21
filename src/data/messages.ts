@@ -15,6 +15,8 @@ export type ChatThread = {
   id: string;
   kind: 'group' | 'private';
   personId?: string; // for private chats
+  sessionId?: string; // a private session's group chat ("<Host>'s Corner")
+  members?: string[]; // people in a session group chat, besides the user
   name: string;
   time: string;
   unread: boolean;

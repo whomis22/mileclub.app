@@ -24,6 +24,7 @@ export default function Menu() {
     { label: 'Messages', href: '/messages' },
     { label: 'Notifications', href: '/notifications' as Href },
     { label: 'Schedule & events', href: '/events' as Href },
+    { label: 'Private sessions', href: '/private-session' as Href },
     { label: 'Places near you', href: '/explore' as Href },
     { label: 'Mile Club Premium', href: '/premium' as Href },
     ...(isCoach

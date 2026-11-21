@@ -29,7 +29,7 @@ type Plan = {
 // Sample plans until real members post their own. Photos get swapped for Yana's as they come in.
 const PLANS: Plan[] = [
   { id: 'x-football', kind: 'Football', emoji: '⚽', title: 'Sunset 5-a-side', when: 'Tonight 19:00', place: 'Westerpark', km: 1.2, level: 'All levels', spots: 3, hostId: 'tom', going: ['tom', 'lucas', 'mateo', 'noah', 'daan', 'sanne', 'lotte'], about: 'Friendly 5-a-side, mixed teams, no keepers. Drinks after for whoever’s up for it.', photo: require('../../../assets/images/photos/explore-football.jpg') },
-  { id: 'x-padel', kind: 'Padel', emoji: '🎾', title: 'After-work padel', when: 'Tomorrow 18:30', place: 'Padel Club Oost', km: 2.4, level: 'Intermediate', spots: 1, hostId: 'noah', going: ['noah', 'mateo', 'amira'], about: 'Doubles, one spot left. Rackets to borrow if you don’t have one.', photo: require('../../../assets/images/photos/padel.jpg') },
+  { id: 'x-padel', kind: 'Padel', emoji: '🎾', title: 'After-work padel', when: 'Tomorrow 18:30', place: 'Padel Club Oost', km: 2.4, level: 'Intermediate', spots: 1, hostId: 'noah', going: ['noah', 'mateo', 'amira'], about: 'Doubles, one spot left. Rackets to borrow if you don’t have one.', photo: require('../../../assets/images/photos/explore-padel.jpg') },
   { id: 'x-run', kind: 'Running', emoji: '🏃', title: 'Track night intervals', when: 'Tomorrow 18:30', place: 'Olympic Stadium track', km: 0.8, level: 'All paces', spots: 6, hostId: 'sanne', going: ['sanne', 'daan', 'lotte', 'tom'], about: 'Warm-up lap, 6 x 400m in pace groups, cool-down together. Every pace has a group.', photo: require('../../../assets/images/photos/explore-running.jpg') },
   { id: 'x-cycling', kind: 'Cycling', emoji: '🚴', title: 'Golden hour ride', when: 'Sun 17:00', place: 'Start at Amstel', km: 1.7, level: 'Easy pace', spots: 5, hostId: 'daan', going: ['daan', 'sanne', 'mateo', 'femke'], about: '20 km along the river at a chatty pace, then drinks by the water.', photo: require('../../../assets/images/photos/explore-cycling.jpg'), pos: { left: '68%' } },
   { id: 'x-basketball', kind: 'Basketball', emoji: '🏀', title: 'Pickup ball at sunset', when: 'Sat 18:00', place: 'Museumplein courts', km: 2.0, level: 'All levels', spots: 4, hostId: 'lucas', going: ['lucas', 'daan', 'mateo', 'tom', 'noah'], about: 'Run-ins to 21, teams picked on the spot. Lights come on when it gets dark.', photo: require('../../../assets/images/photos/explore-basketball.jpg') },
@@ -184,6 +184,7 @@ export default function Explore() {
   const [h, setH] = useState(0);
   const [what, setWhat] = useState('any');
   const [picking, setPicking] = useState(false);
+  const [starting, setStarting] = useState(false);
   const [joined, setJoined] = useState<string[]>([]);
   const [toast, setToast] = useState('');
   const [fade] = useState(() => new Animated.Value(0));
@@ -252,7 +253,7 @@ export default function Explore() {
           <Text style={styles.topPillText}>{what === 'any' ? 'All plans' : what}</Text>
           <Feather name="chevron-down" size={14} color="#FFFFFF" />
         </Pressable>
-        <Pressable style={styles.topRound} onPress={() => router.push('/create-activity' as Href)} accessibilityLabel="Start a plan">
+        <Pressable style={styles.topRound} onPress={() => setStarting(true)} accessibilityLabel="Start a plan">
           <Feather name="plus" size={20} color="#FFFFFF" />
         </Pressable>
       </View>
@@ -260,6 +261,33 @@ export default function Explore() {
       <Animated.View pointerEvents="none" style={[styles.toast, { top: insets.top + 120, opacity: fade }]}>
         <Text style={styles.toastText}>{toast}</Text>
       </Animated.View>
+
+      <Modal visible={starting} transparent animationType="fade" onRequestClose={() => setStarting(false)}>
+        <Pressable style={styles.backdrop} onPress={() => setStarting(false)}>
+          <View style={styles.sheet}>
+            <Text style={styles.sheetTitle}>Start something</Text>
+            {[
+              { icon: 'globe' as const, title: 'Open plan', sub: 'Shows on Explore. Anyone nearby can ask to join.', href: '/create-activity' },
+              { icon: 'lock' as const, title: 'Private session', sub: 'Invite friends only. With 4+ people you get a group chat.', href: '/private-session' },
+            ].map((o) => (
+              <Pressable
+                key={o.title}
+                style={styles.start}
+                onPress={() => {
+                  setStarting(false);
+                  router.push(o.href as Href);
+                }}>
+                <View style={styles.startIcon}><Feather name={o.icon} size={20} color={colors.onMine} /></View>
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.startTitle}>{o.title}</Text>
+                  <Text style={styles.startSub}>{o.sub}</Text>
+                </View>
+                <Feather name="chevron-right" size={18} color={colors.muted} />
+              </Pressable>
+            ))}
+          </View>
+        </Pressable>
+      </Modal>
 
       <Modal visible={picking} transparent animationType="fade" onRequestClose={() => setPicking(false)}>
         <Pressable style={styles.backdrop} onPress={() => setPicking(false)}>
@@ -330,6 +358,10 @@ const styles = themed(() =>
     backdrop: { flex: 1, backgroundColor: colors.overlay, justifyContent: 'flex-end' },
     sheet: { backgroundColor: colors.bg, borderTopLeftRadius: 24, borderTopRightRadius: 24, padding: 22, paddingBottom: 40 },
     sheetTitle: { fontFamily: fonts.serif, fontSize: 20, color: colors.ink, marginBottom: 14 },
+    start: { flexDirection: 'row', alignItems: 'center', gap: 12, backgroundColor: colors.card, borderRadius: 18, padding: 14, marginBottom: 10 },
+    startIcon: { width: 44, height: 44, borderRadius: 14, backgroundColor: colors.mine, alignItems: 'center', justifyContent: 'center' },
+    startTitle: { fontFamily: fonts.sansBold, fontSize: 15, color: colors.ink },
+    startSub: { fontFamily: fonts.sans, fontSize: 13, lineHeight: 18, color: colors.muted, marginTop: 2 },
     options: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
     option: { borderRadius: 999, paddingVertical: 10, paddingHorizontal: 14, backgroundColor: colors.card },
     optionOn: { backgroundColor: LIME },

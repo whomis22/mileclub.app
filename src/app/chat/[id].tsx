@@ -21,7 +21,7 @@ import { LocationCard } from "@/components/location-card";
 import { Avatar, Logo } from "@/components/ui";
 import { faceFor } from "@/data/faces";
 import Feather from "@expo/vector-icons/Feather";
-import { findThread, type ChatMessage } from "@/data/messages";
+import { findThread, MEMBERS_GROUP_ID, type ChatMessage } from "@/data/messages";
 import { NEIGHBORHOODS } from "@/data/options";
 import { findPerson } from "@/data/people";
 import * as Location from "expo-location";
@@ -34,7 +34,8 @@ import { colors, fonts, radius, space, themed, useTheme } from "@/theme";
 export default function Chat() {
   useTheme();
   const { id } = useLocalSearchParams<{ id: string }>();
-  const thread = findThread(id);
+  const { corners } = useStore();
+  const thread = findThread(id) ?? (corners ?? []).find((c) => c.id === id);
   const settings = useGroupSettings();
   const [messages, setMessages] = useState<ChatMessage[]>(
     thread?.messages ?? [],
@@ -56,7 +57,7 @@ export default function Chat() {
   const isGroup = thread.kind === "group";
   const person = thread.personId ? findPerson(thread.personId) : undefined;
   // Mock: you are a regular member, so when "Only admins can post" is on you can read and react, not send.
-  const canSend = !isGroup || !settings.adminsOnly;
+  const canSend = !isGroup || thread.id !== MEMBERS_GROUP_ID || !settings.adminsOnly;
   // Calls and location sharing are only for people you follow.
   const follows = !!person && following.includes(person.id);
 
@@ -410,7 +411,7 @@ export default function Chat() {
         <View style={{ flex: 1 }}>
           <Text style={styles.name}>{thread.name}</Text>
           {isGroup ? (
-            <Text style={styles.sub}>Everyone who joins Mile Club</Text>
+            <Text style={styles.sub} numberOfLines={1}>{thread.members ? `You, ${thread.members.map((m) => findPerson(m)?.firstName ?? m).join(", ")}` : "Everyone who joins Mile Club"}</Text>
           ) : (
             <View style={{ flexDirection: "row", alignItems: "center", gap: 4 }}>
               <Text style={styles.sub}>Online</Text>
@@ -460,7 +461,7 @@ export default function Chat() {
       >
         <ScrollView contentContainerStyle={styles.list}>
           {isGroup ? (
-            <Text style={styles.system}>You joined Mile Club Members</Text>
+            <Text style={styles.system}>{thread.sessionId ? "Everyone said yes, so this chat was made for your session" : "You joined Mile Club Members"}</Text>
           ) : (
             <Text style={styles.day}>TODAY</Text>
           )}

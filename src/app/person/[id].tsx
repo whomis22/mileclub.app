@@ -126,7 +126,7 @@ export default function PersonDetail() {
             {p.isCaptain ? 'Host' : 'Member'} · {km}
           </Text>
           <Text style={[s.bioText, { color: c.ink }]}>{p.experience}</Text>
-          <Text style={[s.match, { color: olive }]}>{score}% match with you</Text>
+          <Text style={[s.match, { color: olive }]}>{score}% in common with you</Text>
         </View>
 
         <View style={s.btnRow}>

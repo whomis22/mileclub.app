@@ -17,7 +17,7 @@ const LIME = '#B9E769';
 const H = Dimensions.get('window').height;
 
 const SLIDES = [
-  { photo: require('../../assets/images/photos/board-ob1.jpg'), title: 'Meet\nworkout\npartners.', sub: 'Find people who match\nyour sport, goals and vibe.' },
+  { photo: require('../../assets/images/photos/board-ob1.jpg'), title: 'Meet\nworkout\npartners.', sub: 'Find people into\nyour sport, goals and vibe.' },
   { photo: require('../../assets/images/photos/board-ob2.jpg'), title: 'Explore\nactivities.', sub: 'Running, padel, Pilates,\nyoga, gym and more.' },
   { photo: require('../../assets/images/photos/board-ob3.jpg'), title: 'Build\nyour community.', sub: 'Make friends. Stay active.\nBe part of something bigger.' },
 ];
