@@ -5,70 +5,85 @@ import { Image } from 'expo-image';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Redirect, router, useFocusEffect, type Href } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
-import { useCallback, useRef, useState, type ComponentRef, type ReactNode } from 'react';
+import { useCallback, useRef, useState, type ComponentRef } from 'react';
 import { Animated, FlatList, Modal, Pressable, ScrollView, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
-import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Avatar } from '@/components/ui';
-import { faceFor, nextWant, type Strength } from '@/data/faces';
-import { ACTIVITIES, activityInfo, cityOf, distanceKm, type ActivityId } from '@/data/options';
-import { PEOPLE } from '@/data/people';
-import type { Person } from '@/data/types';
-import { fitsMeet } from '@/lib/meet';
+import { faceFor } from '@/data/faces';
+import { findPerson } from '@/data/people';
 import { useStore } from '@/state/store';
 import { colors, fonts, themed, useTheme } from '@/theme';
 
-// Explore (Yana, 2026-11-21): no more swipe cards. Each person fills the whole page
-// with their name, age, neighbourhood, a short bio and 3 strengths in bubbles.
-// Swipe up for the next person, swipe sideways to open their profile.
-// Wave = "I'd like to train with you"; a wave matches when you share an activity.
+// Explore (Yana, 2026-11-21): the ACTIVITY is the main focus, not one person's face.
+// Each plan fills the whole page with its own photo (Yana sends one per activity),
+// and a bubble shows everyone who's joining. Swipe up for the next plan,
+// swipe sideways for the details and the full list of who's going.
 const LIME = '#B9E769';
+const un = (id: string) => `https://images.unsplash.com/photo-${id}?w=1080&h=1920&fit=crop&q=70`;
 
-// Sample people live in one city; anyone far away is shown as a short walk away until real members join.
-function kmTo(home: Parameters<typeof distanceKm>[0], p: Person) {
-  const d = distanceKm(home, p.neighborhood);
-  if (d < 50) return d;
-  return 0.4 + ([...p.id].reduce((n, c) => n + c.charCodeAt(0), 0) % 42) / 10;
+type Plan = {
+  id: string; kind: string; emoji: string; title: string; when: string; place: string; km: number;
+  level: string; spots: number; hostId: string; going: string[]; about: string; photo: string | number;
+};
+
+// Sample plans until real members post their own. Photos get swapped for Yana's as they come in.
+const PLANS: Plan[] = [
+  { id: 'x-football', kind: 'Football', emoji: '⚽', title: 'Sunset 5-a-side', when: 'Tonight 19:00', place: 'Westerpark', km: 1.2, level: 'All levels', spots: 3, hostId: 'tom', going: ['tom', 'lucas', 'mateo', 'noah', 'daan', 'sanne', 'lotte'], about: 'Friendly 5-a-side, mixed teams, no keepers. Drinks after for whoever’s up for it.', photo: require('../../../assets/images/photos/explore-football.jpg') },
+  { id: 'x-padel', kind: 'Padel', emoji: '🎾', title: 'After-work padel', when: 'Tomorrow 18:30', place: 'Padel Club Oost', km: 2.4, level: 'Intermediate', spots: 1, hostId: 'noah', going: ['noah', 'mateo', 'amira'], about: 'Doubles, one spot left. Rackets to borrow if you don’t have one.', photo: require('../../../assets/images/photos/padel.jpg') },
+  { id: 'x-run', kind: 'Running', emoji: '🏃', title: 'Track night intervals', when: 'Tomorrow 18:30', place: 'Olympic Stadium track', km: 0.8, level: 'All paces', spots: 6, hostId: 'sanne', going: ['sanne', 'daan', 'lotte', 'tom'], about: 'Warm-up lap, 6 x 400m in pace groups, cool-down together. Every pace has a group.', photo: require('../../../assets/images/photos/explore-running.jpg') },
+  { id: 'x-basketball', kind: 'Basketball', emoji: '🏀', title: 'Pickup ball at sunset', when: 'Sat 18:00', place: 'Museumplein courts', km: 2.0, level: 'All levels', spots: 4, hostId: 'lucas', going: ['lucas', 'daan', 'mateo', 'tom', 'noah'], about: 'Run-ins to 21, teams picked on the spot. Lights come on when it gets dark.', photo: require('../../../assets/images/photos/explore-basketball.jpg') },
+  { id: 'x-pilates', kind: 'Pilates', emoji: '🤸', title: 'Reformer Pilates', when: 'Sat 10:00', place: 'Core Studio, Oud-West', km: 1.4, level: 'All levels', spots: 2, hostId: 'yasmin', going: ['yasmin', 'amira', 'lotte', 'femke', 'sanne'], about: '50-minute reformer class, small group. Brunch next door after if you’re hungry.', photo: require('../../../assets/images/photos/explore-pilates.jpg') },
+  { id: 'x-yoga', kind: 'Yoga', emoji: '🧘', title: 'Golden hour yoga', when: 'Sun 19:00', place: 'Sarphatipark', km: 1.9, level: 'Beginner friendly', spots: 4, hostId: 'amira', going: ['amira', 'yasmin', 'femke'], about: 'Slow flow on the grass as the sun goes down. Bring a mat, or borrow one of ours.', photo: require('../../../assets/images/photos/explore-yoga.jpg') },
+  { id: 'x-gym', kind: 'Gym', emoji: '🏋️', title: 'Leg day crew', when: 'Mon 18:00', place: 'Basic-Fit Centrum', km: 1.5, level: 'Intermediate', spots: 2, hostId: 'lucas', going: ['lucas', 'tom', 'lotte'], about: 'Squats, lunges, spotters. Bring water and good music suggestions.', photo: un('1534438327276-14e5300c3a48') },
+  { id: 'x-spa', kind: 'Spa', emoji: '🧖', title: 'Long walk + sauna', when: 'Sun 11:00', place: 'Amsterdamse Bos', km: 4.1, level: 'Easy', spots: 5, hostId: 'femke', going: ['femke', 'yasmin', 'amira', 'sanne'], about: 'An hour’s walk in the woods, then the sauna. The best way to end the week.', photo: require('../../../assets/images/photos/lake.png') },
+];
+
+function nameOf(id: string) {
+  return findPerson(id)?.firstName ?? id[0]!.toUpperCase() + id.slice(1);
 }
 
-function Bubble({ s, light }: { s: Strength; light?: boolean }) {
+// Overlapping round faces, like a group chat bubble.
+function Faces({ ids, me, size = 30 }: { ids: string[]; me?: { name: string; uri?: string }; size?: number }) {
+  const shown = ids.slice(0, me ? 4 : 5);
   return (
-    <View style={[styles.bubble, light && styles.bubbleLight]}>
-      <Ionicons name={s.icon as keyof typeof Ionicons.glyphMap} size={14} color={light ? colors.ink : '#FFFFFF'} />
-      <Text style={[styles.bubbleText, light && { color: colors.ink }]}>{s.label}</Text>
-      <View style={styles.bars}>
-        <View style={styles.barLine} />
-        <View style={[styles.barLine, { width: 8 }]} />
-      </View>
+    <View style={{ flexDirection: 'row' }}>
+      {me ? (
+        <View style={[styles.faceRing, { width: size + 4, height: size + 4, borderRadius: (size + 4) / 2 }]}>
+          <Avatar name={me.name} uri={me.uri} size={size} />
+        </View>
+      ) : null}
+      {shown.map((id, i) => (
+        <View key={id} style={[styles.faceRing, { width: size + 4, height: size + 4, borderRadius: (size + 4) / 2 }, (i > 0 || me) && { marginLeft: -size * 0.32 }]}>
+          <Avatar name={nameOf(id)} color={findPerson(id)?.color} uri={faceFor(id)?.photo} size={size} />
+        </View>
+      ))}
     </View>
   );
 }
 
-function RailButton({ label, onPress, children }: { label: string; onPress: () => void; children: ReactNode }) {
-  return (
-    <Pressable onPress={onPress} accessibilityLabel={label} hitSlop={6} style={({ pressed }) => [styles.rail, pressed && { transform: [{ scale: 0.9 }] }]}>
-      {children}
-    </Pressable>
-  );
-}
-
-function PersonPage({
-  p, w, h, km, following, onFollow, onWave, onPass,
+function PlanPage({
+  plan, w, h, joined, me, onJoin,
 }: {
-  p: Person; w: number; h: number; km: number; following: boolean;
-  onFollow: () => void; onWave: () => void; onPass: () => void;
+  plan: Plan; w: number; h: number; joined: boolean; me: { name: string; uri?: string };
+  onJoin: () => void;
 }) {
   useTheme();
+  const insets = useSafeAreaInsets();
   const [page, setPage] = useState(0);
   const scroller = useRef<ComponentRef<typeof ScrollView>>(null);
-  const face = faceFor(p.id);
-  const want = nextWant(p.id);
-  const strengths = face?.strengths ?? p.activities.slice(0, 3).map((a) => ({ icon: 'fitness', label: activityInfo(a).label }));
-  const where = `${p.age} y/o · ${p.neighborhood} · ${km.toFixed(1)} km`;
+  const count = plan.going.length + (joined ? 1 : 0);
+  const left = Math.max(0, plan.spots - (joined ? 1 : 0));
+  const firsts = (joined ? ['You', ...plan.going.slice(0, 1).map(nameOf)] : plan.going.slice(0, 2).map(nameOf)).join(', ');
+  const rest = count - 2;
+  const host = findPerson(plan.hostId);
+  const hostFace = faceFor(plan.hostId);
+  const people = joined ? ['me', ...plan.going] : plan.going;
 
-  const followBtn = (onDark: boolean) => (
-    <Pressable onPress={onFollow} style={[styles.follow, following ? styles.followOn : onDark ? styles.followDark : styles.followLight]} accessibilityLabel={following ? `Unfollow ${p.firstName}` : `Follow ${p.firstName}`}>
-      <Text style={[styles.followText, following ? { color: '#000' } : { color: onDark ? '#FFFFFF' : colors.ink }]}>{following ? 'Following' : 'Follow'}</Text>
+  const joinBtn = (
+    <Pressable onPress={onJoin} style={({ pressed }) => [styles.join, joined && styles.joinOn, pressed && { transform: [{ scale: 0.97 }] }]} accessibilityLabel={joined ? 'Leave this plan' : 'Join this plan'}>
+      {joined ? <Feather name="check" size={18} color="#FFFFFF" /> : null}
+      <Text style={[styles.joinText, joined && { color: '#FFFFFF' }]}>{joined ? 'You’re in' : 'Join'}</Text>
     </Pressable>
   );
 
@@ -80,102 +95,76 @@ function PersonPage({
         pagingEnabled
         showsHorizontalScrollIndicator={false}
         onMomentumScrollEnd={(e) => setPage(Math.round(e.nativeEvent.contentOffset.x / w))}>
-        {/* Page 1: the full photo */}
+        {/* Page 1: the activity, full page */}
         <View style={{ width: w, height: h }}>
-          {face ? <Image source={{ uri: face.photo }} style={StyleSheet.absoluteFill} contentFit="cover" transition={250} cachePolicy="memory-disk" /> : <View style={[StyleSheet.absoluteFill, { backgroundColor: p.color }]} />}
-          <LinearGradient colors={['rgba(0,0,0,0.45)', 'rgba(0,0,0,0)', 'rgba(0,0,0,0)', 'rgba(0,0,0,0.88)']} locations={[0, 0.2, 0.45, 0.85]} style={StyleSheet.absoluteFill} />
+          <Image source={typeof plan.photo === 'string' ? { uri: plan.photo } : plan.photo} style={StyleSheet.absoluteFill} contentFit="cover" transition={250} cachePolicy="memory-disk" recyclingKey={plan.id} />
+          <LinearGradient colors={['rgba(0,0,0,0.5)', 'rgba(0,0,0,0)', 'rgba(0,0,0,0)', 'rgba(0,0,0,0.92)']} locations={[0, 0.22, 0.42, 0.86]} style={StyleSheet.absoluteFill} />
 
-          <View style={styles.railWrap}>
-            <RailButton label={`Wave at ${p.firstName}`} onPress={onWave}>
-              <Text style={{ fontSize: 26 }}>👋</Text>
-            </RailButton>
-            <RailButton label={`Message ${p.firstName}`} onPress={() => router.push(`/chat/${p.id}` as Href)}>
-              <Ionicons name="chatbubble-ellipses" size={24} color="#FFFFFF" />
-            </RailButton>
-            <RailButton label={`Pass on ${p.firstName}`} onPress={onPass}>
-              <Feather name="x" size={28} color="#FF5A5F" />
-            </RailButton>
-          </View>
+          {/* who's going, at the top */}
+          <Pressable onPress={() => scroller.current?.scrollTo({ x: w, animated: true })} style={[styles.goingBubble, { top: insets.top + 58 }]} accessibilityLabel={`${count} people going. See who`}>
+            <Faces ids={plan.going} me={joined ? me : undefined} size={30} />
+            <View style={{ flexShrink: 1 }}>
+              <Text style={styles.goingTitle} numberOfLines={1}>{firsts}{rest > 0 ? ` + ${rest}` : ''}</Text>
+              <Text style={styles.goingSub}>{count} going · {left > 0 ? `${left} spot${left === 1 ? '' : 's'} left` : 'Full'}</Text>
+            </View>
+            <Feather name="chevron-right" size={16} color="rgba(255,255,255,0.8)" />
+          </Pressable>
 
           <View style={styles.info}>
-            <View style={styles.nameRow}>
-              <Text style={styles.name} numberOfLines={1} adjustsFontSizeToFit>{p.firstName.toUpperCase()}</Text>
-              {followBtn(true)}
+            <View style={styles.kind}>
+              <Text style={styles.kindText}>{plan.emoji}  {plan.kind.toUpperCase()}</Text>
             </View>
-            <Text style={styles.where}>{where}</Text>
-            <Text style={styles.bio} numberOfLines={2}>{face?.bio ?? p.experience}</Text>
-            <View style={styles.bubbles}>
-              {strengths.slice(0, 3).map((s) => <Bubble key={s.label} s={s} />)}
+            <Text style={styles.title} numberOfLines={2} adjustsFontSizeToFit>{plan.title.toUpperCase()}</Text>
+            <View style={styles.stats}>
+              <View style={styles.stat}><Feather name="clock" size={13} color={LIME} /><Text style={styles.statText}>{plan.when}</Text></View>
+              <View style={styles.stat}><Feather name="map-pin" size={13} color={LIME} /><Text style={styles.statText}>{plan.place} · {plan.km.toFixed(1)} km</Text></View>
+              <View style={styles.stat}><Feather name="bar-chart-2" size={13} color={LIME} /><Text style={styles.statText}>{plan.level}</Text></View>
             </View>
-            <Pressable onPress={() => scroller.current?.scrollTo({ x: w, animated: true })} style={styles.more} hitSlop={8}>
-              <Text style={styles.moreText}>Swipe for profile</Text>
-              <Feather name="chevron-right" size={14} color="rgba(255,255,255,0.75)" />
+            <Pressable style={styles.host} onPress={() => router.push(`/person/${plan.hostId}`)}>
+              <Avatar name={nameOf(plan.hostId)} color={host?.color} uri={hostFace?.photo} size={32} />
+              <Text style={styles.hostText} numberOfLines={1}>
+                Hosted by <Text style={{ fontFamily: fonts.sansBold }}>{nameOf(plan.hostId)}</Text>{hostFace?.work ? ` · ${hostFace.work}` : ''}
+              </Text>
             </Pressable>
-          </View>
-        </View>
-
-        {/* Page 2: their profile */}
-        <ScrollView style={{ width: w, height: h, backgroundColor: colors.bg }} contentContainerStyle={styles.profile} showsVerticalScrollIndicator={false}>
-          <View style={styles.pHead}>
-            {face ? <Image source={{ uri: face.photo }} style={styles.pPhoto} contentFit="cover" /> : <Avatar name={p.firstName} color={p.color} size={88} />}
-            <Text style={styles.pName}>{p.firstName}, {p.age}</Text>
-            <Text style={styles.pSub}>{face?.work ?? p.experience}</Text>
-            <Text style={styles.pSub}>{p.neighborhood}{cityOf(p.neighborhood) ? `, ${cityOf(p.neighborhood)}` : ''} · {km.toFixed(1)} km away</Text>
-            <View style={styles.pButtons}>
-              {followBtn(false)}
-              <Pressable style={styles.msg} onPress={() => router.push(`/chat/${p.id}` as Href)}>
-                <Text style={styles.msgText}>Message</Text>
+            <View style={styles.buttons}>
+              {joinBtn}
+              <Pressable style={styles.round} onPress={() => router.push(`/chat/${plan.hostId}` as Href)} accessibilityLabel={`Message ${nameOf(plan.hostId)}`}>
+                <Ionicons name="chatbubble-ellipses-outline" size={22} color="#FFFFFF" />
+              </Pressable>
+              <Pressable style={styles.round} onPress={() => scroller.current?.scrollTo({ x: w, animated: true })} accessibilityLabel="Plan details">
+                <Feather name="info" size={21} color="#FFFFFF" />
               </Pressable>
             </View>
           </View>
+        </View>
 
-          <Text style={styles.label}>About</Text>
-          <Text style={styles.body}>{face?.bio ?? p.experience}</Text>
+        {/* Page 2: the details and everyone going */}
+        <ScrollView style={{ width: w, height: h, backgroundColor: colors.bg }} contentContainerStyle={[styles.detail, { paddingTop: insets.top + 64 }]} showsVerticalScrollIndicator={false}>
+          <Text style={styles.dKind}>{plan.emoji} {plan.kind}</Text>
+          <Text style={styles.dTitle}>{plan.title}</Text>
+          <Text style={styles.dSub}>{plan.when} · {plan.place} · {plan.level}</Text>
+          <Text style={styles.dBody}>{plan.about}</Text>
+          <View style={{ marginTop: 18, flexDirection: 'row' }}>{joinBtn}</View>
 
-          <Text style={styles.label}>Strengths</Text>
-          <View style={styles.bubbles}>
-            {strengths.slice(0, 3).map((s) => <Bubble key={s.label} s={s} light />)}
-          </View>
-
-          {want ? (
-            <>
-              <Text style={styles.label}>Looking for someone to join</Text>
-              <View style={styles.wantCard}>
-                <Text style={{ fontSize: 26 }}>{activityInfo(want.type).emoji}</Text>
+          <Text style={styles.dLabel}>Who’s going · {count}</Text>
+          {people.map((id) => {
+            const isMe = id === 'me';
+            const f = isMe ? undefined : faceFor(id);
+            return (
+              <Pressable key={id} style={styles.person} onPress={isMe ? undefined : () => router.push(`/person/${id}`)} disabled={isMe}>
+                <Avatar name={isMe ? me.name : nameOf(id)} uri={isMe ? me.uri : f?.photo} color={isMe ? undefined : findPerson(id)?.color} size={44} />
                 <View style={{ flex: 1 }}>
-                  <Text style={styles.wantTitle}>{want.what}</Text>
-                  <Text style={styles.pSub}>{want.label}</Text>
+                  <Text style={styles.pName}>{isMe ? 'You' : nameOf(id)}{id === plan.hostId ? '  ·  Host' : ''}</Text>
+                  <Text style={styles.pWork} numberOfLines={1}>{isMe ? 'See you there' : f?.work ?? 'Mile Club member'}</Text>
                 </View>
-                <Pressable style={styles.join} onPress={onWave}>
-                  <Text style={styles.joinText}>Ask to join</Text>
-                </Pressable>
-              </View>
-            </>
-          ) : null}
-
-          <Text style={styles.label}>Activities</Text>
-          <View style={styles.bubbles}>
-            {p.activities.map((a) => (
-              <View key={a} style={[styles.bubble, styles.bubbleLight]}>
-                <Text style={[styles.bubbleText, { color: colors.ink }]}>{activityInfo(a).emoji} {activityInfo(a).label}</Text>
-              </View>
-            ))}
-          </View>
-
-          <Text style={styles.label}>Level</Text>
-          <Text style={styles.body}>{p.level}{p.pace ? ` · ${p.pace}` : ''}</Text>
-          <Text style={styles.label}>Usually free</Text>
-          <Text style={styles.body}>{p.availability.join(', ')}</Text>
-
-          <Pressable style={styles.full} onPress={() => router.push(`/person/${p.id}`)}>
-            <Text style={styles.fullText}>Open full profile</Text>
-            <Feather name="chevron-right" size={16} color={colors.ink} />
-          </Pressable>
+                {isMe ? null : <Feather name="chevron-right" size={18} color={colors.muted} />}
+              </Pressable>
+            );
+          })}
         </ScrollView>
       </ScrollView>
 
-      {/* page dashes, like the photo pager in the picture */}
-      <View style={styles.dashes} pointerEvents="none">
+      <View style={[styles.dashes, { top: insets.top + 48 }]} pointerEvents="none">
         {[0, 1].map((i) => <View key={i} style={[styles.dash, page === i && styles.dashOn, page === 1 && { backgroundColor: i === 1 ? colors.ink : colors.edge }]} />)}
       </View>
     </View>
@@ -189,52 +178,50 @@ export default function Explore() {
     setFocused(true);
     return () => setFocused(false);
   }, []));
-  const [now] = useState(() => Date.now());
   const insets = useSafeAreaInsets();
   const { width } = useWindowDimensions();
-  const { profile, following, toggleFollow, blocked } = useStore();
+  const { profile, blocked } = useStore();
   const [h, setH] = useState(0);
-  const [what, setWhat] = useState<ActivityId | 'any'>('any');
+  const [what, setWhat] = useState('any');
   const [picking, setPicking] = useState(false);
-  const [hidden, setHidden] = useState<string[]>([]);
-  const [match, setMatch] = useState<Person | null>(null);
+  const [joined, setJoined] = useState<string[]>([]);
   const [toast, setToast] = useState('');
   const [fade] = useState(() => new Animated.Value(0));
+  const list = useRef<FlatList<Plan>>(null);
   if (!profile) return <Redirect href="/welcome" />;
 
-  const items = PEOPLE.filter((p) => fitsMeet(profile, p) && !blocked.includes(p.id) && !hidden.includes(p.id))
-    .filter((p) => what === 'any' || p.activities.includes(what))
-    .sort((a, b) => (nextWant(a.id, now)?.when.getTime() ?? Infinity) - (nextWant(b.id, now)?.when.getTime() ?? Infinity));
+  const me = { name: profile.firstName, uri: profile.photoUri };
+  const kinds = [...new Set(PLANS.map((p) => p.kind))];
+  const items = PLANS.filter((p) => !blocked.includes(p.hostId) && (what === 'any' || p.kind === what));
 
   function say(text: string) {
     setToast(text);
     fade.setValue(0);
     Animated.sequence([
       Animated.timing(fade, { toValue: 1, duration: 180, useNativeDriver: true }),
-      Animated.delay(1400),
+      Animated.delay(1600),
       Animated.timing(fade, { toValue: 0, duration: 250, useNativeDriver: true }),
     ]).start();
   }
 
-  function wave(p: Person) {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium).catch(() => {});
-    if (!following.includes(p.id)) toggleFollow(p.id);
-    if (p.activities.some((a) => profile!.activities.includes(a))) setMatch(p);
-    else say(`👋 You waved at ${p.firstName}`);
+  function toggleJoin(p: Plan) {
+    if (joined.includes(p.id)) {
+      Haptics.selectionAsync().catch(() => {});
+      setJoined((x) => x.filter((id) => id !== p.id));
+      say('You left this plan');
+      return;
+    }
+    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => {});
+    setJoined((x) => [...x, p.id]);
+    say(`You’re in. See you ${p.when.replace(/^(Tonight|Tomorrow)/, (m) => m.toLowerCase())} 💪`);
   }
-
-  function follow(p: Person) {
-    Haptics.selectionAsync().catch(() => {});
-    toggleFollow(p.id);
-  }
-
-  const theirFace = match ? faceFor(match.id)?.photo : undefined;
 
   return (
     <View style={styles.screen} onLayout={(e) => setH(Math.round(e.nativeEvent.layout.height))}>
       {focused ? <StatusBar style="light" /> : null}
-      {h > 0 && items.length ? (
+      {h > 0 ? (
         <FlatList
+          ref={list}
           data={items}
           keyExtractor={(p) => p.id}
           pagingEnabled
@@ -247,101 +234,55 @@ export default function Explore() {
           initialNumToRender={2}
           maxToRenderPerBatch={2}
           renderItem={({ item }) => (
-            <PersonPage
-              p={item}
+            <PlanPage
+              plan={item}
               w={width}
               h={h}
-              km={kmTo(profile.neighborhood, item)}
-              following={following.includes(item.id)}
-              onFollow={() => follow(item)}
-              onWave={() => wave(item)}
-              onPass={() => {
-                Haptics.selectionAsync().catch(() => {});
-                setHidden((x) => [...x, item.id]);
-              }}
+              me={me}
+              joined={joined.includes(item.id)}
+              onJoin={() => toggleJoin(item)}
             />
           )}
         />
-      ) : h > 0 ? (
-        <View style={[styles.empty, { backgroundColor: colors.bg }]}>
-          <Feather name="users" size={34} color={colors.muted} />
-          <Text style={styles.emptyTitle}>You’ve seen everyone for now</Text>
-          <Text style={styles.emptySub}>Try another activity, or start a plan and let people come to you.</Text>
-          <Pressable style={styles.lime} onPress={() => { setHidden([]); setWhat('any'); }}>
-            <Text style={styles.limeText}>See everyone again</Text>
-          </Pressable>
-        </View>
       ) : null}
 
       {/* top bar over the photos */}
       <View style={[styles.top, { top: insets.top + 6 }]} pointerEvents="box-none">
         <Pressable style={styles.topPill} onPress={() => setPicking(true)}>
-          <Text style={styles.topPillText}>{what === 'any' ? 'Everyone' : activityInfo(what).label}</Text>
+          <Text style={styles.topPillText}>{what === 'any' ? 'All plans' : what}</Text>
           <Feather name="chevron-down" size={14} color="#FFFFFF" />
         </Pressable>
-        <Pressable style={styles.topRound} onPress={() => setPicking(true)} accessibilityLabel="Filters">
-          <Ionicons name="options-outline" size={20} color="#FFFFFF" />
+        <Pressable style={styles.topRound} onPress={() => router.push('/create-activity' as Href)} accessibilityLabel="Start a plan">
+          <Feather name="plus" size={20} color="#FFFFFF" />
         </Pressable>
       </View>
 
-      <Animated.View pointerEvents="none" style={[styles.toast, { top: insets.top + 56, opacity: fade }]}>
+      <Animated.View pointerEvents="none" style={[styles.toast, { top: insets.top + 120, opacity: fade }]}>
         <Text style={styles.toastText}>{toast}</Text>
       </Animated.View>
 
       <Modal visible={picking} transparent animationType="fade" onRequestClose={() => setPicking(false)}>
         <Pressable style={styles.backdrop} onPress={() => setPicking(false)}>
           <View style={styles.sheet}>
-            <Text style={styles.sheetTitle}>Who do you want to meet?</Text>
+            <Text style={styles.sheetTitle}>What do you feel like doing?</Text>
             <View style={styles.options}>
-              {[{ id: 'any', label: 'Everyone' }, ...ACTIVITIES.map((a) => ({ id: a.id, label: `${a.emoji} ${a.label}` }))].map((o) => (
+              {['any', ...kinds].map((k) => (
                 <Pressable
-                  key={o.id}
-                  style={[styles.option, what === o.id && styles.optionOn]}
+                  key={k}
+                  style={[styles.option, what === k && styles.optionOn]}
                   onPress={() => {
-                    setWhat(o.id as ActivityId | 'any');
+                    setWhat(k);
                     setPicking(false);
+                    list.current?.scrollToOffset({ offset: 0, animated: false });
                   }}>
-                  <Text style={[styles.optionText, what === o.id && { color: '#000' }]}>{o.label}</Text>
+                  <Text style={[styles.optionText, what === k && { color: '#000' }]}>
+                    {k === 'any' ? 'All plans' : `${PLANS.find((p) => p.kind === k)!.emoji} ${k}`}
+                  </Text>
                 </Pressable>
               ))}
             </View>
           </View>
         </Pressable>
-      </Modal>
-
-      <Modal visible={!!match} animationType="fade" onRequestClose={() => setMatch(null)}>
-        <SafeAreaView style={styles.match}>
-          <View style={styles.matchMid}>
-            <View style={styles.glow} />
-            <View style={styles.pair}>
-              <View style={styles.face}>
-                {profile.photoUri ? <Image source={{ uri: profile.photoUri }} style={StyleSheet.absoluteFill} contentFit="cover" /> : <Avatar name={profile.firstName} size={124} />}
-              </View>
-              <View style={[styles.face, { marginLeft: -22 }]}>
-                {theirFace ? <Image source={{ uri: theirFace }} style={StyleSheet.absoluteFill} contentFit="cover" /> : null}
-              </View>
-              <View style={styles.heart}>
-                <Ionicons name="heart-outline" size={54} color={colors.cta} />
-              </View>
-            </View>
-            <Text style={styles.matchTitle}>It’s a match!</Text>
-            <Text style={styles.matchSub}>Start a chat and plan{'\n'}your next workout together.</Text>
-          </View>
-          <View style={styles.matchBottom}>
-            <Pressable
-              style={styles.lime}
-              onPress={() => {
-                const id = match?.id;
-                setMatch(null);
-                if (id) router.push(`/chat/${id}` as Href);
-              }}>
-              <Text style={styles.limeText}>Send a message</Text>
-            </Pressable>
-            <Pressable onPress={() => setMatch(null)} hitSlop={10}>
-              <Text style={styles.keep}>Keep exploring</Text>
-            </Pressable>
-          </View>
-        </SafeAreaView>
       </Modal>
     </View>
   );
@@ -354,52 +295,38 @@ const styles = themed(() =>
     topPill: { flexDirection: 'row', alignItems: 'center', gap: 6, height: 40, paddingHorizontal: 16, borderRadius: 20, backgroundColor: 'rgba(0,0,0,0.38)' },
     topPillText: { fontFamily: fonts.sansSemi, fontSize: 14, color: '#FFFFFF' },
     topRound: { width: 40, height: 40, borderRadius: 20, backgroundColor: 'rgba(0,0,0,0.38)', alignItems: 'center', justifyContent: 'center' },
-    dashes: { position: 'absolute', top: 64, left: 0, right: 0, flexDirection: 'row', justifyContent: 'center', gap: 6 },
+    dashes: { position: 'absolute', left: 0, right: 0, flexDirection: 'row', justifyContent: 'center', gap: 6 },
     dash: { width: 16, height: 3, borderRadius: 2, backgroundColor: 'rgba(255,255,255,0.4)' },
     dashOn: { width: 26, backgroundColor: '#FFFFFF' },
-    railWrap: { position: 'absolute', right: 16, top: '38%', gap: 14, alignItems: 'center' },
-    rail: { width: 52, height: 52, borderRadius: 26, backgroundColor: 'rgba(20,20,20,0.55)', borderWidth: 1, borderColor: 'rgba(255,255,255,0.12)', alignItems: 'center', justifyContent: 'center' },
+    goingBubble: { position: 'absolute', left: 20, right: 20, flexDirection: 'row', alignItems: 'center', gap: 10, paddingVertical: 8, paddingLeft: 8, paddingRight: 14, borderRadius: 30, backgroundColor: 'rgba(20,20,20,0.55)', borderWidth: 1, borderColor: 'rgba(255,255,255,0.16)' },
+    faceRing: { backgroundColor: '#141414', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', borderWidth: 2, borderColor: '#141414' },
+    goingTitle: { fontFamily: fonts.sansBold, fontSize: 14, color: '#FFFFFF' },
+    goingSub: { fontFamily: fonts.sansSemi, fontSize: 12, color: LIME, marginTop: 1 },
     info: { position: 'absolute', left: 20, right: 20, bottom: 22 },
-    nameRow: { flexDirection: 'row', alignItems: 'center', gap: 12 },
-    name: { flexShrink: 1, fontFamily: fonts.logo, fontSize: 40, lineHeight: 44, color: LIME, letterSpacing: 0.5 },
-    where: { fontFamily: fonts.sansBold, fontSize: 15, color: '#FFFFFF', marginTop: 2 },
-    bio: { fontFamily: fonts.sans, fontSize: 14, lineHeight: 20, color: 'rgba(255,255,255,0.88)', marginTop: 8 },
-    bubbles: { flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginTop: 14 },
-    bubble: { flexDirection: 'row', alignItems: 'center', gap: 6, height: 34, paddingHorizontal: 11, borderRadius: 18, backgroundColor: 'rgba(40,40,40,0.72)', borderWidth: 1, borderColor: 'rgba(255,255,255,0.12)' },
-    bubbleLight: { backgroundColor: colors.card, borderColor: colors.line },
-    bubbleText: { fontFamily: fonts.sansSemi, fontSize: 12.5, color: '#FFFFFF' },
-    bars: { gap: 2, marginLeft: 2 },
-    barLine: { width: 10, height: 2, borderRadius: 1, backgroundColor: LIME },
-    more: { flexDirection: 'row', alignItems: 'center', gap: 2, alignSelf: 'flex-end', marginTop: 14 },
-    moreText: { fontFamily: fonts.sansSemi, fontSize: 12, color: 'rgba(255,255,255,0.75)' },
-    follow: { height: 32, paddingHorizontal: 14, borderRadius: 16, alignItems: 'center', justifyContent: 'center', borderWidth: 1 },
-    followDark: { borderColor: 'rgba(255,255,255,0.7)', backgroundColor: 'rgba(0,0,0,0.25)' },
-    followLight: { borderColor: colors.ink },
-    followOn: { backgroundColor: LIME, borderColor: LIME },
-    followText: { fontFamily: fonts.sansBold, fontSize: 13 },
-    profile: { paddingHorizontal: 20, paddingTop: 96, paddingBottom: 40 },
-    pHead: { alignItems: 'center' },
-    pPhoto: { width: 96, height: 96, borderRadius: 48, borderWidth: 3, borderColor: LIME },
-    pName: { fontFamily: fonts.sansBold, fontSize: 24, color: colors.ink, marginTop: 12 },
-    pSub: { fontFamily: fonts.sans, fontSize: 13, color: colors.muted, marginTop: 3, textAlign: 'center' },
-    pButtons: { flexDirection: 'row', gap: 10, marginTop: 16 },
-    msg: { height: 32, paddingHorizontal: 18, borderRadius: 16, backgroundColor: colors.mine, alignItems: 'center', justifyContent: 'center' },
-    msgText: { fontFamily: fonts.sansBold, fontSize: 13, color: colors.onMine },
-    label: { fontFamily: fonts.sansBold, fontSize: 15, color: colors.ink, marginTop: 26 },
-    body: { fontFamily: fonts.sans, fontSize: 14, lineHeight: 21, color: colors.muted, marginTop: 6 },
-    wantCard: { flexDirection: 'row', alignItems: 'center', gap: 12, backgroundColor: colors.card, borderRadius: 18, padding: 14, marginTop: 10 },
-    wantTitle: { fontFamily: fonts.sansSemi, fontSize: 14, color: colors.ink },
-    join: { backgroundColor: LIME, borderRadius: 16, paddingHorizontal: 12, paddingVertical: 8 },
-    joinText: { fontFamily: fonts.sansBold, fontSize: 12, color: '#000' },
-    full: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 4, height: 48, borderRadius: 24, backgroundColor: colors.card, marginTop: 28 },
-    fullText: { fontFamily: fonts.sansBold, fontSize: 14, color: colors.ink },
-    toast: { position: 'absolute', alignSelf: 'center', backgroundColor: 'rgba(0,0,0,0.75)', borderRadius: 20, paddingHorizontal: 16, paddingVertical: 9 },
+    kind: { alignSelf: 'flex-start', backgroundColor: LIME, borderRadius: 6, paddingHorizontal: 9, paddingVertical: 4 },
+    kindText: { fontFamily: fonts.sansBold, fontSize: 11.5, letterSpacing: 1.2, color: '#000' },
+    title: { fontFamily: fonts.logo, fontSize: 46, lineHeight: 48, color: '#FFFFFF', letterSpacing: -0.5, marginTop: 10 },
+    stats: { flexDirection: 'row', flexWrap: 'wrap', columnGap: 14, rowGap: 6, marginTop: 10 },
+    stat: { flexDirection: 'row', alignItems: 'center', gap: 5 },
+    statText: { fontFamily: fonts.sansSemi, fontSize: 13.5, color: '#FFFFFF' },
+    host: { flexDirection: 'row', alignItems: 'center', gap: 10, marginTop: 14 },
+    hostText: { flex: 1, fontFamily: fonts.sans, fontSize: 13.5, color: 'rgba(255,255,255,0.9)' },
+    buttons: { flexDirection: 'row', alignItems: 'center', gap: 10, marginTop: 16 },
+    join: { flex: 1, flexDirection: 'row', gap: 6, height: 54, borderRadius: 27, backgroundColor: LIME, alignItems: 'center', justifyContent: 'center' },
+    joinOn: { backgroundColor: 'rgba(255,255,255,0.18)', borderWidth: 1.5, borderColor: LIME },
+    joinText: { fontFamily: fonts.sansBold, fontSize: 17, color: '#000', letterSpacing: 0.2 },
+    round: { width: 54, height: 54, borderRadius: 27, backgroundColor: 'rgba(255,255,255,0.14)', borderWidth: 1, borderColor: 'rgba(255,255,255,0.2)', alignItems: 'center', justifyContent: 'center' },
+    detail: { paddingHorizontal: 20, paddingBottom: 40 },
+    dKind: { fontFamily: fonts.sansSemi, fontSize: 13, color: colors.muted },
+    dTitle: { fontFamily: fonts.sansBold, fontSize: 28, color: colors.ink, marginTop: 4, letterSpacing: -0.4 },
+    dSub: { fontFamily: fonts.sansSemi, fontSize: 14, color: colors.ink, marginTop: 6 },
+    dBody: { fontFamily: fonts.sans, fontSize: 14.5, lineHeight: 21, color: colors.muted, marginTop: 10 },
+    dLabel: { fontFamily: fonts.sansBold, fontSize: 16, color: colors.ink, marginTop: 28, marginBottom: 6 },
+    person: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 10, borderBottomWidth: 1, borderBottomColor: colors.line },
+    pName: { fontFamily: fonts.sansBold, fontSize: 15, color: colors.ink },
+    pWork: { fontFamily: fonts.sans, fontSize: 13, color: colors.muted, marginTop: 2 },
+    toast: { position: 'absolute', alignSelf: 'center', backgroundColor: 'rgba(0,0,0,0.8)', borderRadius: 20, paddingHorizontal: 16, paddingVertical: 9 },
     toastText: { fontFamily: fonts.sansSemi, fontSize: 13, color: '#FFFFFF' },
-    empty: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: 10, paddingHorizontal: 30 },
-    emptyTitle: { fontFamily: fonts.serif, fontSize: 21, color: colors.ink, textAlign: 'center' },
-    emptySub: { fontFamily: fonts.sans, fontSize: 14, color: colors.muted, textAlign: 'center', lineHeight: 20 },
-    lime: { alignSelf: 'stretch', height: 54, borderRadius: 27, backgroundColor: LIME, alignItems: 'center', justifyContent: 'center', marginTop: 8 },
-    limeText: { fontFamily: fonts.sansBold, fontSize: 16, color: '#000' },
     backdrop: { flex: 1, backgroundColor: colors.overlay, justifyContent: 'flex-end' },
     sheet: { backgroundColor: colors.bg, borderTopLeftRadius: 24, borderTopRightRadius: 24, padding: 22, paddingBottom: 40 },
     sheetTitle: { fontFamily: fonts.serif, fontSize: 20, color: colors.ink, marginBottom: 14 },
@@ -407,15 +334,5 @@ const styles = themed(() =>
     option: { borderRadius: 999, paddingVertical: 10, paddingHorizontal: 14, backgroundColor: colors.card },
     optionOn: { backgroundColor: LIME },
     optionText: { fontFamily: fonts.sansSemi, fontSize: 13, color: colors.ink },
-    match: { flex: 1, backgroundColor: colors.bg, justifyContent: 'space-between' },
-    matchMid: { flex: 1, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 30, gap: 14 },
-    pair: { flexDirection: 'row', marginTop: 30 },
-    heart: { position: 'absolute', top: -44, left: 0, right: 0, alignItems: 'center' },
-    glow: { position: 'absolute', width: 260, height: 260, borderRadius: 130, backgroundColor: colors.cta, opacity: 0.08, top: '22%' },
-    face: { width: 128, height: 128, borderRadius: 64, overflow: 'hidden', borderWidth: 4, borderColor: colors.cta, backgroundColor: colors.card, alignItems: 'center', justifyContent: 'center' },
-    matchTitle: { fontFamily: fonts.serif, fontSize: 32, color: colors.ink, marginTop: 8 },
-    matchSub: { fontFamily: fonts.sans, fontSize: 15, lineHeight: 21, color: colors.muted, textAlign: 'center' },
-    matchBottom: { paddingHorizontal: 24, paddingBottom: 20, gap: 16, alignItems: 'center' },
-    keep: { fontFamily: fonts.sansSemi, fontSize: 15, color: colors.ink },
   }),
 );
