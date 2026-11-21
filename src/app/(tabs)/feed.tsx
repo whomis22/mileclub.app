@@ -141,9 +141,6 @@ export default function Home() {
         <Round label="Notifications" onPress={() => router.push('/notifications' as Href)}>
           <Ionicons name="notifications-outline" size={19} color={colors.ink} />
         </Round>
-        <Round label="Messages" onPress={() => router.push('/messages' as Href)}>
-          <Ionicons name="paper-plane-outline" size={18} color={colors.ink} style={{ marginLeft: -1, marginTop: 1 }} />
-        </Round>
       </View>
 
       <View style={styles.hello}>
