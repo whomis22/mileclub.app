@@ -1,12 +1,13 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { Image } from 'expo-image';
 import { Redirect, router, type Href } from 'expo-router';
-import { useState } from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { useState, type ReactNode } from 'react';
+import * as Haptics from 'expo-haptics';
+import { Animated, Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { CommentPreview, openComments, useComments } from '@/components/comment-preview';
 import { CommentsSheet } from '@/components/comments-sheet';
-import { Avatar, Logo, MenuButton, Screen } from '@/components/ui';
+import { Avatar, Logo, Screen } from '@/components/ui';
 import { useCity } from '@/lib/use-city';
 import { agoLabel } from '@/data/comments';
 import { faceFor } from '@/data/faces';
@@ -31,6 +32,38 @@ const POSTS: Post[] = [
   { id: 'b5', personId: 'femke', handle: 'femke.outdoors', hoursAgo: 8, text: 'Long walk then sauna this Sunday. Who’s in?', likes: 41 },
   { id: 'b6', personId: 'tom', handle: 'tom.sunrise', hoursAgo: 11, text: 'Sunrise run + coffee tomorrow 06:30. All paces welcome ☕', photo: require('../../../assets/images/photos/football.jpg'), likes: 158 },
 ];
+
+// A 40px round button, so every icon at the top lines up on the same centre line.
+function Round({ label, onPress, children }: { label: string; onPress: () => void; children: ReactNode }) {
+  useTheme();
+  return (
+    <Pressable onPress={onPress} accessibilityLabel={label} hitSlop={4} style={({ pressed }) => [styles.round, pressed && { transform: [{ scale: 0.92 }], opacity: 0.8 }]}>
+      {children}
+    </Pressable>
+  );
+}
+
+// Heart that pops when you like a post, with a light tap on the phone.
+function LikeButton({ liked, count, onPress }: { liked: boolean; count: number; onPress: () => void }) {
+  useTheme();
+  const [scale] = useState(() => new Animated.Value(1));
+  function tap() {
+    if (!liked) {
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => {});
+      scale.setValue(0.7);
+      Animated.spring(scale, { toValue: 1, friction: 3, tension: 160, useNativeDriver: true }).start();
+    }
+    onPress();
+  }
+  return (
+    <Pressable onPress={tap} style={styles.action} accessibilityLabel={liked ? 'Unlike' : 'Like'} hitSlop={8}>
+      <Animated.View style={{ transform: [{ scale }] }}>
+        <Ionicons name={liked ? 'heart' : 'heart-outline'} size={21} color={liked ? '#FF4D6D' : colors.ink} />
+      </Animated.View>
+      <Text style={styles.count}>{count}</Text>
+    </Pressable>
+  );
+}
 
 function PostCard({
   id, name, handle, photoUri, color, when, text, photo, likes, onOpenPerson, onMore,
@@ -60,14 +93,11 @@ function PostCard({
       <Text style={styles.text}>{text}</Text>
       {photo ? (
         <View style={styles.photo}>
-          <Image source={typeof photo === 'string' ? { uri: photo } : photo} style={StyleSheet.absoluteFill} contentFit="cover" transition={150} />
+          <Image source={typeof photo === 'string' ? { uri: photo } : photo} style={StyleSheet.absoluteFill} contentFit="cover" transition={250} cachePolicy="memory-disk" recyclingKey={id} />
         </View>
       ) : null}
       <View style={styles.actions}>
-        <Pressable onPress={() => toggleKudos(id)} style={styles.action} accessibilityLabel="Like">
-          <Ionicons name={liked ? 'heart' : 'heart-outline'} size={21} color={liked ? '#FF4D6D' : colors.ink} />
-          <Text style={styles.count}>{likes + (liked ? 1 : 0)}</Text>
-        </Pressable>
+        <LikeButton liked={liked} count={likes + (liked ? 1 : 0)} onPress={() => toggleKudos(id)} />
         <Pressable onPress={() => openComments(id)} style={styles.action} accessibilityLabel="Comments">
           <Ionicons name="chatbubble-outline" size={19} color={colors.ink} />
           <Text style={styles.count}>{comments}</Text>
@@ -94,20 +124,24 @@ export default function Home() {
   return (
     <Screen onRefresh={() => { setPulls(pulls + 1); return 0; }}>
       <View style={styles.top}>
-        <MenuButton onPress={() => router.push('/menu')} />
-        <Logo size={30} m={isDark ? '#9CB561' : '#556B2F'} c="#F4B595" />
-        <View style={{ flex: 1 }}>
+        <Round label="Open menu" onPress={() => router.push('/menu')}>
+          <Ionicons name="menu" size={20} color={colors.ink} />
+        </Round>
+        <View style={styles.logo}>
+          <Logo size={28} m={isDark ? '#9CB561' : '#556B2F'} c="#F4B595" />
+        </View>
+        <View style={{ flex: 1, minWidth: 0 }}>
           <Pressable style={styles.cityPill} onPress={here.city ? undefined : here.ask} disabled={!!here.city} accessibilityLabel={here.city ? `You're in ${here.city}` : 'Turn on location'}>
             <Ionicons name={here.city ? 'location' : 'location-outline'} size={13} color={colors.ink} />
             <Text style={styles.cityText} numberOfLines={1}>{here.city ?? 'Set location'}</Text>
           </Pressable>
         </View>
-        <Pressable style={styles.bell} onPress={() => router.push('/notifications' as Href)} accessibilityLabel="Notifications">
-          <Ionicons name="notifications-outline" size={22} color={colors.ink} />
-        </Pressable>
-        <Pressable style={styles.bell} onPress={() => router.push('/messages' as Href)} accessibilityLabel="Messages">
-          <Ionicons name="paper-plane-outline" size={21} color={colors.ink} />
-        </Pressable>
+        <Round label="Notifications" onPress={() => router.push('/notifications' as Href)}>
+          <Ionicons name="notifications-outline" size={19} color={colors.ink} />
+        </Round>
+        <Round label="Messages" onPress={() => router.push('/messages' as Href)}>
+          <Ionicons name="paper-plane-outline" size={18} color={colors.ink} style={{ marginLeft: -1, marginTop: 1 }} />
+        </Round>
       </View>
 
       <Pressable style={styles.create} onPress={() => router.push('/new-post' as Href)} accessibilityLabel="Create a post">
@@ -155,11 +189,12 @@ export default function Home() {
 }
 
 const styles = themed(() => StyleSheet.create({
-  top: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: space.md },
-  cityPill: { flexDirection: 'row', alignItems: 'center', gap: 4, alignSelf: 'flex-start', maxWidth: '100%', backgroundColor: colors.card, borderRadius: 999, paddingHorizontal: 10, paddingVertical: 6 },
+  top: { flexDirection: 'row', alignItems: 'center', gap: 10, height: 44, marginBottom: space.md },
+  round: { width: 40, height: 40, borderRadius: 20, backgroundColor: colors.card, alignItems: 'center', justifyContent: 'center' },
+  logo: { height: 40, justifyContent: 'center', marginTop: -4 },
+  cityPill: { flexDirection: 'row', alignItems: 'center', gap: 5, alignSelf: 'flex-start', maxWidth: '100%', height: 32, backgroundColor: colors.card, borderRadius: 999, paddingHorizontal: 12 },
   cityText: { fontFamily: fonts.sansSemi, fontSize: 12, color: colors.ink, flexShrink: 1 },
-  bell: { width: 36, height: 40, alignItems: 'center', justifyContent: 'center' },
-  create: { flexDirection: 'row', alignItems: 'center', gap: space.md, backgroundColor: colors.card, borderRadius: 999, paddingVertical: 8, paddingHorizontal: 10, marginBottom: space.md },
+  create: { flexDirection: 'row', alignItems: 'center', gap: 12, height: 52, backgroundColor: colors.card, borderRadius: 999, paddingHorizontal: 10, marginBottom: space.sm },
   createText: { flex: 1, fontFamily: fonts.sans, fontSize: 14, color: colors.muted },
   post: { paddingVertical: space.md, borderBottomWidth: 1, borderBottomColor: colors.line },
   head: { flexDirection: 'row', alignItems: 'center', gap: 10 },

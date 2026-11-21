@@ -45,7 +45,7 @@ export default function Events() {
 
   return (
     <View style={styles.root}>
-      <ScrollView contentContainerStyle={{ paddingTop: insets.top + 6, paddingBottom: 130, paddingHorizontal: 18 }}>
+      <ScrollView contentContainerStyle={{ paddingTop: insets.top + 6, paddingBottom: 130, paddingHorizontal: 20 }}>
         <View style={styles.top}>
           <Pressable onPress={() => router.back()} style={styles.back} accessibilityLabel="Back">
             <Feather name="arrow-left" size={22} color={colors.ink} />
@@ -119,7 +119,7 @@ const styles = themed(() => StyleSheet.create({
   joinText: { fontFamily: fonts.sansBold, fontSize: 12, color: colors.onMine },
   state: { fontFamily: fonts.sansSemi, fontSize: 12, color: colors.muted, alignSelf: 'flex-end' },
   empty: { fontFamily: fonts.sans, fontSize: 14, color: colors.muted, textAlign: 'center', marginTop: 40 },
-  footer: { position: 'absolute', left: 0, right: 0, bottom: 0, paddingHorizontal: 18, paddingTop: 10, backgroundColor: colors.bg },
+  footer: { position: 'absolute', left: 0, right: 0, bottom: 0, paddingHorizontal: 20, paddingTop: 10, backgroundColor: colors.bg },
   create: { height: 52, borderRadius: 999, alignItems: 'center', justifyContent: 'center' },
   createText: { fontFamily: fonts.sansBold, fontSize: 16 },
 }));

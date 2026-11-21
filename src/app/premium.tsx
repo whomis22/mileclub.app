@@ -27,7 +27,7 @@ export default function Premium() {
 
   return (
     <View style={styles.root}>
-      <ScrollView contentContainerStyle={{ paddingTop: insets.top + space.md, paddingBottom: insets.bottom + space.xl, paddingHorizontal: space.lg }}>
+      <ScrollView contentContainerStyle={{ paddingTop: insets.top + space.md, paddingBottom: insets.bottom + space.xl, paddingHorizontal: 20 }}>
         <Pressable style={styles.close} onPress={() => router.back()} accessibilityLabel="Close">
           <Feather name="arrow-left" size={22} color={colors.ink} />
         </Pressable>

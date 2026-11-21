@@ -221,7 +221,7 @@ export default function Explore() {
 const styles = themed(() =>
   StyleSheet.create({
     screen: { flex: 1, backgroundColor: colors.bg },
-    wrap: { flex: 1, paddingHorizontal: 16, paddingTop: 6, paddingBottom: 10 },
+    wrap: { flex: 1, paddingHorizontal: 20, paddingTop: 8, paddingBottom: 10 },
     head: { flexDirection: 'row', alignItems: 'center', gap: 8 },
     chip: { flexShrink: 1, flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: colors.card, borderRadius: 999, paddingVertical: 9, paddingHorizontal: 12, borderWidth: 1, borderColor: 'transparent' },
     chipOn: { backgroundColor: colors.cta, borderColor: colors.cta },

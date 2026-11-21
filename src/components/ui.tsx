@@ -162,7 +162,7 @@ export function Badge({ label, tone = 'accent' }: { label: string; tone?: 'accen
 
 const styles = themed(() => StyleSheet.create({
   screen: { flex: 1, backgroundColor: colors.bg },
-  scroll: { padding: space.xl, paddingBottom: 48 },
+  scroll: { paddingHorizontal: 20, paddingTop: 8, paddingBottom: 48 }, // one 20px side margin on every page
   toastWrap: { position: 'absolute', left: 0, right: 0, alignItems: 'center', zIndex: 50 },
   toast: { backgroundColor: colors.olive, color: colors.onBrand, fontFamily: fonts.sansSemi, fontSize: 13, paddingVertical: 8, paddingHorizontal: 16, borderRadius: 999, overflow: 'hidden' },
   title: { fontSize: 30, fontFamily: fonts.serif, color: colors.ink, lineHeight: 40 },

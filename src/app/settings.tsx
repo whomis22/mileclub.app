@@ -64,7 +64,7 @@ export default function Settings() {
 
   return (
     <View style={styles.root}>
-      <ScrollView contentContainerStyle={{ paddingTop: insets.top + space.sm, paddingBottom: insets.bottom + space.xl, paddingHorizontal: space.lg }}>
+      <ScrollView contentContainerStyle={{ paddingTop: insets.top + space.sm, paddingBottom: insets.bottom + space.xl, paddingHorizontal: 20 }}>
         <View style={styles.top}>
           <Pressable style={styles.back} onPress={() => router.back()} accessibilityLabel="Back">
             <Feather name="arrow-left" size={22} color={colors.ink} />
