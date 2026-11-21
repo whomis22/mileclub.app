@@ -1,7 +1,7 @@
 import Feather from '@expo/vector-icons/Feather';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import * as Haptics from 'expo-haptics';
-import { Image } from 'expo-image';
+import { Image, type ImageContentPosition } from 'expo-image';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Redirect, router, useFocusEffect, type Href } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
@@ -20,11 +20,10 @@ import { colors, fonts, themed, useTheme } from '@/theme';
 // and a bubble shows everyone who's joining. Swipe up for the next plan,
 // swipe sideways for the details and the full list of who's going.
 const LIME = '#B9E769';
-const un = (id: string) => `https://images.unsplash.com/photo-${id}?w=1080&h=1920&fit=crop&q=70`;
 
 type Plan = {
   id: string; kind: string; emoji: string; title: string; when: string; place: string; km: number;
-  level: string; spots: number; hostId: string; going: string[]; about: string; photo: string | number;
+  level: string; spots: number; hostId: string; going: string[]; about: string; photo: string | number; pos?: ImageContentPosition;
 };
 
 // Sample plans until real members post their own. Photos get swapped for Yana's as they come in.
@@ -32,10 +31,11 @@ const PLANS: Plan[] = [
   { id: 'x-football', kind: 'Football', emoji: '⚽', title: 'Sunset 5-a-side', when: 'Tonight 19:00', place: 'Westerpark', km: 1.2, level: 'All levels', spots: 3, hostId: 'tom', going: ['tom', 'lucas', 'mateo', 'noah', 'daan', 'sanne', 'lotte'], about: 'Friendly 5-a-side, mixed teams, no keepers. Drinks after for whoever’s up for it.', photo: require('../../../assets/images/photos/explore-football.jpg') },
   { id: 'x-padel', kind: 'Padel', emoji: '🎾', title: 'After-work padel', when: 'Tomorrow 18:30', place: 'Padel Club Oost', km: 2.4, level: 'Intermediate', spots: 1, hostId: 'noah', going: ['noah', 'mateo', 'amira'], about: 'Doubles, one spot left. Rackets to borrow if you don’t have one.', photo: require('../../../assets/images/photos/padel.jpg') },
   { id: 'x-run', kind: 'Running', emoji: '🏃', title: 'Track night intervals', when: 'Tomorrow 18:30', place: 'Olympic Stadium track', km: 0.8, level: 'All paces', spots: 6, hostId: 'sanne', going: ['sanne', 'daan', 'lotte', 'tom'], about: 'Warm-up lap, 6 x 400m in pace groups, cool-down together. Every pace has a group.', photo: require('../../../assets/images/photos/explore-running.jpg') },
+  { id: 'x-cycling', kind: 'Cycling', emoji: '🚴', title: 'Golden hour ride', when: 'Sun 17:00', place: 'Start at Amstel', km: 1.7, level: 'Easy pace', spots: 5, hostId: 'daan', going: ['daan', 'sanne', 'mateo', 'femke'], about: '20 km along the river at a chatty pace, then drinks by the water.', photo: require('../../../assets/images/photos/explore-cycling.jpg'), pos: { left: '68%' } },
   { id: 'x-basketball', kind: 'Basketball', emoji: '🏀', title: 'Pickup ball at sunset', when: 'Sat 18:00', place: 'Museumplein courts', km: 2.0, level: 'All levels', spots: 4, hostId: 'lucas', going: ['lucas', 'daan', 'mateo', 'tom', 'noah'], about: 'Run-ins to 21, teams picked on the spot. Lights come on when it gets dark.', photo: require('../../../assets/images/photos/explore-basketball.jpg') },
   { id: 'x-pilates', kind: 'Pilates', emoji: '🤸', title: 'Reformer Pilates', when: 'Sat 10:00', place: 'Core Studio, Oud-West', km: 1.4, level: 'All levels', spots: 2, hostId: 'yasmin', going: ['yasmin', 'amira', 'lotte', 'femke', 'sanne'], about: '50-minute reformer class, small group. Brunch next door after if you’re hungry.', photo: require('../../../assets/images/photos/explore-pilates.jpg') },
   { id: 'x-yoga', kind: 'Yoga', emoji: '🧘', title: 'Golden hour yoga', when: 'Sun 19:00', place: 'Sarphatipark', km: 1.9, level: 'Beginner friendly', spots: 4, hostId: 'amira', going: ['amira', 'yasmin', 'femke'], about: 'Slow flow on the grass as the sun goes down. Bring a mat, or borrow one of ours.', photo: require('../../../assets/images/photos/explore-yoga.jpg') },
-  { id: 'x-gym', kind: 'Gym', emoji: '🏋️', title: 'Leg day crew', when: 'Mon 18:00', place: 'Basic-Fit Centrum', km: 1.5, level: 'Intermediate', spots: 2, hostId: 'lucas', going: ['lucas', 'tom', 'lotte'], about: 'Squats, lunges, spotters. Bring water and good music suggestions.', photo: un('1534438327276-14e5300c3a48') },
+  { id: 'x-gym', kind: 'Gym', emoji: '🏋️', title: 'Group workout', when: 'Mon 18:00', place: 'The Gym Club, Centrum', km: 1.5, level: 'All levels', spots: 3, hostId: 'lotte', going: ['lotte', 'tom', 'lucas', 'yasmin', 'sanne', 'daan'], about: '45 minutes of circuits in teams. Hard work, loud music, high fives at the end.', photo: require('../../../assets/images/photos/explore-gym.jpg') },
   { id: 'x-spa', kind: 'Spa', emoji: '🧖', title: 'Long walk + sauna', when: 'Sun 11:00', place: 'Amsterdamse Bos', km: 4.1, level: 'Easy', spots: 5, hostId: 'femke', going: ['femke', 'yasmin', 'amira', 'sanne'], about: 'An hour’s walk in the woods, then the sauna. The best way to end the week.', photo: require('../../../assets/images/photos/lake.png') },
 ];
 
@@ -97,7 +97,7 @@ function PlanPage({
         onMomentumScrollEnd={(e) => setPage(Math.round(e.nativeEvent.contentOffset.x / w))}>
         {/* Page 1: the activity, full page */}
         <View style={{ width: w, height: h }}>
-          <Image source={typeof plan.photo === 'string' ? { uri: plan.photo } : plan.photo} style={StyleSheet.absoluteFill} contentFit="cover" transition={250} cachePolicy="memory-disk" recyclingKey={plan.id} />
+          <Image source={typeof plan.photo === 'string' ? { uri: plan.photo } : plan.photo} style={StyleSheet.absoluteFill} contentFit="cover" contentPosition={plan.pos ?? 'center'} transition={250} cachePolicy="memory-disk" recyclingKey={plan.id} />
           <LinearGradient colors={['rgba(0,0,0,0.5)', 'rgba(0,0,0,0)', 'rgba(0,0,0,0)', 'rgba(0,0,0,0.92)']} locations={[0, 0.22, 0.42, 0.86]} style={StyleSheet.absoluteFill} />
 
           {/* who's going, at the top */}
