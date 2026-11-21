@@ -6,7 +6,8 @@ import { StatusBar } from 'expo-status-bar';
 import { BrandMark } from '@/components/ui';
 import { colors, themed, useTheme } from '@/theme';
 
-// Opening screen (Yana, 2026-11-21): ONLY the black MILE CLUB logo on plain white while the app loads.
+// Opening screen (Yana, 2026-11-21): ONLY the MILE CLUB logo while the app loads.
+// Light mode: black on white. Dark mode (the app's own setting): white on black.
 // Older notes: (2026-11-20, Kulmo style): cream in light mode (everyone
 // starts there), black once they switch to dark mode (2026-11-21), a big white mc
 // logo in the centre and nothing else (2026-11-21: logo only, no wordmark). Then it fades away.
@@ -24,7 +25,7 @@ const BEATS: [number, Haptics.ImpactFeedbackStyle][] = [
 ];
 
 export function LaunchScreen() {
-  useTheme();
+  const { isDark } = useTheme();
   const [opacity] = useState(() => new Animated.Value(1));
   const [visible, setVisible] = useState(true);
   const [scale] = useState(() => new Animated.Value(1));
@@ -59,10 +60,10 @@ export function LaunchScreen() {
 
   return (
     <Animated.View style={[StyleSheet.absoluteFill, styles.screen, { opacity }]}>
-      <StatusBar style="dark" />
+      <StatusBar style={isDark ? 'light' : 'dark'} />
       <View style={styles.center}>
         <Animated.View style={{ transform: [{ scale }] }}>
-          <BrandMark height={56} tone="black" />
+          <BrandMark height={56} />
         </Animated.View>
       </View>
     </Animated.View>
@@ -70,6 +71,6 @@ export function LaunchScreen() {
 }
 
 const styles = themed(() => StyleSheet.create({
-  screen: { backgroundColor: '#FFFFFF', zIndex: 100 },
+  screen: { backgroundColor: colors.bg, zIndex: 100 },
   center: { flex: 1, alignItems: 'center', justifyContent: 'center', paddingBottom: 20 },
 }));
