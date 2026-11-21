@@ -9,7 +9,10 @@ import { useCallback, useRef, useState, type ComponentRef } from 'react';
 import { Animated, FlatList, Modal, Pressable, ScrollView, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { CityLock } from '@/components/city-lock';
 import { Avatar } from '@/components/ui';
+import { cityOf } from '@/data/options';
+import { isLive, useCities } from '@/lib/cities';
 import { faceFor } from '@/data/faces';
 import { findPerson } from '@/data/people';
 import { PLANS, type Plan } from '@/data/plans';
@@ -194,7 +197,10 @@ export default function Explore() {
   const [toast, setToast] = useState('');
   const [fade] = useState(() => new Animated.Value(0));
   const list = useRef<FlatList<Plan>>(null);
+  const cities = useCities();
   if (!profile) return <Redirect href="/welcome" />;
+  const homeCity = profile.city ?? cityOf(profile.neighborhood);
+  const locked = !!homeCity && !isLive(homeCity, cities);
 
   const me = { name: profile.firstName, uri: profile.photoUri };
   const kinds = [...new Set(PLANS.map((p) => p.kind))];
@@ -360,6 +366,7 @@ export default function Explore() {
           </View>
         </Pressable>
       </Modal>
+      {locked && homeCity ? <CityLock city={homeCity} name={profile.firstName} /> : null}
     </View>
   );
 }

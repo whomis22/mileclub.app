@@ -18,6 +18,7 @@ import {
 } from '@/data/options';
 import type { Profile } from '@/data/types';
 import { ROLES, type Role } from '@/data/roles';
+import { detectCity } from '@/lib/cities';
 import { homeFor } from '@/lib/home';
 import { useStore } from '@/state/store';
 import { colors, getThemeMode, setThemeMode, fonts, palettes, radius, space, themed, type ThemePref, useTheme } from '@/theme';
@@ -85,6 +86,19 @@ export default function Onboarding() {
     photoUri: params.photoUri,
   });
   const set = (patch: Partial<Draft>) => setD((prev) => ({ ...prev, ...patch }));
+  // City from location first (Yana, 2026-11-21); picking by hand is the fallback.
+  const [locating, setLocating] = useState(false);
+  const [locNote, setLocNote] = useState('');
+  async function useMyLocation() {
+    setLocating(true);
+    const r = await detectCity();
+    setLocating(false);
+    if (r.city) {
+      set({ city: r.city, neighborhood: d.city === r.city ? d.neighborhood : undefined });
+      setLocNote(`📍 Found you in ${r.city}`);
+    } else if (r.denied) setLocNote('Location is off. Pick your city below.');
+    else setLocNote(r.place ? `Mile Club isn’t in ${r.place} yet. Pick the closest city below.` : 'Couldn’t find you. Pick your city below.');
+  }
 
   const valid = [
     !!d.role,
@@ -218,8 +232,11 @@ export default function Onboarding() {
           {step === 2 && (
             <>
               <Text style={styles.q}>Which city are you in?</Text>
-              <Body muted>We use this to find people and plans close by.</Body>
+              <Body muted>We use this to find people and plans close by. You can change it later in Settings.</Body>
               <View style={{ height: space.lg }} />
+              <Button title={locating ? 'Finding you…' : '📍  Use my location'} variant="soft" onPress={useMyLocation} disabled={locating} />
+              {locNote ? <Body muted>{locNote}</Body> : null}
+              <View style={{ height: space.md }} />
               <Chips>
                 {CITIES.map((c) => (
                   <Chip

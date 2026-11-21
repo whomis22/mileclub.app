@@ -12,7 +12,7 @@ type Row = { icon: keyof typeof Feather.glyphMap; label: string; onPress: () => 
 export default function Settings() {
   const { isDark, setMode } = useTheme();
   const insets = useSafeAreaInsets();
-  const { profile, reset, setRole } = useStore();
+  const { profile, reset, setRole, admin } = useStore();
   const soon = (what: string) => Alert.alert(what, 'This page is coming soon.');
 
   const isCoach = profile?.role === 'coach';
@@ -22,6 +22,7 @@ export default function Settings() {
       title: '',
       rows: [
         { icon: 'user', label: 'Account Information', onPress: () => router.push({ pathname: '/onboarding', params: { edit: '1' } }) },
+        { icon: 'map-pin', label: 'Home city', onPress: () => router.push('/home-city' as Href) },
         { icon: 'bell', label: 'Notifications', onPress: () => router.push('/notifications' as Href) },
         { icon: 'shield', label: 'Privacy & Safety', onPress: () => router.push('/meet-settings' as Href) },
         { icon: 'credit-card', label: 'Payment Methods', onPress: () => soon('Payment Methods') },
@@ -35,6 +36,8 @@ export default function Settings() {
         { icon: 'star', label: 'Mile Club Premium', onPress: () => router.push('/premium' as Href) },
         { icon: 'calendar', label: 'Schedule & events', onPress: () => router.push('/events' as Href) },
         { icon: 'map', label: 'Places near you', onPress: () => router.push('/explore' as Href) },
+        { icon: 'bar-chart-2', label: 'City leaderboard', onPress: () => router.push('/cities' as Href) },
+        ...(admin ? [{ icon: 'sliders' as const, label: 'City admin', onPress: () => router.push('/city-admin' as Href) }] : []),
         {
           icon: 'award',
           label: isCoach ? 'Switch to a member account' : 'Become a coach',
