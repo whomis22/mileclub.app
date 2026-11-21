@@ -112,17 +112,15 @@ export default function Explore() {
     <SafeAreaView style={styles.screen} edges={['top']}>
       <View style={styles.wrap}>
         <View style={styles.head}>
-          {chips.map((c) => (
-            <Pressable key={c.id} style={[styles.chip, c.on && styles.chipOn]} onPress={() => setPicker(c.id)}>
-              <Text style={[styles.chipText, c.on && { color: colors.onCta }]} numberOfLines={1}>
+          {chips.map((c, i) => (
+            <Pressable key={c.id} style={[styles.chip, c.on && styles.chipSet]} onPress={() => setPicker(c.id)}>
+              {i === 0 ? <Feather name="search" size={13} color={colors.ink} /> : null}
+              <Text style={styles.chipText} numberOfLines={1}>
                 {c.label}
               </Text>
-              <Feather name="chevron-down" size={14} color={c.on ? colors.onCta : colors.ink} />
+              <Feather name="chevron-down" size={14} color={colors.ink} />
             </Pressable>
           ))}
-          <Pressable style={styles.round} onPress={() => router.push('/explore' as Href)} accessibilityLabel="Places map">
-            <Feather name="map" size={18} color={colors.ink} />
-          </Pressable>
         </View>
 
         {swipes.outOfSwipes ? (
@@ -141,7 +139,6 @@ export default function Explore() {
                 <Ionicons name="heart" size={26} color="#FF4F7B" />
               </Pressable>
             </View>
-            <Text style={styles.hint}>{swipes.plus ? 'Premium: unlimited swipes' : `${swipes.left} free ${swipes.left === 1 ? 'swipe' : 'swipes'} left today`}</Text>
           </>
         ) : (
           <View style={styles.empty}>
@@ -184,18 +181,21 @@ export default function Explore() {
       <Modal visible={!!match} animationType="fade" onRequestClose={() => setMatch(null)}>
         <SafeAreaView style={styles.match}>
           <View style={styles.matchMid}>
-            <Ionicons name="heart" size={56} color={colors.cta} />
+            <View style={styles.glow} />
             <View style={styles.pair}>
-              <View style={[styles.face, { transform: [{ rotate: '-6deg' }] }]}>
+              <View style={styles.face}>
                 {myFace ? <Image source={{ uri: myFace }} style={StyleSheet.absoluteFill} contentFit="cover" /> : <Avatar name={profile.firstName} size={124} />}
               </View>
-              <View style={[styles.face, { marginLeft: -26, transform: [{ rotate: '6deg' }] }]}>
+              <View style={[styles.face, { marginLeft: -22 }]}>
                 {theirFace ? <Image source={{ uri: theirFace }} style={StyleSheet.absoluteFill} contentFit="cover" /> : null}
+              </View>
+              <View style={styles.heart}>
+                <Ionicons name="heart-outline" size={54} color={colors.cta} />
               </View>
             </View>
             <Text style={styles.matchTitle}>It’s a match!</Text>
             <Text style={styles.matchSub}>
-              You and {match?.p.firstName} are both into {match ? ACTIVITIES.find((a) => match.p.activities.includes(a.id) && profile.activities.includes(a.id))?.label.toLowerCase() ?? 'moving' : ''}.{'\n'}Start a chat and plan your next workout together.
+              Start a chat and plan{'\n'}your next workout together.
             </Text>
           </View>
           <View style={styles.matchBottom}>
@@ -223,13 +223,14 @@ const styles = themed(() =>
     screen: { flex: 1, backgroundColor: colors.bg },
     wrap: { flex: 1, paddingHorizontal: 16, paddingTop: 6, paddingBottom: 10 },
     head: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-    chip: { flexShrink: 1, flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: colors.card, borderRadius: 999, paddingVertical: 9, paddingHorizontal: 12, borderWidth: 1, borderColor: colors.edge },
+    chip: { flexShrink: 1, flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: colors.card, borderRadius: 999, paddingVertical: 9, paddingHorizontal: 12, borderWidth: 1, borderColor: 'transparent' },
     chipOn: { backgroundColor: colors.cta, borderColor: colors.cta },
+    chipSet: { borderColor: colors.cta },
     chipText: { fontFamily: fonts.sansSemi, fontSize: 13, color: colors.ink },
     round: { marginLeft: 'auto', width: 40, height: 40, borderRadius: 20, backgroundColor: colors.card, borderWidth: 1, borderColor: colors.edge, alignItems: 'center', justifyContent: 'center' },
     buttons: { flexDirection: 'row', justifyContent: 'center', alignItems: 'center', gap: 22, marginTop: 18 },
     btn: { width: 60, height: 60, borderRadius: 30, alignItems: 'center', justifyContent: 'center' },
-    pass: { backgroundColor: colors.card, borderWidth: 1, borderColor: colors.edge },
+    pass: { backgroundColor: colors.card },
     star: { width: 66, height: 66, borderRadius: 33, backgroundColor: colors.cta },
     hint: { textAlign: 'center', fontFamily: fonts.sans, fontSize: 12, color: colors.muted, marginTop: 10 },
     empty: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: 10, paddingHorizontal: 30 },
@@ -245,7 +246,9 @@ const styles = themed(() =>
     option: { borderRadius: 999, borderWidth: 1, borderColor: colors.edge, paddingVertical: 10, paddingHorizontal: 14, backgroundColor: colors.card },
     match: { flex: 1, backgroundColor: colors.bg, justifyContent: 'space-between' },
     matchMid: { flex: 1, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 30, gap: 14 },
-    pair: { flexDirection: 'row', marginTop: 6 },
+    pair: { flexDirection: 'row', marginTop: 30 },
+    heart: { position: 'absolute', top: -44, left: 0, right: 0, alignItems: 'center' },
+    glow: { position: 'absolute', width: 260, height: 260, borderRadius: 130, backgroundColor: colors.cta, opacity: 0.08, top: '22%' },
     face: { width: 128, height: 128, borderRadius: 64, overflow: 'hidden', borderWidth: 4, borderColor: colors.cta, backgroundColor: colors.card, alignItems: 'center', justifyContent: 'center' },
     matchTitle: { fontFamily: fonts.serif, fontSize: 32, color: colors.ink, marginTop: 8 },
     matchSub: { fontFamily: fonts.sans, fontSize: 15, lineHeight: 21, color: colors.muted, textAlign: 'center' },

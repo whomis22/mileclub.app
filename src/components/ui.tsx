@@ -87,14 +87,15 @@ export function Body({ children, muted, style }: { children: ReactNode; muted?: 
 export function Button({ title, onPress, variant = 'primary', disabled, style }: {
   title: string;
   onPress: () => void;
-  variant?: 'primary' | 'secondary' | 'ghost' | 'danger';
+  variant?: 'primary' | 'secondary' | 'alt' | 'soft' | 'ghost' | 'danger';
   disabled?: boolean;
   style?: ViewStyle;
 }) {
   useTheme();
   // Lime pill for the main action, forest for the second one (2026-11-21 look).
-  const bg = { primary: colors.cta, secondary: colors.olive, ghost: 'transparent', danger: 'transparent' }[variant];
-  const fg = { primary: colors.onCta, secondary: colors.onBrand, ghost: colors.ink, danger: colors.danger }[variant];
+  // alt = black in light mode, purple in dark mode (design board).
+  const bg = { primary: colors.cta, secondary: colors.olive, alt: colors.violet, soft: colors.card, ghost: 'transparent', danger: 'transparent' }[variant];
+  const fg = { primary: colors.onCta, secondary: colors.onBrand, alt: colors.onViolet, soft: colors.ink, ghost: colors.ink, danger: colors.danger }[variant];
   return (
     <Pressable
       onPress={onPress}
@@ -231,3 +232,9 @@ const shared = themed(() => ({
   } as ViewStyle,
   bar: { height: 2, borderRadius: 1, backgroundColor: colors.ink } as ViewStyle,
 }));
+
+// The wordmark under the logo: heavy italic capitals.
+export function Wordmark({ size = 34, color }: { size?: number; color: string }) {
+  return <Text style={{ fontFamily: fonts.logo, fontSize: size, lineHeight: size * 0.98, color, textAlign: 'center', fontStyle: 'italic', letterSpacing: -0.5 }}>MILE{'\n'}CLUB</Text>;
+}
+

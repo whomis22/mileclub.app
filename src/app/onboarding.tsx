@@ -70,12 +70,13 @@ function LookPreview({ mode, selected, onPress }: { mode: ThemePref; selected: b
 
 export default function Onboarding() {
   useTheme();
-  const { saveProfile } = useStore();
+  const { saveProfile, profile } = useStore();
   const [step, setStep] = useState(0);
   const [agreed, setAgreed] = useState(false);
   const [look, setLook] = useState<ThemePref>(getThemeMode());
-  const params = useLocalSearchParams<{ firstName?: string; age?: string; photoUri?: string }>();
-  const [d, setD] = useState<Draft>({
+  const params = useLocalSearchParams<{ firstName?: string; age?: string; photoUri?: string; edit?: string }>();
+  // Edit Profile opens this with edit=1: start from the saved profile.
+  const [d, setD] = useState<Draft>(params.edit === '1' && profile ? { ...profile } : {
     activities: [],
     goals: [],
     availability: [],

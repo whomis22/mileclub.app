@@ -1,968 +1,162 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
-import { Image } from "expo-image";
-import { Redirect, router, type Href } from "expo-router";
-import { useState } from "react";
-import {
-  Pressable,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TextInput,
-  View,
-} from "react-native";
+import { Image } from 'expo-image';
+import { Redirect, router, type Href } from 'expo-router';
+import { useState } from 'react';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
 
-import {
-  CommentPreview,
-  openComments,
-  useComments,
-} from "@/components/comment-preview";
-import { CommentsSheet } from "@/components/comments-sheet";
-import { SessionCard } from "@/components/session-card";
-import { openPostActions } from "@/lib/post-actions";
-import { PHOTOS } from "@/data/photos";
-import { Avatar, Logo, MenuButton, Screen } from "@/components/ui";
-import { agoLabel } from "@/data/comments";
-import { FEED, TEXT_POSTS, type FeedPost, type TextPost } from "@/data/feed";
-import { COACHES } from "@/data/coaches";
-import { PEOPLE, findPerson } from "@/data/people";
-import { hoursAgoLabel } from "@/lib/time";
-import { useStore } from "@/state/store";
-import { colors, fonts, radius, space, themed, useTheme } from "@/theme";
+import { CommentPreview, openComments, useComments } from '@/components/comment-preview';
+import { CommentsSheet } from '@/components/comments-sheet';
+import { Avatar, Logo, Screen } from '@/components/ui';
+import { agoLabel } from '@/data/comments';
+import { faceFor } from '@/data/faces';
+import { cityOf } from '@/data/options';
+import { findPerson } from '@/data/people';
+import { openPostActions } from '@/lib/post-actions';
+import { hoursAgoLabel } from '@/lib/time';
+import { useStore } from '@/state/store';
+import { colors, fonts, space, themed, useTheme } from '@/theme';
 
-const FILTERS = ["All", "Following", "Nearby", "Coaches"] as const;
+// Home feed, copied from Yana's design board (2026-11-21): logo + bell,
+// "Create a post...", then posts with text, a photo, likes, comments and save.
+const un = (id: string) => `https://images.unsplash.com/photo-${id}?w=900&h=600&fit=crop&q=70`;
 
-// Like Twitter: pulling down adds the newest posts on top, and the feed only
-// keeps the latest MAX_POSTS so it never grows forever. Demo posts for now.
-const MAX_POSTS = 12;
-const FRESH: Omit<FeedPost, "id" | "hoursAgo">[] = [
-  {
-    personId: "sanne",
-    type: "running",
-    title: "Lunch Run Loop",
-    place: "De Pijp",
-    distanceKm: 5.1,
-    minutes: 29,
-    pace: "5:41/km",
-    withCount: 2,
-    note: "Quick one between meetings ☀️",
-    kudos: 3,
-    route: 0,
-  },
-  {
-    personId: "daan",
-    type: "running",
-    title: "Canal Intervals",
-    place: "Centrum",
-    distanceKm: 8.0,
-    minutes: 41,
-    pace: "5:08/km",
-    withCount: 4,
-    note: "6 x 800m. Lungs on fire, worth it.",
-    kudos: 7,
-    route: 1,
-  },
-  {
-    personId: "femke",
-    type: "running",
-    title: "Evening Easy 6K",
-    place: "Westerpark",
-    distanceKm: 6.0,
-    minutes: 37,
-    pace: "6:10/km",
-    withCount: 5,
-    note: "Who's in for Thursday?",
-    kudos: 5,
-    route: 2,
-  },
-  {
-    personId: "amira",
-    type: "running",
-    title: "Park Run With The Crew",
-    place: "Oosterpark",
-    distanceKm: 5.0,
-    minutes: 31,
-    pace: "6:12/km",
-    withCount: 9,
-    note: "Nine of us today! 🧡",
-    kudos: 11,
-    route: 0,
-  },
+type Post = { id: string; personId: string; handle: string; hoursAgo: number; text: string; photo?: string | number; likes: number };
+
+const POSTS: Post[] = [
+  { id: 'b1', personId: 'sanne', handle: 'sannefit', hoursAgo: 2, text: 'Post run in the park 🏃‍♀️\nAnyone down for another run tonight?', photo: require('../../../assets/images/photos/run-london.jpg'), likes: 247 },
+  { id: 'b2', personId: 'mateo', handle: 'mateo.padel', hoursAgo: 3, text: 'Padel later? 7pm', photo: require('../../../assets/images/photos/padel.jpg'), likes: 86 },
+  { id: 'b3', personId: 'amira', handle: 'amira.flow', hoursAgo: 5, text: 'Lunchtime yoga is the reset I needed. Who wants to join tomorrow? 🧘‍♀️', photo: un('1544367567-0f2fcb009e0b'), likes: 132 },
+  { id: 'b4', personId: 'lucas', handle: 'lucas.lifts', hoursAgo: 6, text: 'Leg day done. Looking for a gym buddy at 6pm this week 💪', photo: un('1534438327276-14e5300c3a48'), likes: 64 },
+  { id: 'b5', personId: 'femke', handle: 'femke.outdoors', hoursAgo: 8, text: 'Long walk then sauna this Sunday. Who’s in?', likes: 41 },
+  { id: 'b6', personId: 'tom', handle: 'tom.sunrise', hoursAgo: 11, text: 'Sunrise run + coffee tomorrow 06:30. All paces welcome ☕', photo: require('../../../assets/images/photos/football.jpg'), likes: 158 },
 ];
 
-function CommentButton({ postId }: { postId: string }) {
-  useTheme();
-  const n = useComments(postId).length;
-  return (
-    <Pressable
-      onPress={() => openComments(postId)}
-      style={styles.action}
-      accessibilityLabel="Comments"
-    >
-      <Ionicons name="chatbubble-outline" size={20} color={colors.ink} />
-      <Text style={styles.count}>{n}</Text>
-    </Pressable>
-  );
-}
-
-// A text-only post, like a tweet.
-function TextPostCard({
-  id,
-  name,
-  color,
-  photoUri,
-  when,
-  text,
-  likes,
-  onOpenPerson,
-  onMore,
+function PostCard({
+  id, name, handle, photoUri, color, when, text, photo, likes, onOpenPerson, onMore,
 }: {
-  id: string;
-  name: string;
-  color?: string;
-  photoUri?: string;
-  when: string;
-  text: string;
-  likes: number;
-  onOpenPerson?: () => void;
-  onMore?: () => void;
+  id: string; name: string; handle: string; photoUri?: string; color?: string; when: string; text: string;
+  photo?: string | number; likes: number; onOpenPerson?: () => void; onMore?: () => void;
 }) {
   useTheme();
   const { kudos, toggleKudos } = useStore();
+  const [saved, setSaved] = useState(false);
   const liked = kudos.includes(id);
+  const comments = useComments(id).length;
   return (
-    <View style={styles.tweet}>
-      <View style={styles.tweetHead}>
+    <View style={styles.post}>
+      <View style={styles.head}>
         <Pressable onPress={onOpenPerson}>
-          <Avatar name={name} color={color} uri={photoUri} size={38} />
+          <Avatar name={name} color={color} uri={photoUri} size={40} />
         </Pressable>
         <Pressable style={{ flex: 1 }} onPress={onOpenPerson}>
-          <Text style={styles.name}>{name}</Text>
+          <Text style={styles.handle}>{handle}</Text>
           <Text style={styles.meta}>{when}</Text>
         </Pressable>
-        {onMore ? (
-          <Pressable onPress={onMore} hitSlop={10}>
-            <Text style={styles.dots}>•••</Text>
-          </Pressable>
-        ) : null}
+        <Pressable onPress={onMore} hitSlop={10} accessibilityLabel="More">
+          <Ionicons name="ellipsis-horizontal" size={18} color={colors.muted} />
+        </Pressable>
       </View>
-      <Text style={styles.tweetText}>{text}</Text>
+      <Text style={styles.text}>{text}</Text>
+      {photo ? (
+        <View style={styles.photo}>
+          <Image source={typeof photo === 'string' ? { uri: photo } : photo} style={StyleSheet.absoluteFill} contentFit="cover" transition={150} />
+        </View>
+      ) : null}
       <View style={styles.actions}>
-        <Pressable
-          onPress={() => toggleKudos(id)}
-          style={styles.action}
-          accessibilityLabel="Like"
-        >
-          <Ionicons name={liked ? "heart" : "heart-outline"} size={22} color={liked ? colors.peachDeep : colors.ink} />
+        <Pressable onPress={() => toggleKudos(id)} style={styles.action} accessibilityLabel="Like">
+          <Ionicons name={liked ? 'heart' : 'heart-outline'} size={21} color={liked ? '#FF4D6D' : colors.ink} />
           <Text style={styles.count}>{likes + (liked ? 1 : 0)}</Text>
         </Pressable>
-        <CommentButton postId={id} />
+        <Pressable onPress={() => openComments(id)} style={styles.action} accessibilityLabel="Comments">
+          <Ionicons name="chatbubble-outline" size={19} color={colors.ink} />
+          <Text style={styles.count}>{comments}</Text>
+        </Pressable>
+        <View style={{ flex: 1 }} />
+        <Pressable onPress={() => setSaved(!saved)} hitSlop={8} accessibilityLabel="Save">
+          <Ionicons name={saved ? 'bookmark' : 'bookmark-outline'} size={20} color={colors.ink} />
+        </Pressable>
       </View>
       <CommentPreview postId={id} />
     </View>
   );
 }
 
-function SampleTextPost({ post }: { post: TextPost }) {
+export default function Home() {
   useTheme();
-  const person = findPerson(post.personId);
-  if (!person) return null;
-  return (
-    <TextPostCard
-      id={post.id}
-      name={person.firstName}
-      color={person.color}
-      when={hoursAgoLabel(post.hoursAgo)}
-      text={post.text}
-      likes={post.likes}
-      onOpenPerson={() => router.push(`/person/${person.id}`)}
-    />
-  );
-}
-
-function duration(min: number) {
-  const h = Math.floor(min / 60);
-  return h ? `${h}h ${min % 60}m` : `${min}m`;
-}
-
-export default function Explore() {
-  useTheme();
-  const {
-    profile,
-    kudos,
-    toggleKudos,
-    blocked,
-    following,
-    toggleFollow,
-    myPosts,
-    sessions,
-    statusOf,
-    archivePost,
-    deletePost,
-  } = useStore();
-  const [filter, setFilter] = useState<(typeof FILTERS)[number]>("All");
-  const [query, setQuery] = useState("");
-  const [searching, setSearching] = useState(false);
-  const [fresh, setFresh] = useState<FeedPost[]>([]);
+  const { profile, blocked, myPosts, archivePost, deletePost } = useStore();
   const [pulls, setPulls] = useState(0);
-  // Demo: the first pull brings a new post, after that sometimes nothing is new.
-  function loadNewer() {
-    const n = pulls === 0 ? 1 : [0, 1, 0, 2][pulls % 4];
-    setPulls(pulls + 1);
-    if (!n) return 0;
-    const added = Array.from({ length: n }, (_, k) => ({
-      ...FRESH[(pulls + k) % FRESH.length],
-      id: `fresh-${pulls}-${k}`,
-      hoursAgo: 0,
-    }));
-    setFresh((prev) => [...added, ...prev].slice(0, MAX_POSTS));
-    return n;
-  }
   if (!profile) return <Redirect href="/welcome" />;
-
-  const textPosts = TEXT_POSTS.filter((t) => !blocked.includes(t.personId));
-  let posts = [...fresh, ...FEED]
-    .slice(0, MAX_POSTS)
-    .filter((p) => !blocked.includes(p.personId));
-  if (filter === "Following")
-    posts = posts.filter((p) => following.includes(p.personId));
-  if (filter === "Nearby")
-    posts = posts.filter(
-      (p) => findPerson(p.personId)?.neighborhood === profile.neighborhood,
-    );
-  if (filter === "Coaches") posts = [];
+  const city = profile.city ?? cityOf(profile.neighborhood) ?? '';
+  const where = (h: number) => `${hoursAgoLabel(h)}${city ? ` · ${city}` : ''}`;
 
   return (
-    <Screen onRefresh={loadNewer}>
+    <Screen onRefresh={() => { setPulls(pulls + 1); return 0; }}>
       <View style={styles.top}>
-        <MenuButton onPress={() => router.push("/menu")} />
-        <View style={styles.title}>
-          <Logo size={30} m={colors.ink} c={colors.cta} />
-        </View>
-        <Pressable
-          style={styles.iconBtn}
-          onPress={() => {
-            setSearching(!searching);
-            setQuery("");
-          }}
-          accessibilityLabel="Search people"
-        >
-          <Text style={styles.iconText}>{searching ? "✕" : "🔍"}</Text>
-        </Pressable>
-        <Pressable
-          style={styles.iconBtn}
-          onPress={() => router.push("/new-post" as Href)}
-          accessibilityLabel="New post"
-        >
-          <Text style={styles.iconPlus}>＋</Text>
-        </Pressable>
-        <Pressable
-          style={styles.iconBtn}
-          onPress={() => router.push("/notifications" as Href)}
-          accessibilityLabel="Notifications"
-        >
-          <Ionicons name="notifications-outline" size={20} color={colors.ink} />
+        <Logo size={30} m="#B9E769" c={colors.ink} />
+        <Text style={styles.word}>MILE{'\n'}CLUB</Text>
+        <View style={{ flex: 1 }} />
+        <Pressable style={styles.bell} onPress={() => router.push('/notifications' as Href)} accessibilityLabel="Notifications">
+          <Ionicons name="notifications-outline" size={22} color={colors.ink} />
         </Pressable>
       </View>
 
-      {!searching ? (
-        <Pressable
-          style={styles.createBar}
-          onPress={() => router.push("/new-post" as Href)}
-          accessibilityLabel="Create a post"
-        >
-          <Avatar name={profile.firstName} uri={profile.photoUri} size={36} />
-          <Text style={styles.createText}>Create a post...</Text>
-          <Ionicons name="image-outline" size={20} color={colors.muted} />
-        </Pressable>
-      ) : null}
+      <Pressable style={styles.create} onPress={() => router.push('/new-post' as Href)} accessibilityLabel="Create a post">
+        <Avatar name={profile.firstName} uri={profile.photoUri} size={32} />
+        <Text style={styles.createText}>Create a post...</Text>
+      </Pressable>
 
-      {!searching ? (
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          style={styles.stories}
-          contentContainerStyle={styles.storiesIn}
-        >
-          <Pressable
-            style={styles.story}
-            onPress={() => router.push("/new-post" as Href)}
-          >
-            <View style={styles.storyAdd}>
-              <Text style={styles.storyAddText}>＋</Text>
-            </View>
-            <Text style={styles.storyName}>Your post</Text>
-          </Pressable>
-          {[...PEOPLE]
-            .filter((p) => !blocked.includes(p.id))
-            .sort(
-              (a, b) =>
-                Number(following.includes(b.id)) -
-                Number(following.includes(a.id)),
-            )
-            .map((p) => (
-              <Pressable
-                key={p.id}
-                style={styles.story}
-                onPress={() => router.push(`/person/${p.id}`)}
-              >
-                <View style={styles.storyRing}>
-                  <View style={styles.storyGap}>
-                    <Avatar name={p.firstName} color={p.color} size={58} />
-                  </View>
-                </View>
-                <Text style={styles.storyName} numberOfLines={1}>
-                  {p.firstName}
-                </Text>
-              </Pressable>
-            ))}
-          <Pressable
-            style={styles.story}
-            onPress={() => router.push("/people")}
-          >
-            <View style={styles.storyAdd}>
-              <Text style={styles.storyAddText}>→</Text>
-            </View>
-            <Text style={styles.storyName}>See all</Text>
-          </Pressable>
-        </ScrollView>
-      ) : null}
-
-      <View style={[styles.search, !searching && { display: "none" }]}>
-        <Text style={styles.searchIcon}>🔍</Text>
-        <TextInput
-          value={query}
-          onChangeText={setQuery}
-          placeholder="Search people by name"
-          placeholderTextColor={colors.muted}
-          style={styles.searchInput}
-          autoCorrect={false}
-          returnKeyType="search"
-          inputMode="search"
-          clearButtonMode="while-editing"
-          enablesReturnKeyAutomatically
-          autoComplete="name"
-          textContentType="name"
-          autoCapitalize="words"
-          autoFocus
+      {myPosts.filter((p) => !p.archived).map((mp) => (
+        <PostCard
+          key={mp.id}
+          id={mp.id}
+          name={profile.firstName}
+          handle={profile.firstName.toLowerCase()}
+          photoUri={profile.photoUri}
+          when={`${agoLabel(mp.at)}${city ? ` · ${city}` : ''}`}
+          text={mp.caption}
+          photo={mp.uri}
+          likes={0}
+          onMore={() => openPostActions(mp, { archivePost, deletePost })}
         />
-        {query ? (
-          <Pressable onPress={() => setQuery("")} hitSlop={10}>
-            <Text style={styles.searchClear}>✕</Text>
-          </Pressable>
-        ) : null}
-      </View>
+      ))}
 
-      {query.trim() ? (
-        <View style={{ gap: space.sm }}>
-          {[
-            ...PEOPLE.filter((p) => !blocked.includes(p.id)).map((p) => ({
-              id: p.id,
-              name: p.firstName,
-              color: p.color,
-              sub: p.neighborhood,
-              href: `/person/${p.id}`,
-            })),
-            ...COACHES.map((c) => ({
-              id: c.id,
-              name: c.name,
-              color: c.color,
-              sub: `Coach · ${c.headline}`,
-              href: `/coach/${c.id}`,
-            })),
-          ]
-            .filter((r) =>
-              r.name.toLowerCase().includes(query.trim().toLowerCase()),
-            )
-            .map((r) => (
-              <Pressable
-                key={r.id}
-                style={styles.result}
-                onPress={() => router.push(r.href as Href)}
-              >
-                <Avatar name={r.name} color={r.color} size={44} />
-                <View style={{ flex: 1 }}>
-                  <Text style={styles.name}>{r.name}</Text>
-                  <Text style={styles.meta} numberOfLines={1}>
-                    {r.sub}
-                  </Text>
-                </View>
-                <Text style={styles.meta}>›</Text>
-              </Pressable>
-            ))}
-          {![
-            ...PEOPLE.map((p) => p.firstName),
-            ...COACHES.map((c) => c.name),
-          ].some((n) =>
-            n.toLowerCase().includes(query.trim().toLowerCase()),
-          ) ? (
-            <Text style={styles.empty}>
-              No one called “{query.trim()}” yet.
-            </Text>
-          ) : null}
-        </View>
-      ) : null}
-
-      <View style={query.trim() ? { display: "none" } : undefined}>
-        <View style={styles.tabs}>
-          {FILTERS.map((f) => (
-            <Pressable key={f} style={styles.tabItem} onPress={() => setFilter(f)}>
-              <Text style={[styles.tab, filter === f && styles.tabOn]}>
-                {f}
-              </Text>
-            </Pressable>
-          ))}
-        </View>
-
-        {!profile.gender ? (
-          <Pressable
-            style={styles.meetBanner}
-            onPress={() => router.push("/meet-settings" as Href)}
-          >
-            <Text style={styles.meetTitle}>
-              New: choose who you meet up with
-            </Text>
-            <Text style={styles.meetSub}>
-              Everyone, women only or men only. Tap to set it →
-            </Text>
-          </Pressable>
-        ) : null}
-
-        {filter !== "Nearby" && filter !== "Following"
-          ? myPosts
-              .filter((mp) => !mp.archived)
-              .map((mp) => {
-                const liked = kudos.includes(mp.id);
-                const askDelete = () =>
-                  openPostActions(mp, { archivePost, deletePost });
-                if (!mp.uri)
-                  return (
-                    <TextPostCard
-                      key={mp.id}
-                      id={mp.id}
-                      name={profile.firstName}
-                      photoUri={profile.photoUri}
-                      when={`Your post · ${agoLabel(mp.at)}`}
-                      text={mp.caption}
-                      likes={0}
-                      onMore={askDelete}
-                    />
-                  );
-                return (
-                  <View key={mp.id} style={styles.post}>
-                    <View style={styles.head}>
-                      <Avatar
-                        name={profile.firstName}
-                        uri={profile.photoUri}
-                        size={38}
-                      />
-                      <View style={{ flex: 1 }}>
-                        <Text style={styles.name}>{profile.firstName}</Text>
-                        <Text style={styles.meta}>
-                          Your post · {agoLabel(mp.at)}
-                        </Text>
-                      </View>
-                      <Pressable onPress={askDelete} hitSlop={10}>
-                        <Text style={styles.dots}>•••</Text>
-                      </Pressable>
-                    </View>
-                    <View style={styles.photo}>
-                      <Image
-                        source={{ uri: mp.uri }}
-                        style={StyleSheet.absoluteFill}
-                        contentFit="cover"
-                      />
-                    </View>
-                    <View style={styles.actions}>
-                      <Pressable
-                        onPress={() => toggleKudos(mp.id)}
-                        style={styles.action}
-                        accessibilityLabel="Like"
-                      >
-                        <Ionicons name={liked ? "heart" : "heart-outline"} size={22} color={liked ? colors.peachDeep : colors.ink} />
-                        <Text style={styles.count}>{liked ? 1 : 0}</Text>
-                      </Pressable>
-                      <CommentButton postId={mp.id} />
-                    </View>
-                    {mp.caption ? (
-                      <Text style={styles.caption}>
-                        <Text style={{ fontFamily: fonts.sansSemi }}>
-                          {profile.firstName}{" "}
-                        </Text>
-                        {mp.caption}
-                      </Text>
-                    ) : null}
-                    <CommentPreview postId={mp.id} />
-                  </View>
-                );
-              })
-          : null}
-
-        {filter === "Coaches" ? (
-          <View style={styles.coaches}>
-            <Text style={styles.sectionLabel}>COACHES NEAR YOU</Text>
-            {COACHES.map((c) => (
-              <Pressable
-                key={c.id}
-                style={styles.coachRow}
-                onPress={() => router.push(`/coach/${c.id}` as Href)}
-              >
-                <Avatar name={c.name} color={c.color} size={46} />
-                <View style={{ flex: 1 }}>
-                  <Text style={styles.name}>{c.name}</Text>
-                  <Text style={styles.meta} numberOfLines={1}>
-                    {c.headline}
-                  </Text>
-                  <Text style={styles.meta}>
-                    ★ {c.rating.toFixed(1)} · {c.neighborhood}
-                  </Text>
-                </View>
-                <Text style={styles.meta}>›</Text>
-              </Pressable>
-            ))}
-            <Text style={[styles.sectionLabel, { marginTop: space.lg }]}>
-              UPCOMING SESSIONS
-            </Text>
-            {sessions
-              .filter((x) => x.coachId !== "me")
-              .sort((a, b) => (a.date + a.time).localeCompare(b.date + b.time))
-              .slice(0, 4)
-              .map((x) => (
-                <SessionCard key={x.id} s={x} status={statusOf(x.id)} />
-              ))}
-            <Pressable
-              style={styles.seeAll}
-              onPress={() => router.navigate("/train" as Href)}
-            >
-              <Text style={styles.seeAllText}>See all coach sessions →</Text>
-            </Pressable>
-          </View>
-        ) : null}
-
-        {filter !== "Coaches" && posts.length === 0 ? (
-          <Text style={styles.empty}>
-            {filter === "Following"
-              ? "Follow people to see what they get up to here."
-              : "Nothing here yet."}
-          </Text>
-        ) : null}
-
-        {posts.map((post, i) => {
-          const person = findPerson(post.personId);
-          if (!person) return null;
-          const liked = kudos.includes(post.id);
-          const follows = following.includes(person.id);
-          const tp = filter === "All" ? textPosts[i] : undefined;
-          return (
-            <View key={post.id}>
-              <View style={styles.post}>
-                <View style={styles.head}>
-                  <Pressable
-                    onPress={() => router.push(`/person/${person.id}`)}
-                  >
-                    <Avatar
-                      name={person.firstName}
-                      color={person.color}
-                      size={38}
-                    />
-                  </Pressable>
-                  <Pressable
-                    style={{ flex: 1 }}
-                    onPress={() => router.push(`/person/${person.id}`)}
-                  >
-                    <Text style={styles.name}>
-                      {person.firstName}
-                      <Text style={styles.meta}>
-                        {" · "}
-                        {hoursAgoLabel(post.hoursAgo)}
-                      </Text>
-                    </Text>
-                    <Text style={styles.meta} numberOfLines={1}>
-                      {post.place}
-                      {post.withCount ? ` · ran with ${post.withCount}` : ""}
-                    </Text>
-                  </Pressable>
-                  <Pressable
-                    onPress={() => toggleFollow(person.id)}
-                    hitSlop={8}
-                  >
-                    <Text
-                      style={follows ? styles.followingText : styles.followText}
-                    >
-                      {follows ? "Following" : "Follow"}
-                    </Text>
-                  </Pressable>
-                </View>
-
-                <View style={styles.photo}>
-                  <Image
-                    source={
-                      PHOTOS[
-                        (FEED.indexOf(post) >= 0
-                          ? FEED.indexOf(post)
-                          : post.route + 3) % PHOTOS.length
-                      ]
-                    }
-                    style={StyleSheet.absoluteFill}
-                    contentFit="cover"
-                  />
-                </View>
-
-                {/* Plan card (blend look, Yana 2026-11-13): what happened, in numbers. */}
-                <Text style={styles.postTitle} numberOfLines={1}>
-                  {post.title}
-                </Text>
-                <View style={styles.statsRow}>
-                  <View style={styles.stat}>
-                    <Text style={styles.statNum}>{(post.withCount ?? 0) + 1}</Text>
-                    <Text style={styles.statLabel}>{(post.withCount ?? 0) ? "people" : "solo"}</Text>
-                  </View>
-                  <View style={styles.stat}>
-                    <Text style={styles.statNum}>{duration(post.minutes)}</Text>
-                    <Text style={styles.statLabel}>together</Text>
-                  </View>
-                  <View style={styles.stat}>
-                    <Text style={[styles.statNum, { color: colors.link }]}>
-                      {post.distanceKm ? `${post.distanceKm.toFixed(1)} km` : Math.max(1, Math.round((post.withCount ?? 0) / 2))}
-                    </Text>
-                    <Text style={styles.statLabel}>{post.distanceKm ? "distance" : "new friends"}</Text>
-                  </View>
-                </View>
-
-                <View style={styles.actions}>
-                  <Pressable
-                    onPress={() => toggleKudos(post.id)}
-                    style={styles.action}
-                    accessibilityLabel="Like"
-                  >
-                    <Ionicons name={liked ? "heart" : "heart-outline"} size={22} color={liked ? colors.peachDeep : colors.ink} />
-                    <Text style={styles.count}>
-                      {post.kudos + (liked ? 1 : 0)}
-                    </Text>
-                  </Pressable>
-                  <CommentButton postId={post.id} />
-                  <Pressable
-                    style={styles.joinNext}
-                    onPress={() => router.navigate("/now" as Href)}
-                    accessibilityLabel="Find the next plan like this"
-                  >
-                    <Text style={styles.joinNextText}>Join next one</Text>
-                  </Pressable>
-                </View>
-                {post.note ? (
-                  <Text style={styles.caption}>
-                    <Text style={{ fontFamily: fonts.sansSemi }}>
-                      {person.firstName}{" "}
-                    </Text>
-                    {post.note}
-                  </Text>
-                ) : null}
-                <CommentPreview postId={post.id} />
-              </View>
-              {tp ? <SampleTextPost post={tp} /> : null}
-            </View>
-          );
-        })}
-      </View>
+      {POSTS.filter((p) => !blocked.includes(p.personId)).map((p) => {
+        const person = findPerson(p.personId);
+        return (
+          <PostCard
+            key={p.id}
+            id={p.id}
+            name={person?.firstName ?? p.handle}
+            handle={p.handle}
+            color={person?.color}
+            photoUri={faceFor(p.personId)?.photo}
+            when={where(p.hoursAgo)}
+            text={p.text}
+            photo={p.photo}
+            likes={p.likes}
+            onOpenPerson={() => router.push(`/person/${p.personId}`)}
+            onMore={() => router.push(`/person/${p.personId}`)}
+          />
+        );
+      })}
       <CommentsSheet />
     </Screen>
   );
 }
 
-const styles = themed(() =>
-  StyleSheet.create({
-    top: { flexDirection: "row", alignItems: "center", gap: space.md },
-    title: { flex: 1, alignItems: "flex-start" },
-    createBar: {
-      flexDirection: "row",
-      alignItems: "center",
-      gap: space.md,
-      backgroundColor: colors.card,
-      borderRadius: 999,
-      paddingVertical: 8,
-      paddingHorizontal: 10,
-      marginTop: space.md,
-    },
-    createText: {
-      flex: 1,
-      fontFamily: fonts.sans,
-      fontSize: 15,
-      color: colors.muted,
-    },
-    people: { display: "none" },
-    peopleText: {
-      fontFamily: fonts.sansMedium,
-      color: colors.ink,
-      fontSize: 12,
-    },
-    followingText: {
-      fontFamily: fonts.sansMedium,
-      fontSize: 13,
-      color: colors.muted,
-    },
-    iconBtn: {
-      width: 40,
-      height: 40,
-      borderRadius: 20,
-      borderWidth: 1,
-      borderColor: colors.line,
-      alignItems: "center",
-      justifyContent: "center",
-    },
-    iconText: { fontSize: 15, color: colors.ink },
-    iconPlus: { fontSize: 20, color: colors.ink, marginTop: -2 },
-    stories: { marginHorizontal: -space.xl, marginTop: space.lg },
-    storiesIn: { paddingHorizontal: space.xl, gap: 14 },
-    story: { alignItems: "center", gap: 6, width: 66 },
-    storyRing: {
-      padding: 2.5,
-      borderRadius: 40,
-      borderWidth: 2,
-      borderColor: colors.peach,
-    },
-    storyGap: { padding: 2, borderRadius: 36, backgroundColor: colors.bg },
-    storyAdd: {
-      width: 66,
-      height: 66,
-      borderRadius: 33,
-      borderWidth: 1.5,
-      borderStyle: "dashed",
-      borderColor: colors.muted,
-      alignItems: "center",
-      justifyContent: "center",
-    },
-    storyAddText: { fontSize: 22, color: colors.muted },
-    storyName: { fontFamily: fonts.sans, fontSize: 11, color: colors.muted },
-    coaches: { gap: space.md },
-    sectionLabel: {
-      fontFamily: fonts.sansBold,
-      fontSize: 11,
-      letterSpacing: 1.5,
-      color: colors.muted,
-    },
-    coachRow: {
-      flexDirection: "row",
-      alignItems: "center",
-      gap: space.md,
-      backgroundColor: colors.card,
-      borderRadius: radius.lg,
-      borderWidth: 1,
-      borderColor: colors.line,
-      padding: space.md,
-    },
-    seeAll: { alignSelf: "center", paddingVertical: space.md },
-    seeAllText: {
-      fontFamily: fonts.sansSemi,
-      fontSize: 14,
-      color: colors.olive,
-    },
-    tabs: {
-      flexDirection: "row",
-      marginTop: space.lg,
-      marginBottom: space.lg,
-      backgroundColor: colors.card,
-      borderWidth: StyleSheet.hairlineWidth,
-      borderColor: colors.line,
-      borderRadius: 999,
-      padding: 4,
-    },
-    tabItem: { flex: 1 },
-    tab: {
-      fontFamily: fonts.sansMedium,
-      fontSize: 13,
-      color: colors.muted,
-      textAlign: "center",
-      paddingVertical: 8,
-      borderRadius: 999,
-      overflow: "hidden",
-    },
-    tabOn: {
-      fontFamily: fonts.sansBold,
-      color: colors.bg,
-      backgroundColor: colors.ink,
-    },
-    empty: {
-      fontFamily: fonts.sans,
-      color: colors.muted,
-      textAlign: "center",
-      marginTop: space.xl,
-    },
-    post: {
-      marginBottom: space.lg,
-      backgroundColor: colors.card,
-      borderRadius: 22,
-      borderWidth: StyleSheet.hairlineWidth,
-      borderColor: colors.line,
-      padding: space.lg,
-    },
-    statsRow: { flexDirection: "row", marginTop: space.md },
-    stat: { flex: 1, alignItems: "center", gap: 2 },
-    statNum: { fontFamily: fonts.serif, fontSize: 18, color: colors.ink, letterSpacing: -0.5 },
-    statLabel: { fontFamily: fonts.sans, fontSize: 11, color: colors.muted },
-    joinNext: {
-      marginLeft: "auto",
-      backgroundColor: colors.peach,
-      paddingHorizontal: 14,
-      paddingVertical: 8,
-      borderRadius: 999,
-    },
-    joinNextText: { fontFamily: fonts.sansBold, fontSize: 13, color: colors.onPeach },
-    head: {
-      flexDirection: "row",
-      alignItems: "center",
-      gap: space.md,
-      marginBottom: space.md,
-    },
-    name: { fontFamily: fonts.sansSemi, fontSize: 14, color: colors.ink },
-    meta: {
-      fontFamily: fonts.sans,
-      fontSize: 12,
-      color: colors.muted,
-      marginTop: 1,
-    },
-    follow: {},
-    following: {},
-    followText: {
-      fontFamily: fonts.sansBold,
-      fontSize: 13,
-      color: colors.olive,
-    },
-    photo: {
-      aspectRatio: 4 / 3,
-      borderRadius: 16,
-      overflow: "hidden",
-      backgroundColor: colors.oliveDark,
-    },
-    overlay: {
-      position: "absolute",
-      left: space.lg,
-      right: space.lg,
-      bottom: space.lg,
-      gap: 2,
-    },
-    postTitle: {
-      fontFamily: fonts.serif,
-      fontSize: 18,
-      color: colors.ink,
-      letterSpacing: -0.4,
-      marginTop: space.md,
-    },
-    stats: {
-      fontFamily: fonts.sansSemi,
-      fontSize: 12,
-      color: "#fff",
-      textShadowColor: "rgba(0,0,0,0.4)",
-      textShadowRadius: 6,
-    },
-    actions: {
-      flexDirection: "row",
-      alignItems: "center",
-      gap: space.lg,
-      marginTop: space.md,
-    },
-    action: { flexDirection: "row", alignItems: "center", gap: 6 },
-    heart: { fontSize: 22, color: colors.ink },
-    count: { fontFamily: fonts.sansSemi, fontSize: 13, color: colors.ink },
-    place: {
-      flex: 1,
-      textAlign: "right",
-      fontFamily: fonts.sans,
-      fontSize: 12,
-      color: colors.muted,
-    },
-    bubble: { fontSize: 18 },
-    search: {
-      flexDirection: "row",
-      alignItems: "center",
-      gap: 8,
-      backgroundColor: colors.card,
-      borderRadius: radius.pill,
-      borderWidth: 1,
-      borderColor: colors.line,
-      paddingHorizontal: 14,
-      marginTop: space.md,
-    },
-    searchIcon: { fontSize: 14 },
-    searchInput: {
-      flex: 1,
-      paddingVertical: 10,
-      fontFamily: fonts.sans,
-      fontSize: 15,
-      color: colors.ink,
-    },
-    searchClear: { fontSize: 14, color: colors.muted },
-    result: {
-      flexDirection: "row",
-      alignItems: "center",
-      gap: space.md,
-      backgroundColor: colors.card,
-      borderRadius: radius.lg,
-      padding: space.md,
-    },
-    meetBanner: {
-      backgroundColor: colors.oliveSoft,
-      borderRadius: radius.lg,
-      padding: space.lg,
-      marginBottom: space.lg,
-      gap: 2,
-    },
-    meetTitle: { fontFamily: fonts.sansSemi, fontSize: 14, color: colors.ink },
-    meetSub: { fontFamily: fonts.sans, fontSize: 13, color: colors.muted },
-    tweet: {
-      padding: space.lg,
-      backgroundColor: colors.card,
-      borderRadius: 22,
-      borderWidth: StyleSheet.hairlineWidth,
-      borderColor: colors.line,
-      marginBottom: space.lg,
-    },
-    tweetHead: { flexDirection: "row", alignItems: "center", gap: space.md },
-    tweetText: {
-      fontFamily: fonts.sans,
-      fontSize: 17,
-      lineHeight: 25,
-      color: colors.ink,
-      marginTop: space.md,
-    },
-    dots: {
-      fontFamily: fonts.sansBold,
-      fontSize: 14,
-      color: colors.muted,
-      letterSpacing: 1,
-    },
-    composer: {
-      flexDirection: "row",
-      alignItems: "center",
-      gap: space.md,
-      backgroundColor: colors.card,
-      borderRadius: radius.lg,
-      borderWidth: 1,
-      borderColor: colors.line,
-      padding: space.md,
-      marginBottom: space.xl,
-    },
-    composerText: {
-      flex: 1,
-      fontFamily: fonts.sans,
-      fontSize: 14,
-      color: colors.muted,
-    },
-    composerBtn: {
-      backgroundColor: colors.olive,
-      borderRadius: radius.pill,
-      paddingVertical: 8,
-      paddingHorizontal: 14,
-    },
-    composerBtnText: {
-      fontFamily: fonts.sansSemi,
-      fontSize: 13,
-      color: colors.onBrand,
-    },
-    caption: {
-      fontFamily: fonts.sans,
-      fontSize: 14,
-      lineHeight: 20,
-      color: colors.ink,
-      marginTop: space.sm,
-    },
-  }),
-);
+const styles = themed(() => StyleSheet.create({
+  top: { flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: space.md },
+  word: { fontFamily: fonts.logo, fontStyle: 'italic', fontSize: 11, lineHeight: 11, color: colors.ink },
+  bell: { width: 40, height: 40, alignItems: 'center', justifyContent: 'center' },
+  create: { flexDirection: 'row', alignItems: 'center', gap: space.md, backgroundColor: colors.card, borderRadius: 999, paddingVertical: 8, paddingHorizontal: 10, marginBottom: space.md },
+  createText: { flex: 1, fontFamily: fonts.sans, fontSize: 14, color: colors.muted },
+  post: { paddingVertical: space.md, borderBottomWidth: 1, borderBottomColor: colors.line },
+  head: { flexDirection: 'row', alignItems: 'center', gap: 10 },
+  handle: { fontFamily: fonts.sansBold, fontSize: 14, color: colors.ink },
+  meta: { fontFamily: fonts.sans, fontSize: 12, color: colors.muted, marginTop: 1 },
+  text: { fontFamily: fonts.sansMedium, fontSize: 15, lineHeight: 21, color: colors.ink, marginTop: 10 },
+  photo: { height: 210, borderRadius: 16, overflow: 'hidden', marginTop: 10, backgroundColor: colors.card },
+  actions: { flexDirection: 'row', alignItems: 'center', gap: 18, marginTop: 10 },
+  action: { flexDirection: 'row', alignItems: 'center', gap: 5 },
+  count: { fontFamily: fonts.sansSemi, fontSize: 13, color: colors.ink },
+}));

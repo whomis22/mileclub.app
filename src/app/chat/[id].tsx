@@ -19,6 +19,8 @@ import {
 
 import { LocationCard } from "@/components/location-card";
 import { Avatar, Logo } from "@/components/ui";
+import { faceFor } from "@/data/faces";
+import Feather from "@expo/vector-icons/Feather";
 import { findThread, type ChatMessage } from "@/data/messages";
 import { NEIGHBORHOODS } from "@/data/options";
 import { findPerson } from "@/data/people";
@@ -287,6 +289,8 @@ export default function Chat() {
     );
   }
 
+  const lastMineId = [...timeline].reverse().find((x) => x.from === "me")?.id;
+
   function renderMsg(m: ChatMessage) {
     const mine = m.from === "me";
     return (
@@ -319,10 +323,12 @@ export default function Chat() {
             {callBubble(m)}
           </Pressable>
         ) : (
+          <View style={{ flexDirection: "row", alignItems: "center", gap: 8, maxWidth: "86%" }}>
+          {!mine && person ? <Avatar name={thread!.name} color={person.color} uri={faceFor(person.id)?.photo} size={30} /> : null}
           <Pressable
             onLongPress={() => setSelected(m)}
             delayLongPress={300}
-            style={[styles.bubble, mine ? styles.mine : styles.theirs]}
+            style={[styles.bubble, mine ? styles.mine : styles.theirs, { maxWidth: "100%" }]}
           >
             {m.from === "admin" ? (
               <Text style={styles.admin}>Mile Club · Admin</Text>
@@ -346,7 +352,9 @@ export default function Chat() {
               {m.text}
             </Text>
           </Pressable>
+          </View>
         )}
+        {mine && m.id === lastMineId ? <Text style={styles.delivered}>Delivered</Text> : null}
         {reactions[m.id] ? (
           <Pressable
             onPress={() => setReactions((r) => ({ ...r, [m.id]: "" }))}
@@ -390,36 +398,34 @@ export default function Chat() {
           accessibilityLabel="Back"
           style={styles.back}
         >
-          <Text style={styles.backText}>‹</Text>
+          <Feather name="arrow-left" size={22} color={colors.ink} />
         </Pressable>
         {isGroup ? (
           <View style={styles.groupIcon}>
             <Logo size={18} m={colors.bg} />
           </View>
         ) : (
-          <Avatar name={thread.name} color={person?.color} size={42} />
+          <Avatar name={thread.name} color={person?.color} uri={person ? faceFor(person.id)?.photo : undefined} size={40} />
         )}
         <View style={{ flex: 1 }}>
           <Text style={styles.name}>{thread.name}</Text>
-          <Text style={styles.sub}>
-            {isGroup ? "Everyone who joins Mile Club" : "Active now"}
-          </Text>
+          {isGroup ? (
+            <Text style={styles.sub}>Everyone who joins Mile Club</Text>
+          ) : (
+            <View style={{ flexDirection: "row", alignItems: "center", gap: 4 }}>
+              <Text style={styles.sub}>Online</Text>
+              <View style={styles.online} />
+            </View>
+          )}
         </View>
         {person ? (
           <>
-            <Pressable
-              onPress={() => call()}
-              style={styles.call}
-              accessibilityLabel={`Call ${thread.name}`}
-            >
-              <Text style={styles.callText}>📞</Text>
-            </Pressable>
             <Pressable
               onPress={() => setMenuOpen(true)}
               style={styles.more}
               accessibilityLabel="More options"
             >
-              <Text style={styles.moreText}>•••</Text>
+              <Feather name="more-horizontal" size={22} color={colors.ink} />
             </Pressable>
           </>
         ) : null}
@@ -481,30 +487,24 @@ export default function Chat() {
               </View>
             ) : null}
             <View style={styles.composer}>
-              {person ? (
-                <Pressable
-                  onPress={askLocation}
-                  style={styles.pinBtn}
-                  accessibilityLabel="Send location"
-                >
-                  <Text style={styles.pinText}>📍</Text>
-                </Pressable>
-              ) : null}
+              <View style={styles.inputWrap}>
               <TextInput
                 value={draft}
                 onChangeText={setDraft}
-                placeholder={`Message ${thread.name}`}
+                placeholder="Type a message..."
                 placeholderTextColor={colors.muted}
                 style={styles.input}
                 onSubmitEditing={send}
                 returnKeyType="send"
               />
+              <Feather name="smile" size={20} color={colors.muted} />
+              </View>
               <Pressable
                 onPress={send}
                 style={styles.send}
                 accessibilityLabel="Send"
               >
-                <Text style={styles.sendText}>↑</Text>
+                <Feather name="send" size={18} color={colors.onMine} style={{ marginLeft: -2, marginTop: 1 }} />
               </Pressable>
             </View>
           </>
@@ -679,15 +679,21 @@ const styles = themed(() =>
       gap: space.md,
       paddingHorizontal: space.lg,
       paddingVertical: space.md,
-      borderBottomWidth: 1,
-      borderBottomColor: colors.line,
+    },
+    online: { width: 7, height: 7, borderRadius: 4, backgroundColor: "#34C759" },
+    delivered: { fontFamily: fonts.sans, fontSize: 11, color: colors.muted, marginTop: 4, marginRight: 4 },
+    inputWrap: {
+      flex: 1,
+      flexDirection: "row",
+      alignItems: "center",
+      height: 48,
+      borderRadius: 24,
+      backgroundColor: colors.card,
+      paddingRight: 14,
     },
     back: {
-      width: 44,
+      width: 36,
       height: 44,
-      borderRadius: 22,
-      borderWidth: 1,
-      borderColor: colors.line,
       alignItems: "center",
       justifyContent: "center",
     },
@@ -700,8 +706,8 @@ const styles = themed(() =>
       alignItems: "center",
       justifyContent: "center",
     },
-    name: { fontFamily: fonts.serif, fontSize: 20, color: colors.ink },
-    sub: { fontFamily: fonts.sansMedium, fontSize: 12, color: colors.link },
+    name: { fontFamily: fonts.sansBold, fontSize: 16, color: colors.ink },
+    sub: { fontFamily: fonts.sansMedium, fontSize: 12, color: colors.muted },
     call: {
       width: 40,
       height: 40,
@@ -714,9 +720,6 @@ const styles = themed(() =>
     more: {
       width: 40,
       height: 40,
-      borderRadius: 20,
-      borderWidth: 1,
-      borderColor: colors.line,
       alignItems: "center",
       justifyContent: "center",
     },
@@ -807,7 +810,7 @@ const styles = themed(() =>
       paddingHorizontal: 14,
       borderRadius: 20,
     },
-    theirs: { backgroundColor: colors.sand, borderBottomLeftRadius: 6 },
+    theirs: { backgroundColor: colors.card, borderBottomLeftRadius: 6 },
     mine: { backgroundColor: colors.mine, borderBottomRightRadius: 6 },
     admin: {
       fontFamily: fonts.sansSemi,
@@ -844,19 +847,16 @@ const styles = themed(() =>
     },
     input: {
       flex: 1,
-      height: 46,
-      borderRadius: 23,
-      borderWidth: 1,
-      borderColor: colors.line,
+      height: 48,
       paddingHorizontal: space.lg,
       fontFamily: fonts.sans,
       fontSize: 15,
       color: colors.ink,
     },
     send: {
-      width: 46,
-      height: 46,
-      borderRadius: 23,
+      width: 44,
+      height: 44,
+      borderRadius: 22,
       backgroundColor: colors.mine,
       alignItems: "center",
       justifyContent: "center",

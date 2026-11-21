@@ -80,6 +80,9 @@ export function placesAround(centre: LatLng, activities: Activity[]): Place[] {
   let seed = 1;
   (Object.keys(SAMPLE) as (keyof typeof SAMPLE)[]).forEach((kind) => {
     SAMPLE[kind].forEach((p, i) => {
+      const rating = 4.3 + ((seed * 3) % 7) / 10;
+      const q = { name: p.name, detail: p.detail, open: p.open, price: p.price, kind, rating: rating.toFixed(1) };
+      const query = Object.entries(q).map(([k, v]) => `${k}=${encodeURIComponent(v)}`).join('&');
       out.push({
         id: `${kind}-${i}`,
         kind,
@@ -87,10 +90,10 @@ export function placesAround(centre: LatLng, activities: Activity[]): Place[] {
         detail: p.detail,
         open: p.open,
         price: p.price,
-        rating: 4.3 + ((seed * 3) % 7) / 10,
+        rating,
         at: spot(centre, seed++),
-        href: '/create-activity',
-        action: kind === 'run' ? 'Join a run' : kind === 'padel' ? 'Find a 4th' : 'Go with someone',
+        href: `/venue/${kind}-${i}?${query}`,
+        action: 'View place',
       });
     });
   });

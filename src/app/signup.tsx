@@ -141,9 +141,11 @@ export default function SignUp() {
   const { saveProfile } = useStore();
   const [busy, setBusy] = useState(false);
   const [problem, setProblem] = useState('');
-  const params = useLocalSearchParams<{ apple?: string; name?: string; email?: string }>();
+  const params = useLocalSearchParams<{ apple?: string; name?: string; email?: string; password?: string }>();
   const viaApple = params.apple === '1';
-  const flow = viaApple ? [0, 3, 4] : [0, 1, 2, 3, 4];
+  // A password from the Sign Up screen means the password step can be skipped.
+  const hasPassword = (params.password ?? '').length >= 8;
+  const flow = viaApple ? [0, 3, 4] : hasPassword ? [0, 1, 3, 4] : [0, 1, 2, 3, 4];
   const [pos, setPos] = useState(0);
   const step = flow[pos];
   const isLast = pos === flow.length - 1;
@@ -160,7 +162,7 @@ export default function SignUp() {
   const dayRef = useRef<ComponentRef<typeof TextInput>>(null);
   const [code, setCode] = useState('');
   const [resent, setResent] = useState(false);
-  const [password, setPassword] = useState('');
+  const [password, setPassword] = useState(params.password ?? '');
   const [showPassword, setShowPassword] = useState(false);
   const [photoUri, setPhotoUri] = useState<string | undefined>();
   const suggested = useMemo(() => {
@@ -238,6 +240,10 @@ export default function SignUp() {
       const ok = await run(async () => {
         const { error } = await supabase.auth.verifyOtp({ email: contact.trim().toLowerCase(), token: code, type: 'email' });
         if (error) throw error;
+        if (hasPassword) {
+          const { error: pwError } = await supabase.auth.updateUser({ password });
+          if (pwError) throw pwError;
+        }
         // Already a member? Bring their profile back and skip the rest.
         const existing = await fetchMyProfile();
         if (existing) {
