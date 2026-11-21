@@ -1,5 +1,5 @@
 import * as Location from 'expo-location';
-import { Storage } from 'expo-sqlite/kv-store';
+import { Storage } from '@/lib/kv';
 import { Alert } from 'react-native';
 import { useSyncExternalStore } from 'react';
 

@@ -1,7 +1,7 @@
 import 'react-native-url-polyfill/auto';
 
 import { createClient, processLock } from '@supabase/supabase-js';
-import { Storage } from 'expo-sqlite/kv-store';
+import { Storage } from '@/lib/kv';
 import { AppState, Platform } from 'react-native';
 
 import type { Profile } from '@/data/types';

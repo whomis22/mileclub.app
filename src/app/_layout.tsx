@@ -9,6 +9,7 @@ import { Outfit_800ExtraBold } from '@expo-google-fonts/outfit';
 import { useFonts } from 'expo-font';
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
+import { Platform, View } from 'react-native';
 
 import { LaunchScreen } from '@/components/launch-screen';
 import { NoticeBanner } from '@/components/notice-banner';
@@ -30,6 +31,7 @@ export default function RootLayout() {
   if (!fontsLoaded && !fontError) return null;
 
   return (
+    <PhoneFrame>
     <StoreProvider>
       <StatusBar style={isDark ? "light" : "dark"} />
       <Stack
@@ -66,5 +68,16 @@ export default function RootLayout() {
       <ThemeFade />
       <LaunchScreen />
     </StoreProvider>
+    </PhoneFrame>
+  );
+}
+
+// Web preview on a computer (Yana, 2026-11-21): show the app in a phone-sized column in the middle.
+function PhoneFrame({ children }: { children: React.ReactNode }) {
+  if (Platform.OS !== 'web') return <>{children}</>;
+  return (
+    <View style={{ flex: 1, backgroundColor: '#E8E8E8', alignItems: 'center' }}>
+      <View style={{ flex: 1, width: '100%', maxWidth: 430, overflow: 'hidden', backgroundColor: colors.bg, boxShadow: '0 0 40px rgba(0,0,0,0.12)' }}>{children}</View>
+    </View>
   );
 }

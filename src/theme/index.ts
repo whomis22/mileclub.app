@@ -1,4 +1,4 @@
-import { Storage } from 'expo-sqlite/kv-store';
+import { Storage } from '@/lib/kv';
 import { Appearance } from 'react-native';
 import { useSyncExternalStore } from 'react';
 

@@ -1,4 +1,4 @@
-import { Storage } from 'expo-sqlite/kv-store';
+import { Storage } from '@/lib/kv';
 import { createContext, useContext, useEffect, useState, type ReactNode } from 'react';
 
 import { sampleActivities } from '@/data/activities';

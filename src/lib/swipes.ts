@@ -1,4 +1,4 @@
-import { Storage } from 'expo-sqlite/kv-store';
+import { Storage } from '@/lib/kv';
 import { useState } from 'react';
 
 // Free swipes per day, plus pretend Premium (Yana, 2026-11-15). Saved on the
