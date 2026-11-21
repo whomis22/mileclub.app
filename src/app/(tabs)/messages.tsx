@@ -1,110 +1,18 @@
 import Feather from '@expo/vector-icons/Feather';
-import { Image, type ImageContentPosition } from 'expo-image';
-import { LinearGradient } from 'expo-linear-gradient';
 import { router, type Href } from 'expo-router';
 import { useState } from 'react';
 import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 
+import { DAY, SessionCard, sessionLabel, sessionsThisWeek, startOfToday, type Session } from '@/components/session-cards';
 import { Avatar, BrandTile, MenuButton, Screen } from '@/components/ui';
 import { faceFor } from '@/data/faces';
-import { THREADS, type ChatThread } from '@/data/messages';
+import { THREADS } from '@/data/messages';
 import { findPerson } from '@/data/people';
-import { PLANS } from '@/data/plans';
-import { parseDate } from '@/lib/format';
-import { useStore, type PrivateSession } from '@/state/store';
+import { useStore } from '@/state/store';
 import { colors, fonts, radius, space, themed, useTheme } from '@/theme';
 
 // Messages (Yana, 2026-11-22): a week calendar on top (dots on days with plans), then
 // this week's sessions as activity photo cards, then the normal chats.
-
-const DAY = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-const LIME = '#B9E769';
-
-type Session = {
-  key: string; title: string; day: number; time: string; sub: string; photo: string | number; pos?: ImageContentPosition;
-  people: string[]; unread?: boolean; tag?: string; href: Href;
-};
-
-// Which Explore photo to use for a private session's activity.
-const PHOTO_FOR: Record<string, string> = {
-  running: 'x-run', gym: 'x-gym', strength: 'x-gym', pilates: 'x-pilates', yoga: 'x-yoga', cycling: 'x-cycling',
-  basketball: 'x-basketball', tennis: 'x-padel', spa: 'x-sauna',
-};
-
-function startOfToday() {
-  const d = new Date();
-  d.setHours(0, 0, 0, 0);
-  return d;
-}
-
-// Days from today (0 = today) for a plan's "when", e.g. "Tonight 19:00", "Tomorrow 18:30", "Every Sun 19:00".
-function dayOffset(when: string) {
-  if (/tonight|today/i.test(when)) return 0;
-  if (/tomorrow/i.test(when)) return 1;
-  const i = DAY.findIndex((d) => when.includes(d));
-  if (i < 0) return -1;
-  return (i - new Date().getDay() + 7) % 7;
-}
-
-function sessionsThisWeek(corners: ChatThread[], privateSessions: PrivateSession[], planJoins: string[]): Session[] {
-  const today = startOfToday().getTime();
-  const out: Session[] = [];
-  for (const c of corners) {
-    const ps = privateSessions.find((p) => p.id === c.sessionId);
-    if (!ps) continue;
-    const day = Math.round((parseDate(ps.date).getTime() - today) / 86400000);
-    if (day < 0 || day > 6) continue;
-    const plan = PLANS.find((p) => p.id === (PHOTO_FOR[ps.type] ?? 'x-run'))!;
-    const last = c.messages[c.messages.length - 1];
-    const who = last?.from === 'admin' ? 'Mile Club: ' : last?.from === 'me' ? 'You: ' : '';
-    out.push({
-      key: c.id, title: c.name, day, time: ps.time, sub: last ? who + last.text : ps.title, photo: plan.photo, pos: plan.pos,
-      people: ps.invited.filter((id) => ps.answers[id] === 'accepted'), unread: c.unread, href: `/chat/${c.id}` as Href,
-    });
-  }
-  for (const id of planJoins) {
-    const p = PLANS.find((x) => x.id === id);
-    if (!p) continue;
-    const day = dayOffset(p.when);
-    if (day < 0) continue;
-    out.push({
-      key: p.id, title: p.title, day, time: p.when.match(/\d\d:\d\d/)?.[0] ?? '', sub: p.place, photo: p.photo, pos: p.pos,
-      people: p.going, href: '/now' as Href,
-    });
-  }
-  return out.sort((a, b) => a.day - b.day || a.time.localeCompare(b.time));
-}
-
-function Faces({ ids }: { ids: string[] }) {
-  return (
-    <View style={{ flexDirection: 'row' }}>
-      {ids.slice(0, 4).map((id, i) => (
-        <View key={id} style={[styles.faceRing, i > 0 && { marginLeft: -8 }]}>
-          <Avatar name={findPerson(id)?.firstName ?? id} color={findPerson(id)?.color} uri={faceFor(id)?.photo} size={22} />
-        </View>
-      ))}
-    </View>
-  );
-}
-
-function SessionCard({ s, big, label }: { s: Session; big?: boolean; label: string }) {
-  return (
-    <Pressable onPress={() => router.push(s.href)} style={({ pressed }) => [styles.card, big ? styles.cardBig : styles.cardSmall, pressed && { opacity: 0.85 }]}>
-      <Image source={s.photo} contentFit="cover" contentPosition={s.pos ?? 'center'} style={StyleSheet.absoluteFill} />
-      <LinearGradient colors={['transparent', 'rgba(0,0,0,0.78)']} locations={[0.25, 1]} style={StyleSheet.absoluteFill} />
-      <Text style={styles.tag}>{label}</Text>
-      {s.unread ? <View style={styles.unread} /> : null}
-      <View style={styles.cardIn}>
-        <Text style={[styles.cardTitle, !big && { fontSize: 15 }]} numberOfLines={1}>{s.title}</Text>
-        {big ? <Text style={styles.cardSub} numberOfLines={1}>{s.sub}</Text> : null}
-        <View style={styles.goingRow}>
-          {big ? <Faces ids={s.people} /> : null}
-          <Text style={styles.going}>{s.people.length + 1} going</Text>
-        </View>
-      </View>
-    </Pressable>
-  );
-}
 
 export default function Messages() {
   useTheme();
@@ -118,7 +26,7 @@ export default function Messages() {
   const sessions = sessionsThisWeek(corners, privateSessions, planJoins);
   const shown = picked === null ? sessions : sessions.filter((s) => s.day === picked);
   const inCards = new Set(sessions.map((s) => s.key));
-  const label = (s: Session) => `${s.day === 0 ? 'TODAY' : s.day === 1 ? 'TOMORROW' : DAY[week[s.day].getDay()].toUpperCase()} ${s.time}`;
+  const label = (s: Session) => sessionLabel(s);
 
   const q = query.trim().toLowerCase();
   const list = [...corners.filter((c) => !inCards.has(c.id)), ...THREADS]
@@ -165,10 +73,16 @@ export default function Messages() {
             <>
               <SessionCard s={shown[0]} big label={label(shown[0])} />
               <View style={styles.grid}>
-                {shown.slice(1).map((s) => (
+                {shown.slice(1, 3).map((s) => (
                   <View key={s.key} style={styles.gridItem}><SessionCard s={s} label={label(s)} /></View>
                 ))}
               </View>
+              {shown.length > 3 ? (
+                <Pressable onPress={() => router.push((picked === null ? '/plans' : `/plans?day=${picked}`) as Href)} style={({ pressed }) => [styles.seeAll, pressed && { opacity: 0.7 }]} accessibilityLabel="See all plans">
+                  <Text style={styles.seeAllText}>See all {shown.length} plans</Text>
+                  <Feather name="chevron-right" size={18} color={colors.ink} />
+                </Pressable>
+              ) : null}
             </>
           ) : (
             <Pressable onPress={() => router.push('/now' as Href)} style={styles.empty}>
@@ -220,6 +134,8 @@ export default function Messages() {
   );
 }
 
+const LIME = '#B9E769';
+
 const styles = themed(() => StyleSheet.create({
   head: { flexDirection: 'row', alignItems: 'center', gap: space.md },
   title: { flex: 1, fontFamily: fonts.serif, fontSize: 30, color: colors.ink },
@@ -235,19 +151,10 @@ const styles = themed(() => StyleSheet.create({
   dayTextOn: { color: colors.bg },
   dayDot: { width: 6, height: 6, borderRadius: 3, backgroundColor: LIME, marginTop: 5 },
   section: { fontFamily: fonts.sansSemi, fontSize: 10, letterSpacing: 2, color: colors.muted, marginTop: space.xl, marginBottom: space.sm },
-  card: { borderRadius: 22, overflow: 'hidden', backgroundColor: colors.card },
-  cardBig: { height: 160 },
-  cardSmall: { height: 124 },
   grid: { flexDirection: 'row', flexWrap: 'wrap', gap: 10, marginTop: 10 },
   gridItem: { width: '48.5%' },
-  tag: { position: 'absolute', top: 12, left: 12, backgroundColor: LIME, color: '#000', fontFamily: fonts.sansBold, fontSize: 10.5, paddingHorizontal: 9, paddingVertical: 4, borderRadius: 999, overflow: 'hidden' },
-  unread: { position: 'absolute', top: 14, right: 14, width: 12, height: 12, borderRadius: 6, backgroundColor: LIME, borderWidth: 2, borderColor: '#000' },
-  cardIn: { position: 'absolute', left: 14, right: 14, bottom: 12 },
-  cardTitle: { fontFamily: fonts.sansBold, fontSize: 19, color: '#FFFFFF' },
-  cardSub: { fontFamily: fonts.sans, fontSize: 12.5, color: 'rgba(255,255,255,0.85)', marginTop: 2 },
-  goingRow: { flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 6 },
-  going: { fontFamily: fonts.sansSemi, fontSize: 12, color: '#FFFFFF' },
-  faceRing: { borderRadius: 13, borderWidth: 2, borderColor: 'rgba(0,0,0,0.4)' },
+  seeAll: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, height: 48, borderRadius: 24, backgroundColor: colors.sand, marginTop: 10 },
+  seeAllText: { fontFamily: fonts.sansSemi, fontSize: 15, color: colors.ink },
   empty: { flexDirection: 'row', alignItems: 'center', gap: 12, backgroundColor: colors.card, borderRadius: 18, padding: 16 },
   emptyTitle: { fontFamily: fonts.sansSemi, fontSize: 15, color: colors.ink },
   emptySub: { fontFamily: fonts.sans, fontSize: 13, color: colors.muted, marginTop: 2 },
