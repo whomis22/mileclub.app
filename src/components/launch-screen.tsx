@@ -1,13 +1,13 @@
 import * as Haptics from 'expo-haptics';
 import { useEffect, useState } from 'react';
-import { Animated, Platform, StyleSheet, Text, View } from 'react-native';
+import { Animated, Platform, StyleSheet, View } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 
 import { Logo } from '@/components/ui';
-import { fonts, themed, useTheme } from '@/theme';
+import { themed, useTheme } from '@/theme';
 
 // Opening screen (Yana, 2026-11-20, Kulmo style): pure black, a big white mc
-// logo in the centre with "Mile Club" right under it, nothing else. Then it fades away.
+// logo in the centre and nothing else (2026-11-21: logo only, no wordmark). Then it fades away.
 const SHOW_MS = 1600;
 const FADE_MS = 350;
 
@@ -60,9 +60,8 @@ export function LaunchScreen() {
       <StatusBar style="light" />
       <View style={styles.center}>
         <Animated.View style={{ transform: [{ scale }] }}>
-          <Logo size={120} m="#FFFFFF" c="#F4CFC6" />
+          <Logo size={140} m="#FFFFFF" c="#F4CFC6" />
         </Animated.View>
-        <Text style={styles.name}>Mile Club</Text>
       </View>
     </Animated.View>
   );
@@ -70,6 +69,5 @@ export function LaunchScreen() {
 
 const styles = themed(() => StyleSheet.create({
   screen: { backgroundColor: '#000000', zIndex: 100 },
-  center: { flex: 1, alignItems: 'center', justifyContent: 'center', paddingBottom: 40 },
-  name: { color: '#FFFFFF', fontSize: 34, fontFamily: fonts.serifItalic, letterSpacing: -0.5, marginTop: 14 },
+  center: { flex: 1, alignItems: 'center', justifyContent: 'center', paddingBottom: 20 },
 }));
