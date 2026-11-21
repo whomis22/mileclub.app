@@ -49,7 +49,7 @@ export function NoticeBanner() {
 const styles = themed(() => StyleSheet.create({
   wrap: { position: 'absolute', left: 12, right: 12, zIndex: 100 },
   card: { flexDirection: 'row', alignItems: 'center', gap: 12, backgroundColor: colors.olive, borderRadius: 20, padding: 14, shadowColor: '#000', shadowOpacity: 0.2, shadowRadius: 16, shadowOffset: { width: 0, height: 6 }, elevation: 8 },
-  declined: { backgroundColor: colors.inkBg },
+  declined: { backgroundColor: colors.violet },
   icon: { fontSize: 24 },
   title: { fontFamily: fonts.sansBold, fontSize: 15, color: colors.onBrand },
   body: { fontFamily: fonts.sans, fontSize: 13, color: colors.onBrand, opacity: 0.9, marginTop: 1 },

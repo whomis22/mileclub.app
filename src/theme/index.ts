@@ -8,72 +8,83 @@ import { useSyncExternalStore } from 'react';
 // lime buttons (Dribbble fitness look Yana sent). Older names (olive, peach) are kept
 // so every screen picks the new colours up: olive = forest, peach = lime.
 const light = {
-  bg: '#F7F7F2', // Cloud White
-  card: '#FFFFFF',
-  sand: '#ECEEE7', // fields and chat bubbles
-  ink: '#102A27', // Midnight Forest text
-  muted: '#777F79', // Slate Grey
-  line: '#E3E6DF',
-  edge: '#D6DAD3', // outlines of round buttons and fields
-  track: '#E6E9E2', // empty part of progress bars
-  dashed: '#AEB4AF',
-  off: '#D3D7D2', // disabled button
-  offText: '#F7F7F2',
-  inkBg: '#102A27', // dark panels (earnings, coach dashboard)
-  link: '#102A27',
-  olive: '#102A27', // main brand: Midnight Forest
-  oliveDark: '#0A1D1B',
-  oliveSoft: '#E6F4D2', // pale lime tint
-  peach: '#B9E769', // Fresh Lime accent
+  // Design board, light version (Yana, 2026-11-21): white pages, soft grey cards,
+  // lime buttons with black text, black secondary buttons, lime chat bubbles.
+  bg: '#FFFFFF',
+  card: '#F4F4F7',
+  sand: '#F0F0F4', // fields and chat bubbles
+  ink: '#0A0A0A',
+  muted: '#86868B',
+  line: '#ECECF0',
+  edge: '#E2E2E8', // outlines of round buttons and fields
+  track: '#ECECF0', // empty part of progress bars
+  dashed: '#B5B5BA',
+  off: '#DCDCE0', // disabled button
+  offText: '#FFFFFF',
+  inkBg: '#0A0A0A', // dark panels (earnings, coach dashboard)
+  link: '#4E7D12', // dark lime, readable on white
+  olive: '#B9E769', // main buttons: Fresh Lime
+  oliveDark: '#102A27',
+  oliveSoft: '#EEF8DC',
+  peach: '#B9E769',
   peachDeep: '#A5D951',
-  black: '#0A1D1B',
-  onBrand: '#FFFFFF', // text on forest, photos and dark panels
-  onPeach: '#102A27', // text on lime
-  cta: '#B9E769', // main action buttons: lime pill with forest text
-  onCta: '#102A27',
-  glow: 'rgba(185,231,105,0.16)', // soft lime glow at the top of screens
-  overlay: 'rgba(5,15,13,0.55)',
+  black: '#0A0A0A',
+  onBrand: '#000000', // text on lime
+  onPeach: '#000000',
+  cta: '#B9E769',
+  onCta: '#000000',
+  violet: '#0A0A0A', // light board uses black for the second button colour
+  onViolet: '#FFFFFF',
+  mine: '#B9E769', // my chat bubbles
+  onMine: '#000000',
+  glow: 'rgba(0,0,0,0)',
+  overlay: 'rgba(0,0,0,0.5)',
   // Older names still used around the app, mapped onto the new palette.
-  accent: '#102A27',
-  accentSoft: '#E6F4D2',
-  green: '#102A27',
-  greenSoft: '#E6F4D2',
-  purple: '#5E8C7A', // coach share in the 80/20 split
-  danger: '#B4442E',
+  accent: '#B9E769',
+  accentSoft: '#EEF8DC',
+  green: '#4E7D12',
+  greenSoft: '#EEF8DC',
+  purple: '#6C4CF1', // coach share in the 80/20 split
+  danger: '#E5484D',
 };
 
 const dark: typeof light = {
-  bg: '#050D0C', // near-black forest
-  card: '#0F1D1B',
-  sand: '#152523',
-  ink: '#F7F7F2',
-  muted: '#9AA29C',
-  line: '#1B2C29',
-  edge: '#253B37',
-  track: '#1B2C29',
-  dashed: '#41544F',
-  off: '#1B2C29',
-  offText: '#6B7A75',
-  inkBg: '#12332E',
+  // Design board (Yana, 2026-11-21): true black, near-black cards, lime buttons, purple accents.
+  bg: '#000000',
+  card: '#141414',
+  sand: '#1C1C1E',
+  ink: '#FFFFFF',
+  muted: '#9A9A9E',
+  line: '#232325',
+  edge: '#2C2C2E',
+  track: '#232325',
+  dashed: '#48484A',
+  off: '#232325',
+  offText: '#6E6E73',
+  inkBg: '#1C1C1E',
   link: '#B9E769',
-  olive: '#1F4F47', // forest, lifted so it shows on black
+  olive: '#B9E769', // main buttons are lime on black
   oliveDark: '#102A27',
-  oliveSoft: '#16302B',
+  oliveSoft: '#1E2615',
   peach: '#B9E769',
   peachDeep: '#A5D951',
-  black: '#050D0C',
-  onBrand: '#FFFFFF',
-  onPeach: '#102A27',
+  black: '#000000',
+  onBrand: '#000000', // text on lime
+  onPeach: '#000000',
   cta: '#B9E769',
-  onCta: '#102A27',
-  glow: 'rgba(46,110,86,0.55)', // forest-green glow like the Dribbble screens
+  onCta: '#000000',
+  violet: '#6C4CF1',
+  onViolet: '#FFFFFF',
+  mine: '#6C4CF1', // my chat bubbles: purple on black
+  onMine: '#FFFFFF',
+  glow: 'rgba(0,0,0,0)', // no glow: flat black like the board
   overlay: 'rgba(0,0,0,0.7)',
-  accent: '#1F4F47',
-  accentSoft: '#16302B',
-  green: '#1F4F47',
-  greenSoft: '#16302B',
-  purple: '#8FB8A8',
-  danger: '#F08A6E',
+  accent: '#B9E769',
+  accentSoft: '#1E2615',
+  green: '#B9E769',
+  greenSoft: '#1E2615',
+  purple: '#6C4CF1',
+  danger: '#FF5A5F',
 };
 
 // Light or dark, switched from the side menu. The app always starts in light
@@ -87,7 +98,7 @@ function readPref(): ThemePref {
     const v = Storage.getItemSync(PREF_KEY);
     if (v === 'light' || v === 'dark') return v;
   } catch {}
-  return 'light';
+  return 'light'; // everyone starts in light mode (Yana, 2026-11-21)
 }
 
 let mode: ThemePref = readPref();

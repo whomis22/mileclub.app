@@ -12,26 +12,21 @@ import { colors, fonts, themed, useTheme } from '@/theme';
 // empty page. Premium packages first, then free ways to keep going.
 // Prices are placeholders and nothing is charged (no payment provider yet).
 const PACKAGES = [
-  { id: 'month', name: 'Mile Club Plus', price: '€9.99', per: 'a month', note: 'Unlimited swipes', best: false },
-  { id: 'quarter', name: 'Plus · 3 months', price: '€24.99', per: 'every 3 months', note: 'Save 17%', best: true },
-  { id: 'pack', name: '10 extra swipes', price: '€2.99', per: 'one time', note: 'Just for today', best: false },
+  // Prices from Yana (2026-11-21): $14.99 a month, or $149.99 a year.
+  { id: 'month', name: 'Premium monthly', price: '$14.99', per: 'a month', note: 'Unlimited swipes', best: false },
+  { id: 'year', name: 'Premium yearly', price: '$149.99', per: 'a year', note: 'Save 17% · 2 months free', best: true },
 ] as const;
 
 const PERKS = ['Unlimited swipes, every day', 'See who wants to join your plans', 'Get seen first by hosts', 'Plans in other cities when you travel'];
 
 export function OutOfSwipes({ onPlus, onBonus }: { onPlus: () => void; onBonus: (n: number) => void }) {
   useTheme();
-  const [picked, setPicked] = useState<(typeof PACKAGES)[number]['id']>('quarter');
-  const [done, setDone] = useState<string | null>(null);
+  const [picked, setPicked] = useState<(typeof PACKAGES)[number]['id']>('year');
+  const [done] = useState<string | null>(null);
   const free = PEOPLE.slice(0, 5);
 
   function buy() {
-    if (picked === 'pack') {
-      onBonus(10);
-      setDone('10 extra swipes added. Demo only, nothing was charged.');
-    } else {
-      onPlus();
-    }
+    onPlus();
   }
 
   async function invite() {
@@ -52,7 +47,7 @@ export function OutOfSwipes({ onPlus, onBonus }: { onPlus: () => void; onBonus: 
       <View style={s.card}>
         <View style={s.plusHead}>
           <Feather name="star" size={18} color={colors.link} />
-          <Text style={s.plusTitle}>Mile Club Plus</Text>
+          <Text style={s.plusTitle}>Mile Club Premium</Text>
         </View>
         {PERKS.map((p) => (
           <View key={p} style={s.perk}>
@@ -76,7 +71,7 @@ export function OutOfSwipes({ onPlus, onBonus }: { onPlus: () => void; onBonus: 
           ))}
         </View>
         <Pressable style={s.buy} onPress={buy}>
-          <Text style={s.buyText}>{picked === 'pack' ? 'Get 10 more swipes' : 'Get Plus'}</Text>
+          <Text style={s.buyText}>Upgrade Now</Text>
         </Pressable>
         <Text style={s.fine}>Demo: no payment is taken yet.</Text>
         {done ? <Text style={s.done}>{done}</Text> : null}

@@ -247,12 +247,12 @@ export default function Chat() {
               : { backgroundColor: colors.card },
           ]}
         >
-          <Text style={[styles.callGlyph, mine && { color: colors.onBrand }]}>
+          <Text style={[styles.callGlyph, mine && { color: colors.onMine }]}>
             {c.video ? "🎥" : mine ? "📞↗" : "📞↙"}
           </Text>
         </View>
         <View style={{ flex: 1 }}>
-          <Text style={[styles.callTitle, mine && { color: colors.onBrand }]}>
+          <Text style={[styles.callTitle, mine && { color: colors.onMine }]}>
             {c.answered
               ? c.video
                 ? "Video call"
@@ -264,7 +264,7 @@ export default function Chat() {
           <Text
             style={[
               styles.callSub,
-              mine && { color: colors.onBrand, opacity: 0.75 },
+              mine && { color: colors.onMine, opacity: 0.75 },
             ]}
           >
             {c.answered ? dur : "Tap to call back"}
@@ -274,7 +274,7 @@ export default function Chat() {
           <Text
             style={[
               styles.callTime,
-              mine && { color: colors.onBrand, opacity: 0.75 },
+              mine && { color: colors.onMine, opacity: 0.75 },
             ]}
           >
             {new Date(m.at).toLocaleTimeString([], {
@@ -331,18 +331,18 @@ export default function Chat() {
               <View
                 style={[
                   styles.quote,
-                  mine && { borderLeftColor: colors.onBrand },
+                  mine && { borderLeftColor: colors.onMine },
                 ]}
               >
                 <Text
-                  style={[styles.quoteText, mine && { color: colors.onBrand }]}
+                  style={[styles.quoteText, mine && { color: colors.onMine }]}
                   numberOfLines={2}
                 >
                   {m.reply}
                 </Text>
               </View>
             ) : null}
-            <Text style={[styles.text, mine && { color: colors.onBrand }]}>
+            <Text style={[styles.text, mine && { color: colors.onMine }]}>
               {m.text}
             </Text>
           </Pressable>
@@ -808,7 +808,7 @@ const styles = themed(() =>
       borderRadius: 20,
     },
     theirs: { backgroundColor: colors.sand, borderBottomLeftRadius: 6 },
-    mine: { backgroundColor: colors.olive, borderBottomRightRadius: 6 },
+    mine: { backgroundColor: colors.mine, borderBottomRightRadius: 6 },
     admin: {
       fontFamily: fonts.sansSemi,
       fontSize: 12,
@@ -857,12 +857,12 @@ const styles = themed(() =>
       width: 46,
       height: 46,
       borderRadius: 23,
-      backgroundColor: colors.olive,
+      backgroundColor: colors.mine,
       alignItems: "center",
       justifyContent: "center",
     },
     sendText: {
-      color: colors.onBrand,
+      color: colors.onMine,
       fontSize: 22,
       fontFamily: fonts.sansBold,
     },

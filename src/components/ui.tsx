@@ -189,7 +189,7 @@ const styles = themed(() => StyleSheet.create({
 // The Mile Club mark: an olive "m" with a peach "c" tucked over its last leg.
 export function Logo({ size = 40, m, c = colors.peachDeep }: { size?: number; m?: string; c?: string }) {
   useTheme();
-  const mColor = m ?? (getThemeMode() === 'dark' ? colors.onBrand : colors.olive);
+  const mColor = m ?? (getThemeMode() === 'dark' ? '#FFFFFF' : colors.olive);
   return (
     <View style={{ flexDirection: 'row' }} accessibilityLabel="Mile Club" accessible>
       <Text style={{ fontFamily: fonts.logo, fontSize: size, lineHeight: size * 1.15, color: mColor }}>m</Text>

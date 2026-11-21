@@ -20,7 +20,7 @@ import { CommentsSheet } from "@/components/comments-sheet";
 import { SessionCard } from "@/components/session-card";
 import { openPostActions } from "@/lib/post-actions";
 import { PHOTOS } from "@/data/photos";
-import { Avatar, MenuButton, Screen } from "@/components/ui";
+import { Avatar, Logo, MenuButton, Screen } from "@/components/ui";
 import { agoLabel } from "@/data/comments";
 import { FEED, TEXT_POSTS, type FeedPost, type TextPost } from "@/data/feed";
 import { COACHES } from "@/data/coaches";
@@ -235,7 +235,9 @@ export default function Explore() {
     <Screen onRefresh={loadNewer}>
       <View style={styles.top}>
         <MenuButton onPress={() => router.push("/menu")} />
-        <Text style={styles.title}>For You</Text>
+        <View style={styles.title}>
+          <Logo size={30} m={colors.ink} c={colors.cta} />
+        </View>
         <Pressable
           style={styles.iconBtn}
           onPress={() => {
@@ -253,7 +255,26 @@ export default function Explore() {
         >
           <Text style={styles.iconPlus}>＋</Text>
         </Pressable>
+        <Pressable
+          style={styles.iconBtn}
+          onPress={() => router.push("/notifications" as Href)}
+          accessibilityLabel="Notifications"
+        >
+          <Ionicons name="notifications-outline" size={20} color={colors.ink} />
+        </Pressable>
       </View>
+
+      {!searching ? (
+        <Pressable
+          style={styles.createBar}
+          onPress={() => router.push("/new-post" as Href)}
+          accessibilityLabel="Create a post"
+        >
+          <Avatar name={profile.firstName} uri={profile.photoUri} size={36} />
+          <Text style={styles.createText}>Create a post...</Text>
+          <Ionicons name="image-outline" size={20} color={colors.muted} />
+        </Pressable>
+      ) : null}
 
       {!searching ? (
         <ScrollView
@@ -650,11 +671,22 @@ export default function Explore() {
 const styles = themed(() =>
   StyleSheet.create({
     top: { flexDirection: "row", alignItems: "center", gap: space.md },
-    title: {
+    title: { flex: 1, alignItems: "flex-start" },
+    createBar: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: space.md,
+      backgroundColor: colors.card,
+      borderRadius: 999,
+      paddingVertical: 8,
+      paddingHorizontal: 10,
+      marginTop: space.md,
+    },
+    createText: {
       flex: 1,
-      fontFamily: fonts.serif,
-      fontSize: 30,
-      color: colors.ink,
+      fontFamily: fonts.sans,
+      fontSize: 15,
+      color: colors.muted,
     },
     people: { display: "none" },
     peopleText: {

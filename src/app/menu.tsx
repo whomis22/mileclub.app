@@ -20,8 +20,9 @@ export default function Menu() {
   const isCoach = profile?.role === 'coach';
   const pages: { label: string; href: Href }[] = isCoach
     ? [
-        { label: 'Home', href: '/now' },
-        { label: 'For You', href: '/feed' },
+        { label: 'Home', href: '/feed' },
+        { label: 'Explore', href: '/now' },
+        { label: 'Places map', href: '/explore' as Href },
         { label: 'Studio', href: '/studio' as Href },
         { label: 'Host a session', href: '/host-session' },
         { label: 'Booking requests', href: '/requests' },
@@ -31,8 +32,9 @@ export default function Menu() {
         { label: 'My plans', href: '/activities' },
       ]
     : [
-        { label: 'Home', href: '/now' },
-        { label: 'For You', href: '/feed' },
+        { label: 'Home', href: '/feed' },
+        { label: 'Explore', href: '/now' },
+        { label: 'Places map', href: '/explore' as Href },
         { label: 'Messages', href: '/messages' },
         { label: 'My plans', href: '/activities' },
         { label: 'Coaches', href: '/train' },
