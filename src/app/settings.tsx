@@ -93,7 +93,12 @@ export default function Settings() {
 
         <Text style={styles.group}>Appearance</Text>
         <View style={styles.card}>
-          <Pressable style={styles.row} onPress={() => setMode(isDark ? 'light' : 'dark')} accessibilityRole="switch" accessibilityState={{ checked: isDark }}>
+          <Pressable style={({ pressed }) => [styles.row, pressed && { opacity: 0.6 }]} onPress={() => router.push('/vibration' as Href)}>
+            <View style={styles.icon}><Feather name="smartphone" size={17} color={colors.ink} /></View>
+            <Text style={styles.label}>Opening vibration</Text>
+            <Feather name="chevron-right" size={18} color={colors.muted} />
+          </Pressable>
+          <Pressable style={[styles.row, styles.rowLine]} onPress={() => setMode(isDark ? 'light' : 'dark')} accessibilityRole="switch" accessibilityState={{ checked: isDark }}>
             <View style={styles.icon}><Feather name="moon" size={17} color={colors.ink} /></View>
             <Text style={styles.label}>Dark mode</Text>
             <Switch

@@ -1,9 +1,9 @@
-import * as Haptics from 'expo-haptics';
 import { useEffect, useState } from 'react';
 import { Animated, Platform, StyleSheet, View } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 
 import { BrandMark } from '@/components/ui';
+import { getOpenPattern, playPattern } from '@/lib/open-haptics';
 import { colors, themed, useTheme } from '@/theme';
 
 // Opening screen (Yana, 2026-11-21): ONLY the MILE CLUB logo while the app loads.
@@ -14,16 +14,6 @@ import { colors, themed, useTheme } from '@/theme';
 const SHOW_MS = 1600;
 const FADE_MS = 350;
 
-// A soft heartbeat while it loads (Yana, 2026-11-19): two gentle taps, twice,
-// with the logo pulsing in time, then a light tap as the app opens.
-const BEATS: [number, Haptics.ImpactFeedbackStyle][] = [
-  [80, Haptics.ImpactFeedbackStyle.Soft],
-  [240, Haptics.ImpactFeedbackStyle.Light],
-  [800, Haptics.ImpactFeedbackStyle.Soft],
-  [960, Haptics.ImpactFeedbackStyle.Light],
-  [SHOW_MS, Haptics.ImpactFeedbackStyle.Light],
-];
-
 export function LaunchScreen() {
   const { isDark } = useTheme();
   const [opacity] = useState(() => new Animated.Value(1));
@@ -32,7 +22,8 @@ export function LaunchScreen() {
 
   useEffect(() => {
     if (Platform.OS === 'web') return;
-    const timers = BEATS.map(([at, style]) => setTimeout(() => Haptics.impactAsync(style).catch(() => {}), at));
+    // The opening vibration Yana picks in Settings (2026-11-21).
+    const stop = playPattern(getOpenPattern().steps);
     const beat = Animated.sequence([
       Animated.timing(scale, { toValue: 1.08, duration: 110, useNativeDriver: true }),
       Animated.timing(scale, { toValue: 1, duration: 110, useNativeDriver: true }),
@@ -42,7 +33,7 @@ export function LaunchScreen() {
     const pulse = Animated.sequence([Animated.delay(60), beat, Animated.delay(160), beat]);
     pulse.start();
     return () => {
-      timers.forEach(clearTimeout);
+      stop();
       pulse.stop();
     };
   }, [scale]);
