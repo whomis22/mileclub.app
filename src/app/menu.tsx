@@ -18,29 +18,24 @@ export default function Menu() {
   };
 
   const isCoach = profile?.role === 'coach';
-  const pages: { label: string; href: Href }[] = isCoach
-    ? [
-        { label: 'Home', href: '/feed' },
-        { label: 'Explore', href: '/now' },
-        { label: 'Places map', href: '/explore' as Href },
-        { label: 'Studio', href: '/studio' as Href },
-        { label: 'Host a session', href: '/host-session' },
-        { label: 'Booking requests', href: '/requests' },
-        { label: 'Earnings', href: '/earnings' },
-        { label: 'About Mile Club', href: '/about' as Href },
-        { label: 'Messages', href: '/messages' },
-        { label: 'My plans', href: '/activities' },
-      ]
-    : [
-        { label: 'Home', href: '/feed' },
-        { label: 'Explore', href: '/now' },
-        { label: 'Places map', href: '/explore' as Href },
-        { label: 'Messages', href: '/messages' },
-        { label: 'My plans', href: '/activities' },
-        { label: 'Coaches', href: '/train' },
-        { label: 'People near you', href: '/people' },
-        { label: 'About Mile Club', href: '/about' as Href },
-      ];
+  const pages: { label: string; href: Href }[] = [
+    { label: 'Home', href: '/feed' },
+    { label: 'Explore', href: '/now' },
+    { label: 'Messages', href: '/messages' },
+    { label: 'Notifications', href: '/notifications' as Href },
+    { label: 'Schedule & events', href: '/events' as Href },
+    { label: 'Places near you', href: '/explore' as Href },
+    { label: 'Mile Club Premium', href: '/premium' as Href },
+    ...(isCoach
+      ? [
+          { label: 'Studio', href: '/studio' as Href },
+          { label: 'Booking requests', href: '/requests' as Href },
+          { label: 'Earnings', href: '/earnings' as Href },
+        ]
+      : [{ label: 'Coaches', href: '/train' as Href }]),
+    { label: 'Settings', href: '/settings' as Href },
+    { label: 'About Mile Club', href: '/about' as Href },
+  ];
   const settings: { label: string; onPress: () => void }[] = [
     { label: 'Account', onPress: () => go('/profile') },
     { label: 'Who I meet up with', onPress: () => go('/meet-settings' as Href) },

@@ -6,7 +6,8 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { CommentPreview, openComments, useComments } from '@/components/comment-preview';
 import { CommentsSheet } from '@/components/comments-sheet';
-import { Avatar, Logo, Screen } from '@/components/ui';
+import { Avatar, Logo, MenuButton, Screen } from '@/components/ui';
+import { useCity } from '@/lib/use-city';
 import { agoLabel } from '@/data/comments';
 import { faceFor } from '@/data/faces';
 import { cityOf } from '@/data/options';
@@ -82,21 +83,30 @@ function PostCard({
 }
 
 export default function Home() {
-  useTheme();
+  const { isDark } = useTheme();
+  const here = useCity();
   const { profile, blocked, myPosts, archivePost, deletePost } = useStore();
   const [pulls, setPulls] = useState(0);
   if (!profile) return <Redirect href="/welcome" />;
-  const city = profile.city ?? cityOf(profile.neighborhood) ?? '';
+  const city = here.city ?? profile.city ?? cityOf(profile.neighborhood) ?? '';
   const where = (h: number) => `${hoursAgoLabel(h)}${city ? ` · ${city}` : ''}`;
 
   return (
     <Screen onRefresh={() => { setPulls(pulls + 1); return 0; }}>
       <View style={styles.top}>
-        <Logo size={30} m="#B9E769" c={colors.ink} />
-        <Text style={styles.word}>MILE{'\n'}CLUB</Text>
-        <View style={{ flex: 1 }} />
+        <MenuButton onPress={() => router.push('/menu')} />
+        <Logo size={30} m={isDark ? '#9CB561' : '#556B2F'} c="#F4B595" />
+        <View style={{ flex: 1 }}>
+          <Pressable style={styles.cityPill} onPress={here.city ? undefined : here.ask} disabled={!!here.city} accessibilityLabel={here.city ? `You're in ${here.city}` : 'Turn on location'}>
+            <Ionicons name={here.city ? 'location' : 'location-outline'} size={13} color={colors.ink} />
+            <Text style={styles.cityText} numberOfLines={1}>{here.city ?? 'Set location'}</Text>
+          </Pressable>
+        </View>
         <Pressable style={styles.bell} onPress={() => router.push('/notifications' as Href)} accessibilityLabel="Notifications">
           <Ionicons name="notifications-outline" size={22} color={colors.ink} />
+        </Pressable>
+        <Pressable style={styles.bell} onPress={() => router.push('/messages' as Href)} accessibilityLabel="Messages">
+          <Ionicons name="paper-plane-outline" size={21} color={colors.ink} />
         </Pressable>
       </View>
 
@@ -145,9 +155,10 @@ export default function Home() {
 }
 
 const styles = themed(() => StyleSheet.create({
-  top: { flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: space.md },
-  word: { fontFamily: fonts.logo, fontStyle: 'italic', fontSize: 11, lineHeight: 11, color: colors.ink },
-  bell: { width: 40, height: 40, alignItems: 'center', justifyContent: 'center' },
+  top: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: space.md },
+  cityPill: { flexDirection: 'row', alignItems: 'center', gap: 4, alignSelf: 'flex-start', maxWidth: '100%', backgroundColor: colors.card, borderRadius: 999, paddingHorizontal: 10, paddingVertical: 6 },
+  cityText: { fontFamily: fonts.sansSemi, fontSize: 12, color: colors.ink, flexShrink: 1 },
+  bell: { width: 36, height: 40, alignItems: 'center', justifyContent: 'center' },
   create: { flexDirection: 'row', alignItems: 'center', gap: space.md, backgroundColor: colors.card, borderRadius: 999, paddingVertical: 8, paddingHorizontal: 10, marginBottom: space.md },
   createText: { flex: 1, fontFamily: fonts.sans, fontSize: 14, color: colors.muted },
   post: { paddingVertical: space.md, borderBottomWidth: 1, borderBottomColor: colors.line },
