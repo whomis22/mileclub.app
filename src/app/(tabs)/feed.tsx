@@ -5,6 +5,7 @@ import { Redirect, router, type Href } from 'expo-router';
 import { useState, type ReactNode } from 'react';
 import * as Haptics from 'expo-haptics';
 import { Animated, Pressable, StyleSheet, Text, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { CommentPreview, openComments, useComments } from '@/components/comment-preview';
 import { CommentsSheet } from '@/components/comments-sheet';
@@ -122,6 +123,7 @@ function PostCard({
 export default function Home() {
   useTheme();
   const here = useCity();
+  const insets = useSafeAreaInsets();
   const { profile, blocked, myPosts, archivePost, deletePost } = useStore();
   const [pulls, setPulls] = useState(0);
   if (!profile) return <Redirect href="/welcome" />;
@@ -129,14 +131,14 @@ export default function Home() {
   const where = (h: number) => `${hoursAgoLabel(h)}${city ? ` · ${city}` : ''}`;
 
   return (
+    <View style={{ flex: 1 }}>
     <Screen onRefresh={() => { setPulls(pulls + 1); return 0; }}>
       <View style={styles.top}>
         <View style={styles.logoMid} pointerEvents="none">
           <BrandMark height={24} />
         </View>
-        <Round label="Open menu" onPress={() => router.push('/menu')}>
-          <Ionicons name="menu" size={20} color={colors.ink} />
-        </Round>
+        {/* the menu button floats above the feed instead (see below) */}
+        <View style={{ width: 40 }} />
         <View style={{ flex: 1 }} />
         <Round label="Notifications" onPress={() => router.push('/notifications' as Href)}>
           <Ionicons name="notifications-outline" size={19} color={colors.ink} />
@@ -193,11 +195,19 @@ export default function Home() {
       })}
       <CommentsSheet />
     </Screen>
+      {/* Side menu button stays on screen while you scroll (Yana, 2026-11-21). */}
+      <View style={[styles.menuFloat, { top: insets.top + 10 }]}>
+        <Round label="Open menu" onPress={() => router.push('/menu')}>
+          <Ionicons name="menu" size={20} color={colors.ink} />
+        </Round>
+      </View>
+    </View>
   );
 }
 
 const styles = themed(() => StyleSheet.create({
   top: { flexDirection: 'row', alignItems: 'center', gap: 10, height: 44, marginBottom: space.md },
+  menuFloat: { position: 'absolute', left: 20, borderRadius: 20, shadowColor: '#000', shadowOpacity: 0.12, shadowRadius: 8, shadowOffset: { width: 0, height: 2 }, elevation: 4 },
   round: { width: 40, height: 40, borderRadius: 20, backgroundColor: colors.card, alignItems: 'center', justifyContent: 'center' },
   logo: { height: 44, justifyContent: 'center', marginTop: -6 },
   logoMid: { position: 'absolute', left: 0, right: 0, top: -6, bottom: 0, alignItems: 'center', justifyContent: 'center' },
