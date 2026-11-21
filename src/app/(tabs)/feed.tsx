@@ -33,6 +33,10 @@ const POSTS: Post[] = [
   { id: 'b6', personId: 'tom', handle: 'tom.sunrise', hoursAgo: 11, text: 'Sunrise run + coffee tomorrow 06:30. All paces welcome ☕', photo: require('../../../assets/images/photos/football.jpg'), likes: 158 },
 ];
 
+function greeting(h = new Date().getHours()) {
+  return h < 5 ? 'Good evening' : h < 12 ? 'Good morning' : h < 18 ? 'Good afternoon' : 'Good evening';
+}
+
 // A 40px round button, so every icon at the top lines up on the same centre line.
 function Round({ label, onPress, children }: { label: string; onPress: () => void; children: ReactNode }) {
   useTheme();
@@ -128,20 +132,23 @@ export default function Home() {
           <Ionicons name="menu" size={20} color={colors.ink} />
         </Round>
         <View style={styles.logo}>
-          <Logo size={28} m={isDark ? '#9CB561' : '#556B2F'} c="#F4B595" />
+          <Logo size={38} m={isDark ? '#9CB561' : '#556B2F'} c="#F4B595" />
         </View>
-        <View style={{ flex: 1, minWidth: 0 }}>
-          <Pressable style={styles.cityPill} onPress={here.city ? undefined : here.ask} disabled={!!here.city} accessibilityLabel={here.city ? `You're in ${here.city}` : 'Turn on location'}>
-            <Ionicons name={here.city ? 'location' : 'location-outline'} size={13} color={colors.ink} />
-            <Text style={styles.cityText} numberOfLines={1}>{here.city ?? 'Set location'}</Text>
-          </Pressable>
-        </View>
+        <View style={{ flex: 1 }} />
         <Round label="Notifications" onPress={() => router.push('/notifications' as Href)}>
           <Ionicons name="notifications-outline" size={19} color={colors.ink} />
         </Round>
         <Round label="Messages" onPress={() => router.push('/messages' as Href)}>
           <Ionicons name="paper-plane-outline" size={18} color={colors.ink} style={{ marginLeft: -1, marginTop: 1 }} />
         </Round>
+      </View>
+
+      <View style={styles.hello}>
+        <Text style={styles.helloText}>{greeting()}, {profile.firstName}</Text>
+        <Pressable style={styles.cityRow} onPress={here.city ? undefined : here.ask} disabled={!!here.city} hitSlop={8} accessibilityLabel={here.city ? `You're in ${here.city}` : 'Turn on location'}>
+          <Ionicons name={here.city ? 'location' : 'location-outline'} size={14} color={colors.muted} />
+          <Text style={styles.cityText} numberOfLines={1}>{here.city ?? 'Set your location'}</Text>
+        </Pressable>
       </View>
 
       <Pressable style={styles.create} onPress={() => router.push('/new-post' as Href)} accessibilityLabel="Create a post">
@@ -191,9 +198,11 @@ export default function Home() {
 const styles = themed(() => StyleSheet.create({
   top: { flexDirection: 'row', alignItems: 'center', gap: 10, height: 44, marginBottom: space.md },
   round: { width: 40, height: 40, borderRadius: 20, backgroundColor: colors.card, alignItems: 'center', justifyContent: 'center' },
-  logo: { height: 40, justifyContent: 'center', marginTop: -4 },
-  cityPill: { flexDirection: 'row', alignItems: 'center', gap: 5, alignSelf: 'flex-start', maxWidth: '100%', height: 32, backgroundColor: colors.card, borderRadius: 999, paddingHorizontal: 12 },
-  cityText: { fontFamily: fonts.sansSemi, fontSize: 12, color: colors.ink, flexShrink: 1 },
+  logo: { height: 44, justifyContent: 'center', marginTop: -6 },
+  hello: { marginBottom: space.md, gap: 3 },
+  helloText: { fontFamily: fonts.serif, fontSize: 24, color: colors.ink, letterSpacing: -0.4 },
+  cityRow: { flexDirection: 'row', alignItems: 'center', gap: 4, alignSelf: 'flex-start' },
+  cityText: { fontFamily: fonts.sansSemi, fontSize: 13, color: colors.muted, flexShrink: 1 },
   create: { flexDirection: 'row', alignItems: 'center', gap: 12, height: 52, backgroundColor: colors.card, borderRadius: 999, paddingHorizontal: 10, marginBottom: space.sm },
   createText: { flex: 1, fontFamily: fonts.sans, fontSize: 14, color: colors.muted },
   post: { paddingVertical: space.md, borderBottomWidth: 1, borderBottomColor: colors.line },
