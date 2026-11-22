@@ -21,3 +21,13 @@ export function pricesFor(profile: Profile | null | undefined) {
   const city = profile ? profile.city ?? cityOf(profile.neighborhood) : undefined;
   return (city && PRICES[city]) || DEFAULT;
 }
+
+// How much paying yearly saves compared with 12 monthly payments, in the same currency,
+// e.g. '£21.89' (Yana, 2026-11-22: yearly gets a discount, monthly pays full price).
+export function yearlySaving(pr: { month: string; year: string }) {
+  const num = (x: string) => Number(x.replace(/[^0-9.]/g, ''));
+  const saved = num(pr.month) * 12 - num(pr.year);
+  const whole = Number.isInteger(num(pr.month));
+  const amount = whole ? String(Math.round(saved)).replace(/\B(?=(\d{3})+(?!\d))/g, ' ') : saved.toFixed(2);
+  return pr.month.replace(/[0-9][0-9 .]*[0-9]/, amount);
+}

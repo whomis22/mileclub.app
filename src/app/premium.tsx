@@ -5,6 +5,7 @@ import { Alert, Pressable, ScrollView, StyleSheet, Text, View } from 'react-nati
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { packagesFor, PACKAGES } from '@/components/out-of-swipes';
+import { pricesFor, yearlySaving } from '@/lib/pricing';
 import { useStore } from '@/state/store';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 
@@ -23,6 +24,8 @@ export default function Premium() {
   const insets = useSafeAreaInsets();
   const swipes = useSwipes();
   const { profile } = useStore();
+  const prices = pricesFor(profile);
+  const saving = yearlySaving(prices);
   const [picked, setPicked] = useState<(typeof PACKAGES)[number]['id']>('month');
 
   function upgrade() {
@@ -63,15 +66,23 @@ export default function Premium() {
           ))}
         </View>
 
+        {/* Monthly = full price. Yearly = pay once for the year and get a discount (Yana, 2026-11-22). */}
         <View style={styles.box}>
-          {packagesFor(profile).map((p) => (
-            <Pressable key={p.id} style={[styles.pack, picked === p.id && styles.packOn]} onPress={() => setPicked(p.id)} accessibilityRole="radio" accessibilityState={{ checked: picked === p.id }}>
-              <Text style={[styles.packPrice, picked !== p.id && styles.packDim]}>
-                {p.price} / {p.id === 'year' ? 'year' : 'month'}
-              </Text>
-              {p.best ? <Text style={styles.save}>Save 17%</Text> : null}
-            </Pressable>
-          ))}
+          {packagesFor(profile).map((p) => {
+            const on = picked === p.id;
+            const yearly = p.id === 'year';
+            return (
+              <Pressable key={p.id} style={[styles.pack, on && styles.packOn]} onPress={() => setPicked(p.id)} accessibilityRole="radio" accessibilityState={{ checked: on }}>
+                <View style={[styles.radio, on && styles.radioOn]}>{on ? <View style={styles.radioDot} /> : null}</View>
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.packName}>{yearly ? 'Pay yearly' : 'Pay monthly'}</Text>
+                  <Text style={styles.packSub}>{yearly ? `${p.price} once a year` : `${p.price} every month`}</Text>
+                </View>
+                {yearly ? <Text style={styles.saveTag}>Save {saving}</Text> : null}
+              </Pressable>
+            );
+          })}
+          <Text style={styles.saveNote}>Pay for the full year up front and you save {saving} (2 months free).</Text>
         </View>
 
         {swipes.plus ? (
@@ -80,7 +91,7 @@ export default function Premium() {
             <Text style={styles.alreadyText}>You’re on Premium</Text>
           </View>
         ) : (
-          <Button title="Upgrade Now" onPress={upgrade} />
+          <Button title={picked === 'year' ? `Get Premium for ${prices.year} / year` : `Get Premium for ${prices.month} / month`} onPress={upgrade} />
         )}
         <Text style={styles.fine}>Cancel anytime.</Text>
       </ScrollView>
@@ -102,7 +113,14 @@ const styles = themed(() => StyleSheet.create({
   freeRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   freeText: { flex: 1, fontFamily: fonts.sans, fontSize: 13.5, color: colors.muted },
   box: { backgroundColor: colors.card, borderRadius: 20, padding: 6, marginVertical: space.xl, gap: 4 },
-  pack: { borderRadius: 16, paddingVertical: 14, alignItems: 'center', borderWidth: 2, borderColor: 'transparent' },
+  pack: { flexDirection: 'row', alignItems: 'center', gap: 12, borderRadius: 16, paddingVertical: 14, paddingHorizontal: 14, borderWidth: 2, borderColor: 'transparent' },
+  radio: { width: 22, height: 22, borderRadius: 11, borderWidth: 2, borderColor: colors.muted, alignItems: 'center', justifyContent: 'center' },
+  radioOn: { borderColor: colors.cta },
+  radioDot: { width: 10, height: 10, borderRadius: 5, backgroundColor: colors.cta },
+  packName: { fontFamily: fonts.sansBold, fontSize: 16, color: colors.ink },
+  packSub: { fontFamily: fonts.sans, fontSize: 13, color: colors.muted, marginTop: 2 },
+  saveTag: { fontFamily: fonts.sansBold, fontSize: 12, color: '#000', backgroundColor: '#B9E769', borderRadius: 999, overflow: 'hidden', paddingHorizontal: 10, paddingVertical: 5 },
+  saveNote: { fontFamily: fonts.sans, fontSize: 12.5, color: colors.muted, textAlign: 'center', marginTop: 8, marginBottom: 4 },
   packOn: { borderColor: colors.cta },
   packPrice: { fontFamily: fonts.sansBold, fontSize: 20, color: colors.ink },
   packDim: { fontSize: 15, fontFamily: fonts.sansSemi, color: colors.muted },
