@@ -30,7 +30,7 @@ export type PostComment = { id: string; authorId: string; text: string; at: numb
 export type CallLog = { id: string; personId: string; video: boolean; secs: number; answered: boolean; at: number; incoming?: boolean };
 
 // A heads-up for the user: a host answered their request to join.
-export type Notice = { id: string; kind: 'accepted' | 'declined'; activityId?: string; sessionId?: string; at: number; read?: boolean };
+export type Notice = { id: string; kind: 'accepted' | 'declined' | 'welcome'; activityId?: string; sessionId?: string; at: number; read?: boolean };
 
 // A private session: only the friends the user invites can see it (Yana, 2026-11-21).
 // Once everyone says yes and there are 4+ people, a group chat "<Host>'s Corner" opens.
@@ -67,6 +67,7 @@ type State = {
   privateSessions: PrivateSession[]; // invite-only sessions the user made, newest first
   corners: ChatThread[]; // group chats made for private sessions
   planJoins: string[]; // Explore plans the user joined (ids from data/plans)
+  welcomed?: boolean; // got the welcome notification (Yana, 2026-11-22)
 };
 
 type Store = State & {
@@ -109,13 +110,19 @@ type Store = State & {
 const KEY = 'mileclub-state-v1';
 const empty: State = { profile: null, myActivities: [], joined: [], blocked: [], skipped: [], kudos: [], mySessions: [], booked: [], requests: {}, incoming: [], runRequests: {}, runIncoming: [], following: [], myPosts: [], comments: {}, calls: [], notices: [], admin: false, privateSessions: [], corners: [], planJoins: [] };
 
+// Every member gets one welcome notification (Yana, 2026-11-22).
+function withWelcome(s: State): State {
+  if (!s.profile || s.welcomed) return s;
+  return { ...s, welcomed: true, notices: [{ id: `welcome-${Date.now()}`, kind: 'welcome', at: Date.now() }, ...(s.notices ?? [])] };
+}
+
 function load(): State {
   try {
     const raw = Storage.getItemSync(KEY);
     if (!raw) return empty;
     const s: State = { ...empty, ...JSON.parse(raw) };
     for (const id of s.booked) s.requests = { ...s.requests, [id]: { status: 'accepted', at: 0 } };
-    return { ...s, booked: [] };
+    return withWelcome({ ...s, booked: [] });
   } catch {
     return empty;
   }
@@ -246,7 +253,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     respond: (rid, status) =>
       update((s) => ({ ...s, incoming: s.incoming.map((r) => (r.id === rid ? { ...r, status } : r)) })),
     saveProfile: (profile) => {
-      update((s) => ({ ...s, profile }));
+      update((s) => withWelcome({ ...s, profile }));
       // Also save it to the person's Mile Club account (if they're logged in).
       pushProfile(profile).catch(() => {});
     },

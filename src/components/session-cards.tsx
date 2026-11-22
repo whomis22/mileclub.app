@@ -17,7 +17,7 @@ export const DAY = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
 export type Session = {
   key: string; title: string; day: number; time: string; sub: string; photo: string | number; pos?: ImageContentPosition;
-  people: string[]; unread?: boolean; tag?: string; href: Href;
+  people: string[]; unread?: boolean; tag?: string; href: Href; place?: string;
 };
 
 // Which Explore photo to use for a private session's activity.
@@ -54,7 +54,7 @@ export function sessionsThisWeek(corners: ChatThread[], privateSessions: Private
     const who = last?.from === 'admin' ? 'Mile Club: ' : last?.from === 'me' ? 'You: ' : '';
     out.push({
       key: c.id, title: c.name, day, time: ps.time, sub: last ? who + last.text : ps.title, photo: plan.photo, pos: plan.pos,
-      people: ps.invited.filter((id) => ps.answers[id] === 'accepted'), unread: c.unread, href: `/chat/${c.id}` as Href,
+      people: ps.invited.filter((id) => ps.answers[id] === 'accepted'), unread: c.unread, href: `/chat/${c.id}` as Href, place: ps.place,
     });
   }
   for (const id of planJoins) {
@@ -64,7 +64,7 @@ export function sessionsThisWeek(corners: ChatThread[], privateSessions: Private
     if (day < 0) continue;
     out.push({
       key: p.id, title: p.title, day, time: p.when.match(/\d\d:\d\d/)?.[0] ?? '', sub: p.place, photo: p.photo, pos: p.pos,
-      people: p.going, href: '/now' as Href,
+      people: p.going, href: '/now' as Href, place: p.place,
     });
   }
   return out.sort((a, b) => a.day - b.day || a.time.localeCompare(b.time));

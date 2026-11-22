@@ -6,8 +6,9 @@ import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 import { DAY, SessionCard, sessionLabel, sessionsThisWeek, startOfToday, type Session } from '@/components/session-cards';
 import { Avatar, BrandTile, MenuButton, Screen } from '@/components/ui';
 import { faceFor } from '@/data/faces';
-import { THREADS } from '@/data/messages';
+import { SUPPORT_ID, THREADS } from '@/data/messages';
 import { findPerson } from '@/data/people';
+import { addToCalendar } from '@/lib/calendar';
 import { useStore } from '@/state/store';
 import { colors, fonts, radius, space, themed, useTheme } from '@/theme';
 
@@ -68,7 +69,15 @@ export default function Messages() {
             })}
           </View>
 
-          <Text style={styles.section}>{picked === null ? 'YOUR PLANS THIS WEEK' : `PLANS ${picked === 0 ? 'TODAY' : `ON ${DAY[week[picked].getDay()].toUpperCase()} ${week[picked].getDate()}`}`}</Text>
+          <View style={styles.secRow}>
+            <Text style={[styles.section, { flex: 1, marginTop: 0, marginBottom: 0 }]}>{picked === null ? 'YOUR PLANS THIS WEEK' : `PLANS ${picked === 0 ? 'TODAY' : `ON ${DAY[week[picked].getDay()].toUpperCase()} ${week[picked].getDate()}`}`}</Text>
+            {shown.length ? (
+              <Pressable onPress={() => addToCalendar(shown)} hitSlop={8} style={styles.calLink} accessibilityLabel="Add these plans to my calendar">
+                <Feather name="calendar" size={13} color={colors.link} />
+                <Text style={styles.calLinkText}>Add to calendar</Text>
+              </Pressable>
+            ) : null}
+          </View>
           {shown.length ? (
             <>
               <SessionCard s={shown[0]} big label={label(shown[0])} />
@@ -112,6 +121,10 @@ export default function Messages() {
               </View>
             ) : t.kind === 'group' ? (
               <BrandTile size={50} />
+            ) : t.id === SUPPORT_ID ? (
+              <View style={[styles.groupIcon, { backgroundColor: colors.mine }]}>
+                <Feather name="headphones" size={20} color={colors.onMine} />
+              </View>
             ) : (
               <Avatar name={t.name} color={person?.color} uri={t.personId ? faceFor(t.personId)?.photo : undefined} size={50} />
             )}
@@ -150,6 +163,9 @@ const styles = themed(() => StyleSheet.create({
   dayNum: { fontFamily: fonts.sansBold, fontSize: 17, color: colors.ink, marginTop: 3 },
   dayTextOn: { color: colors.bg },
   dayDot: { width: 6, height: 6, borderRadius: 3, backgroundColor: LIME, marginTop: 5 },
+  secRow: { flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: space.xl, marginBottom: space.sm },
+  calLink: { flexDirection: 'row', alignItems: 'center', gap: 5 },
+  calLinkText: { fontFamily: fonts.sansSemi, fontSize: 12.5, color: colors.link },
   section: { fontFamily: fonts.sansSemi, fontSize: 10, letterSpacing: 2, color: colors.muted, marginTop: space.xl, marginBottom: space.sm },
   grid: { flexDirection: 'row', flexWrap: 'wrap', gap: 10, marginTop: 10 },
   gridItem: { width: '48.5%' },

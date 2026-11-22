@@ -48,7 +48,7 @@ export default function Menu() {
   ];
   const discover: Item[] = [
     { label: 'Events', icon: 'star', href: '/events' as Href },
-    ...(isCoach ? [] : [{ label: 'Coaches', icon: 'award' as Icon, href: '/train' as Href }]),
+    ...(isCoach ? [] : [{ label: 'Coaches', icon: 'award' as Icon, href: '/coaches' as Href }]),
     { label: 'Places near you', icon: 'map-pin', href: '/explore' as Href },
     { label: 'City leaderboard', icon: 'bar-chart-2', href: '/cities' as Href },
     ...(admin ? [{ label: 'City admin', icon: 'sliders' as Icon, href: '/city-admin' as Href }] : []),

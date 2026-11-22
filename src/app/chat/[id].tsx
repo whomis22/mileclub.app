@@ -21,7 +21,7 @@ import { LocationCard } from "@/components/location-card";
 import { Avatar, BrandTile } from "@/components/ui";
 import { faceFor } from "@/data/faces";
 import Feather from "@expo/vector-icons/Feather";
-import { findThread, MEMBERS_GROUP_ID, type ChatMessage } from "@/data/messages";
+import { findThread, MEMBERS_GROUP_ID, SUPPORT_ID, type ChatMessage } from "@/data/messages";
 import { NEIGHBORHOODS } from "@/data/options";
 import { findPerson } from "@/data/people";
 import * as Location from "expo-location";
@@ -197,6 +197,10 @@ export default function Chat() {
     ]);
     setDraft("");
     setReplyTo(null);
+    // Demo: customer service answers (no real support team behind it yet).
+    if (thread!.id === SUPPORT_ID) {
+      setTimeout(() => setMessages((m) => [...m, { id: `${Date.now()}`, from: "them", text: "Thanks for your message! Someone from the Mile Club team will reply here soon. 💚" }]), 1500);
+    }
   }
 
   // Messages and calls in time order (sample messages first, they have no time).
@@ -403,6 +407,8 @@ export default function Chat() {
         </Pressable>
         {isGroup ? (
           <BrandTile size={40} radius={12} />
+        ) : thread.id === SUPPORT_ID ? (
+          <View style={styles.supportIcon}><Feather name="headphones" size={19} color={colors.onMine} /></View>
         ) : (
           <Avatar name={thread.name} color={person?.color} uri={person ? faceFor(person.id)?.photo : undefined} size={40} />
         )}
@@ -671,6 +677,7 @@ export default function Chat() {
 
 const styles = themed(() =>
   StyleSheet.create({
+    supportIcon: { width: 40, height: 40, borderRadius: 12, backgroundColor: colors.mine, alignItems: 'center', justifyContent: 'center' },
     screen: { flex: 1, backgroundColor: colors.bg },
     head: {
       flexDirection: "row",

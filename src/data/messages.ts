@@ -24,8 +24,20 @@ export type ChatThread = {
 };
 
 export const MEMBERS_GROUP_ID = 'members';
+export const SUPPORT_ID = 'support'; // Customer service chat, in everyone's Chat (Yana, 2026-11-22)
 
 export const THREADS: ChatThread[] = [
+  {
+    id: SUPPORT_ID,
+    kind: 'private',
+    name: 'Customer service',
+    time: 'Now',
+    unread: true,
+    messages: [
+      { id: 'cs1', from: 'them', text: 'Hi! 👋 This is Mile Club customer service.' },
+      { id: 'cs2', from: 'them', text: 'Questions, a problem, or an idea for the app? Send us a message here any time and we’ll get back to you.' },
+    ],
+  },
   {
     id: MEMBERS_GROUP_ID,
     kind: 'group',
