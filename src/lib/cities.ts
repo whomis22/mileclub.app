@@ -18,14 +18,14 @@ const LIVE_BY_DEFAULT: City[] = ['Amsterdam', 'Oslo'];
 
 // Sample numbers so the waitlist bars and leaderboard have life before real sign-ups.
 const SAMPLE: Record<City, { users: number; waitlist: number; referrers: { name: string; count: number }[] }> = {
+  Manchester: { users: 38, waitlist: 581, referrers: [{ name: 'Jade', count: 44 }, { name: 'Callum', count: 29 }, { name: 'Aisha', count: 17 }] },
   Amsterdam: { users: 1840, waitlist: 0, referrers: [{ name: 'Sanne', count: 41 }, { name: 'Daan', count: 27 }, { name: 'Amira', count: 19 }] },
   London: { users: 96, waitlist: 742, referrers: [{ name: 'Priya', count: 58 }, { name: 'Jack', count: 33 }, { name: 'Ellie', count: 21 }] },
   'New York': { users: 61, waitlist: 618, referrers: [{ name: 'Maya', count: 49 }, { name: 'Chris', count: 30 }, { name: 'Dani', count: 12 }] },
-  Dubai: { users: 44, waitlist: 455, referrers: [{ name: 'Omar', count: 37 }, { name: 'Lina', count: 22 }, { name: 'Sara', count: 9 }] },
-  Stockholm: { users: 23, waitlist: 342, referrers: [{ name: 'Elsa', count: 26 }, { name: 'Viktor', count: 14 }, { name: 'Maja', count: 8 }] },
   Oslo: { users: 412, waitlist: 0, referrers: [{ name: 'Ingrid', count: 24 }, { name: 'Jonas', count: 11 }, { name: 'Nora', count: 7 }] },
+  Vancouver: { users: 18, waitlist: 307, referrers: [{ name: 'Liam', count: 21 }, { name: 'Chloe', count: 13 }, { name: 'Ethan', count: 7 }] },
+  'Los Angeles': { users: 27, waitlist: 489, referrers: [{ name: 'Mia', count: 35 }, { name: 'Jordan', count: 19 }, { name: 'Ava', count: 11 }] },
   'San Francisco': { users: 15, waitlist: 263, referrers: [{ name: 'Alex', count: 18 }, { name: 'Sam', count: 10 }, { name: 'Taylor', count: 6 }] },
-  Doha: { users: 12, waitlist: 188, referrers: [{ name: 'Fatima', count: 15 }, { name: 'Khalid', count: 9 }, { name: 'Noor', count: 4 }] },
 };
 
 export type CityState = {
@@ -62,7 +62,7 @@ export function isLive(city: City | undefined, st: CityState = state) {
 }
 
 export function cityStats(city: City, st: CityState = state) {
-  const s = SAMPLE[city];
+  const s = SAMPLE[city] ?? { users: 0, waitlist: 0, referrers: [] }; // a city we no longer list
   const joined = st.waitlist.includes(city);
   const mine = st.invited[city] ?? 0;
   return {

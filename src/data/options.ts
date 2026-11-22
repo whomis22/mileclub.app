@@ -86,13 +86,13 @@ export const NEIGHBORHOODS = {
   SoMa: { lat: 37.7785, lng: -122.4056 },
   'Hayes Valley': { lat: 37.7759, lng: -122.4245 },
   'Noe Valley': { lat: 37.7502, lng: -122.4337 },
-  // Dubai
+  // Dubai (no longer a Mile Club city, kept so older profiles still work)
   'Dubai Marina': { lat: 25.0805, lng: 55.1403 },
   'Downtown Dubai': { lat: 25.1972, lng: 55.2744 },
   'Business Bay': { lat: 25.185, lng: 55.265 },
   Jumeirah: { lat: 25.2048, lng: 55.242 },
   JLT: { lat: 25.0693, lng: 55.1413 },
-  // Doha, Qatar
+  // Doha (no longer a Mile Club city, kept so older profiles still work)
   'West Bay': { lat: 25.3238, lng: 51.5283 },
   'The Pearl': { lat: 25.3686, lng: 51.551 },
   Msheireb: { lat: 25.2867, lng: 51.5262 },
@@ -105,7 +105,29 @@ export const NEIGHBORHOODS = {
   Sentrum: { lat: 59.9127, lng: 10.7461 },
   'Gamle Oslo': { lat: 59.9056, lng: 10.774 },
   'Aker Brygge': { lat: 59.911, lng: 10.727 },
-  // Stockholm
+  // Manchester
+  'Northern Quarter': { lat: 53.4839, lng: -2.2365 },
+  Ancoats: { lat: 53.4848, lng: -2.2268 },
+  'Spinningfields': { lat: 53.4808, lng: -2.2522 },
+  Chorlton: { lat: 53.4419, lng: -2.2775 },
+  Didsbury: { lat: 53.4166, lng: -2.2306 },
+  Salford: { lat: 53.4875, lng: -2.2901 },
+  'Castlefield': { lat: 53.4747, lng: -2.2556 },
+  // Vancouver
+  Kitsilano: { lat: 49.2684, lng: -123.1683 },
+  Gastown: { lat: 49.2838, lng: -123.1087 },
+  'Mount Pleasant': { lat: 49.2633, lng: -123.1007 },
+  Yaletown: { lat: 49.2754, lng: -123.1216 },
+  'West End': { lat: 49.2847, lng: -123.1345 },
+  'Commercial Drive': { lat: 49.2734, lng: -123.0694 },
+  // Los Angeles
+  'Santa Monica': { lat: 34.0195, lng: -118.4912 },
+  'Silver Lake': { lat: 34.0869, lng: -118.2702 },
+  Venice: { lat: 33.985, lng: -118.4695 },
+  'West Hollywood': { lat: 34.09, lng: -118.3617 },
+  'Downtown LA': { lat: 34.0407, lng: -118.2468 },
+  'Echo Park': { lat: 34.0782, lng: -118.2606 },
+  // Stockholm (no longer a Mile Club city, kept so older profiles still work)
   'Södermalm': { lat: 59.315, lng: 18.071 },
   'Östermalm': { lat: 59.338, lng: 18.085 },
   Vasastan: { lat: 59.345, lng: 18.048 },
@@ -115,16 +137,16 @@ export const NEIGHBORHOODS = {
 export type Neighborhood = keyof typeof NEIGHBORHOODS;
 export const NEIGHBORHOOD_NAMES = Object.keys(NEIGHBORHOODS) as Neighborhood[];
 
-// Cities Mile Club is opening in (Yana, 2026-11-15), each with its neighbourhoods.
+// Cities Mile Club is opening in (Yana, 2026-11-22), each with its neighbourhoods.
 export const CITIES = [
+  { id: 'Manchester', label: 'Manchester', hoods: ['Northern Quarter', 'Ancoats', 'Spinningfields', 'Castlefield', 'Chorlton', 'Didsbury', 'Salford'] },
   { id: 'London', label: 'London', hoods: ['Shoreditch', 'Soho', 'Camden', 'Brixton', 'Notting Hill', 'Canary Wharf'] },
   { id: 'New York', label: 'New York', hoods: ['Williamsburg', 'West Village', 'Lower East Side', 'Upper East Side', 'Harlem', 'DUMBO'] },
   { id: 'Amsterdam', label: 'Amsterdam', hoods: ['Centrum', 'Jordaan', 'De Pijp', 'Oud-West', 'Oud-Zuid', 'Oost', 'Indische Buurt', 'Westerpark', 'De Baarsjes', 'Noord', 'Watergraafsmeer', 'Zuidas'] },
   { id: 'San Francisco', label: 'San Francisco', hoods: ['Mission', 'Marina', 'SoMa', 'Hayes Valley', 'Noe Valley'] },
-  { id: 'Dubai', label: 'Dubai', hoods: ['Dubai Marina', 'Downtown Dubai', 'Business Bay', 'Jumeirah', 'JLT'] },
-  { id: 'Doha', label: 'Doha, Qatar', hoods: ['West Bay', 'The Pearl', 'Msheireb', 'Lusail', 'Al Sadd'] },
+  { id: 'Vancouver', label: 'Vancouver', hoods: ['Kitsilano', 'Gastown', 'Mount Pleasant', 'Yaletown', 'West End', 'Commercial Drive'] },
   { id: 'Oslo', label: 'Oslo', hoods: ['Grünerløkka', 'Frogner', 'Majorstuen', 'Sentrum', 'Gamle Oslo', 'Aker Brygge'] },
-  { id: 'Stockholm', label: 'Stockholm', hoods: ['Södermalm', 'Östermalm', 'Vasastan', 'Kungsholmen', 'Norrmalm'] },
+  { id: 'Los Angeles', label: 'Los Angeles', hoods: ['Santa Monica', 'Silver Lake', 'Venice', 'West Hollywood', 'Downtown LA', 'Echo Park'] },
 ] as const satisfies readonly { id: string; label: string; hoods: readonly Neighborhood[] }[];
 export type City = (typeof CITIES)[number]['id'];
 
