@@ -12,7 +12,7 @@ type Row = { icon: keyof typeof Feather.glyphMap; label: string; onPress: () => 
 export default function Settings() {
   const { isDark, setMode } = useTheme();
   const insets = useSafeAreaInsets();
-  const { profile, reset, setRole, admin } = useStore();
+  const { profile, reset, setRole, admin, setAdmin } = useStore();
   const soon = (what: string) => Alert.alert(what, 'This page is coming soon.');
 
   const isCoach = profile?.role === 'coach';
@@ -108,6 +108,21 @@ export default function Settings() {
               thumbColor="#fff"
               ios_backgroundColor={colors.edge}
             />
+          </Pressable>
+        </View>
+
+        {/* Testing tools, moved here from the side menu (Yana, 2026-11-22). */}
+        <Text style={styles.group}>Testing</Text>
+        <View style={styles.card}>
+          <Pressable style={styles.row} onPress={() => setAdmin(!admin)} accessibilityRole="switch" accessibilityState={{ checked: admin }}>
+            <View style={styles.icon}><Feather name="sliders" size={17} color={colors.ink} /></View>
+            <Text style={styles.label}>Admin mode</Text>
+            <Switch value={admin} onValueChange={setAdmin} trackColor={{ false: colors.edge, true: colors.cta }} thumbColor="#fff" ios_backgroundColor={colors.edge} />
+          </Pressable>
+          <Pressable style={({ pressed }) => [styles.row, styles.rowLine, pressed && { opacity: 0.6 }]} onPress={() => setTimeout(() => router.push('/call/femke?incoming=1' as Href), 1500)}>
+            <View style={styles.icon}><Feather name="phone-incoming" size={17} color={colors.ink} /></View>
+            <Text style={styles.label}>Try an incoming call (demo)</Text>
+            <Feather name="chevron-right" size={18} color={colors.muted} />
           </Pressable>
         </View>
 
