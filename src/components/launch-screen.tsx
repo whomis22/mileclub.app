@@ -16,7 +16,7 @@ const FADE_MS = 350;
 const OPENED_AT = Date.now();
 // When the opening screen is gone: Welcome starts floating the logo up then (Yana, 2026-11-22).
 export function launchEndsIn() {
-  return Math.max(0, OPENED_AT + SHOW_MS + FADE_MS - 150 - Date.now());
+  return Math.max(0, OPENED_AT + SHOW_MS + FADE_MS + 30 - Date.now());
 }
 
 export function LaunchScreen() {
