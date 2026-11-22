@@ -4,7 +4,8 @@ import { useState } from 'react';
 import { Alert, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { PACKAGES } from '@/components/out-of-swipes';
+import { packagesFor, PACKAGES } from '@/components/out-of-swipes';
+import { useStore } from '@/state/store';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 
 import { Button } from '@/components/ui';
@@ -21,6 +22,7 @@ export default function Premium() {
   useTheme();
   const insets = useSafeAreaInsets();
   const swipes = useSwipes();
+  const { profile } = useStore();
   const [picked, setPicked] = useState<(typeof PACKAGES)[number]['id']>('month');
 
   function upgrade() {
@@ -62,7 +64,7 @@ export default function Premium() {
         </View>
 
         <View style={styles.box}>
-          {PACKAGES.map((p) => (
+          {packagesFor(profile).map((p) => (
             <Pressable key={p.id} style={[styles.pack, picked === p.id && styles.packOn]} onPress={() => setPicked(p.id)} accessibilityRole="radio" accessibilityState={{ checked: picked === p.id }}>
               <Text style={[styles.packPrice, picked !== p.id && styles.packDim]}>
                 {p.price} / {p.id === 'year' ? 'year' : 'month'}

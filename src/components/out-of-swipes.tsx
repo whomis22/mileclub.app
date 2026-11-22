@@ -5,6 +5,9 @@ import { Pressable, ScrollView, Share, StyleSheet, Text, View } from 'react-nati
 
 import { Avatar } from '@/components/ui';
 import { PEOPLE } from '@/data/people';
+import type { Profile } from '@/data/types';
+import { pricesFor } from '@/lib/pricing';
+import { useStore } from '@/state/store';
 import { FREE_PER_DAY, untilReset } from '@/lib/swipes';
 import { colors, fonts, themed, useTheme } from '@/theme';
 
@@ -12,10 +15,16 @@ import { colors, fonts, themed, useTheme } from '@/theme';
 // empty page. Premium packages first, then free ways to keep going.
 // Prices are placeholders and nothing is charged (no payment provider yet).
 export const PACKAGES = [
-  // Prices from Yana (2026-11-21): $14.99 a month, or $149.99 a year.
+  // Prices depend on the home city: see packagesFor and src/lib/pricing.ts.
   { id: 'month', name: 'Premium monthly', price: '$14.99', per: 'a month', note: 'Unlimited plans', best: false },
   { id: 'year', name: 'Premium yearly', price: '$149.99', per: 'a year', note: 'Save 17% · 2 months free', best: true },
 ] as const;
+
+// The packages with prices in the person's own currency (Yana, 2026-11-22).
+export function packagesFor(profile: Profile | null | undefined) {
+  const pr = pricesFor(profile);
+  return PACKAGES.map((p) => ({ ...p, price: p.id === 'year' ? pr.year : pr.month }));
+}
 
 export const PERKS = ['Join unlimited plans, every day', 'See who wants to join your plans', 'Get seen first by hosts', 'Plans in other cities when you travel'];
 
@@ -24,6 +33,8 @@ export function OutOfSwipes({ onPlus, onBonus }: { onPlus: () => void; onBonus: 
   const [picked, setPicked] = useState<(typeof PACKAGES)[number]['id']>('year');
   const [done] = useState<string | null>(null);
   const free = PEOPLE.slice(0, 5);
+  const { profile } = useStore();
+  const packages = packagesFor(profile);
 
   function buy() {
     onPlus();
@@ -56,7 +67,7 @@ export function OutOfSwipes({ onPlus, onBonus }: { onPlus: () => void; onBonus: 
           </View>
         ))}
         <View style={s.packs}>
-          {PACKAGES.map((p) => (
+          {packages.map((p) => (
             <Pressable key={p.id} style={[s.pack, picked === p.id && s.packOn]} onPress={() => setPicked(p.id)}>
               {p.best ? (
                 <View style={s.best}>
