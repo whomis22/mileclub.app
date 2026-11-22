@@ -11,6 +11,7 @@ import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { Platform, View } from 'react-native';
 
+import { IncomingCallBanner } from '@/components/incoming-call-banner';
 import { LaunchScreen } from '@/components/launch-screen';
 import { NoticeBanner } from '@/components/notice-banner';
 import { ThemeFade } from '@/components/theme-fade';
@@ -57,6 +58,7 @@ export default function RootLayout() {
         <Stack.Screen name="menu" options={{ presentation: 'transparentModal', animation: 'fade', contentStyle: { backgroundColor: 'transparent' } }} />
         <Stack.Screen name="post/[id]" options={{ headerShown: true, title: 'Comments' }} />
         <Stack.Screen name="call/[id]" options={{ presentation: 'fullScreenModal', animation: 'fade' }} />
+        <Stack.Screen name="group-call/[id]" options={{ presentation: 'fullScreenModal', animation: 'fade' }} />
         <Stack.Screen name="notifications" options={{ headerShown: true, title: 'Notifications' }} />
         <Stack.Screen name="suggest" options={{ headerShown: true, title: 'Find others' }} />
         <Stack.Screen name="meet-settings" options={{ headerShown: true, title: 'Who I meet up with' }} />
@@ -65,6 +67,7 @@ export default function RootLayout() {
         <Stack.Screen name="group-settings" options={{ headerShown: true, title: 'Group settings' }} />
       </Stack>
       <NoticeBanner />
+      <IncomingCallBanner />
       <ThemeFade />
       <LaunchScreen />
     </StoreProvider>

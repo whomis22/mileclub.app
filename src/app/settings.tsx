@@ -3,6 +3,7 @@ import { router, type Href } from 'expo-router';
 import { Alert, Pressable, ScrollView, StyleSheet, Switch, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { DEMO_GROUP_CALL, ring } from '@/lib/ringing';
 import { useStore } from '@/state/store';
 import { colors, fonts, space, themed, useTheme } from '@/theme';
 
@@ -119,9 +120,14 @@ export default function Settings() {
             <Text style={styles.label}>Admin mode</Text>
             <Switch value={admin} onValueChange={setAdmin} trackColor={{ false: colors.edge, true: colors.cta }} thumbColor="#fff" ios_backgroundColor={colors.edge} />
           </Pressable>
-          <Pressable style={({ pressed }) => [styles.row, styles.rowLine, pressed && { opacity: 0.6 }]} onPress={() => setTimeout(() => router.push('/call/femke?incoming=1' as Href), 1500)}>
+          <Pressable style={({ pressed }) => [styles.row, styles.rowLine, pressed && { opacity: 0.6 }]} onPress={() => setTimeout(() => ring({ id: 'femke' }), 1500)}>
             <View style={styles.icon}><Feather name="phone-incoming" size={17} color={colors.ink} /></View>
             <Text style={styles.label}>Try an incoming call (demo)</Text>
+            <Feather name="chevron-right" size={18} color={colors.muted} />
+          </Pressable>
+          <Pressable style={({ pressed }) => [styles.row, styles.rowLine, pressed && { opacity: 0.6 }]} onPress={() => setTimeout(() => ring({ id: DEMO_GROUP_CALL, group: true }), 1500)}>
+            <View style={styles.icon}><Feather name="users" size={17} color={colors.ink} /></View>
+            <Text style={styles.label}>Try an incoming group call (demo)</Text>
             <Feather name="chevron-right" size={18} color={colors.muted} />
           </Pressable>
         </View>

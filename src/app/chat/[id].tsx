@@ -434,6 +434,16 @@ export default function Chat() {
             </Pressable>
           </>
         ) : null}
+        {isGroup && thread.id !== MEMBERS_GROUP_ID ? (
+          <>
+            <Pressable onPress={() => router.push(`/group-call/${thread.id}` as Href)} style={styles.more} accessibilityLabel="Group call">
+              <Feather name="phone" size={20} color={colors.ink} />
+            </Pressable>
+            <Pressable onPress={() => router.push(`/group-call/${thread.id}?video=1` as Href)} style={styles.more} accessibilityLabel="Group video call">
+              <Feather name="video" size={21} color={colors.ink} />
+            </Pressable>
+          </>
+        ) : null}
         {isGroup ? (
           <Pressable
             onPress={() => router.push("/group-settings")}

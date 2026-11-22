@@ -7,10 +7,15 @@ import { useEffect, useState } from 'react';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Alert, Animated, Easing, Platform, Pressable, StyleSheet, Text, Vibration, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import Feather from '@expo/vector-icons/Feather';
+import { Image } from 'expo-image';
 
+import { BrandMark } from '@/components/ui';
 import { findCoach } from '@/data/coaches';
+import { faceFor } from '@/data/faces';
 import { findPerson } from '@/data/people';
 import { friendlyDate } from '@/lib/format';
+import { stopRinging } from '@/lib/ringing';
 import { useStore } from '@/state/store';
 import { fonts, useTheme } from '@/theme';
 
@@ -37,8 +42,10 @@ type Phase = 'ringing' | 'live' | 'ended';
 // until Mile Club has a calling service and a server.
 export default function Call() {
   useTheme();
-  const { id, video, incoming: inc } = useLocalSearchParams<{ id: string; video?: string; incoming?: string }>();
-  const incoming = inc === '1';
+  const { id, video, incoming: inc, answer } = useLocalSearchParams<{ id: string; video?: string; incoming?: string; answer?: string }>();
+  // answer=1: picked up from the call banner, so go straight into the call.
+  const answeredFromBanner = answer === '1';
+  const incoming = inc === '1' || answeredFromBanner;
   // Mile Club's own ringtone (soft marimba chimes), only when someone calls you.
   const ringtone = useAudioPlayer(require('../../../assets/sounds/ringtone.m4a'));
   const { activities, logCall } = useStore();
@@ -47,7 +54,9 @@ export default function Call() {
   const name = p?.firstName ?? c?.name ?? 'Member';
   const shared = activities.find((a) => (a.participants.includes(id) || a.hostId === id) && (a.participants.includes('me') || a.hostId === 'me'));
 
-  const [phase, setPhase] = useState<Phase>('ringing');
+  const [phase, setPhase] = useState<Phase>(answeredFromBanner ? 'live' : 'ringing');
+  // The banner hands the ringing over to this screen.
+  useEffect(() => stopRinging(), []);
   const [secs, setSecs] = useState(0);
   const [muted, setMuted] = useState(false);
   const [speaker, setSpeaker] = useState(false);
@@ -169,6 +178,43 @@ export default function Call() {
   };
   const soon = (what: string) => Alert.alert(what, 'Coming soon to Mile Club calls.');
 
+  // Someone is calling you: layout #24 (Yana, 2026-11-22). Black, MILE CLUB
+  // wordmark on top, bold name, what they do, lime Accept and red Decline.
+  if (phase === 'ringing' && incoming) {
+    const face = p ? faceFor(p.id) : undefined;
+    const line = p ? [face?.work?.split(' · ')[0], p.neighborhood].filter(Boolean).join(' · ') : c ? 'Coach' : '';
+    return (
+      <View style={[s.screen, { backgroundColor: '#000' }]}>
+        <StatusBar style="light" />
+        <SafeAreaView style={s.fill} edges={['top', 'bottom']}>
+          <View style={i.top}>
+            <BrandMark height={26} tone="white" />
+            {face?.photo ? <Image source={{ uri: face.photo }} style={i.photo} /> : null}
+            <Text style={i.label}>{videoOn ? 'Mile Club Video' : 'Mile Club Audio'}</Text>
+            <Text style={i.name} numberOfLines={1} adjustsFontSizeToFit>{name}</Text>
+            {line ? <Text style={i.line} numberOfLines={1}>{line}</Text> : null}
+            {shared ? (
+              <View style={i.chip}>
+                <Feather name="calendar" size={13} color="#fff" />
+                <Text style={i.chipText} numberOfLines={1}>You’re both in {shared.title}</Text>
+              </View>
+            ) : null}
+          </View>
+          <View style={i.bottom}>
+            <View style={i.row}>
+              <Btn icon="clock" label="Remind me" size={54} bg="rgba(255,255,255,0.14)" onPress={remindMe} />
+              <Btn icon="message-circle" label="Message" size={54} bg="rgba(255,255,255,0.14)" onPress={messageInstead} />
+            </View>
+            <View style={i.row}>
+              <Btn icon="phone" end label="Decline" size={76} bg={C.red} onPress={end} />
+              <Btn icon={videoOn ? 'video' : 'phone'} label="Accept" size={76} bg={LIME} fg="#000" onPress={accept} />
+            </View>
+          </View>
+        </SafeAreaView>
+      </View>
+    );
+  }
+
   // Looks like an iPhone call: blurred dark colour behind, thin white name at
   // the top, system font, round buttons. (A real phone-call screen when the app
   // is closed needs CallKit and a proper app build, so this is in-app only.)
@@ -226,6 +272,35 @@ export default function Call() {
     </View>
   );
 }
+
+const LIME = '#B9E769';
+
+function Btn({ icon, label, size, bg, fg = '#fff', end, onPress }: {
+  icon: React.ComponentProps<typeof Feather>['name']; label: string; size: number; bg: string; fg?: string; end?: boolean; onPress: () => void;
+}) {
+  return (
+    <Pressable onPress={onPress} style={({ pressed }) => [i.btnWrap, pressed && { opacity: 0.7 }]} accessibilityLabel={label}>
+      <View style={{ width: size, height: size, borderRadius: size / 2, backgroundColor: bg, alignItems: 'center', justifyContent: 'center' }}>
+        <Feather name={icon} size={size * 0.38} color={fg} style={end ? { transform: [{ rotate: '135deg' }] } : undefined} />
+      </View>
+      <Text style={i.btnLabel}>{label}</Text>
+    </Pressable>
+  );
+}
+
+const i = StyleSheet.create({
+  top: { alignItems: 'center', paddingHorizontal: 24, marginTop: 28, gap: 6 },
+  photo: { width: 96, height: 96, borderRadius: 48, marginTop: 34, marginBottom: 10, backgroundColor: '#1C1C1E' },
+  label: { fontFamily: fonts.sans, fontSize: 15, color: '#9A9A9E', marginTop: 4 },
+  name: { fontFamily: fonts.sansBold, fontSize: 44, color: '#fff', letterSpacing: -0.5 },
+  line: { fontFamily: fonts.sans, fontSize: 15, color: '#9A9A9E' },
+  chip: { flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: 'rgba(255,255,255,0.12)', borderRadius: 20, paddingVertical: 7, paddingHorizontal: 12, marginTop: 12, maxWidth: '100%' },
+  chipText: { fontFamily: fonts.sansMedium, fontSize: 13, color: '#fff', flexShrink: 1 },
+  bottom: { marginTop: 'auto', paddingHorizontal: 40, gap: 36, marginBottom: 30 },
+  row: { flexDirection: 'row', justifyContent: 'space-between' },
+  btnWrap: { width: 90, alignItems: 'center', gap: 8 },
+  btnLabel: { fontFamily: fonts.sansMedium, fontSize: 13, color: '#fff' },
+});
 
 function Round({ icon, label, onPress, on, red, accept, big, small, disabled }: {
   icon: string; label: string; onPress: () => void; on?: boolean; red?: boolean; accept?: boolean; big?: boolean; small?: boolean; disabled?: boolean;
