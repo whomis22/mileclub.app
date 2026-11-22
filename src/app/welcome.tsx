@@ -3,10 +3,11 @@ import { Image } from 'expo-image';
 import { LinearGradient } from 'expo-linear-gradient';
 import { router, type Href } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Animated, Dimensions, Pressable, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { launchEndsIn } from '@/components/launch-screen';
 import { BrandMark } from '@/components/ui';
 import { fonts, radius, space, themed, useTheme } from '@/theme';
 
@@ -27,6 +28,18 @@ export default function Welcome() {
   const [step, setStep] = useState(0); // 0 = splash, 1-3 = onboarding
   const [fade] = useState(() => new Animated.Value(1));
   const busy = useRef(false);
+  // Opening (Yana, 2026-11-22): the logo stays in the middle, where the loading screen
+  // had it, while the photo and buttons fade in around it.
+  const [rise] = useState(() => new Animated.Value(0));
+  useEffect(() => {
+    const anim = Animated.sequence([
+      Animated.delay(launchEndsIn()),
+      Animated.timing(rise, { toValue: 1, duration: 700, useNativeDriver: true }),
+    ]);
+    anim.start();
+    return () => anim.stop();
+  }, [rise]);
+  const showRest = { opacity: rise.interpolate({ inputRange: [0, 0.6, 1], outputRange: [0, 0.7, 1], extrapolate: 'clamp' }) };
   const logIn = () => router.push('/auth?tab=login' as Href);
   const signUp = () => router.push('/auth' as Href);
 
@@ -71,20 +84,23 @@ export default function Welcome() {
     return (
       <View style={styles.screen}>
         <StatusBar style="light" />
-        <Image source={require('../../assets/images/photos/board-splash.jpg')} style={StyleSheet.absoluteFill} contentFit="cover" />
-        <LinearGradient colors={['rgba(0,0,0,0.6)', 'rgba(0,0,0,0.15)', 'rgba(0,0,0,0.45)', 'rgba(0,0,0,0.95)']} locations={[0, 0.25, 0.55, 1]} style={StyleSheet.absoluteFill} />
-        <SafeAreaView style={styles.safe}>
-          <View style={styles.splashMid}>
-            <BrandMark height={60} tone="white" />
-          </View>
-          <View style={styles.bottom}>
+        <Animated.View style={[StyleSheet.absoluteFill, showRest]}>
+          <Image source={require('../../assets/images/photos/board-splash.jpg')} style={StyleSheet.absoluteFill} contentFit="cover" />
+          <LinearGradient colors={['rgba(0,0,0,0.6)', 'rgba(0,0,0,0.15)', 'rgba(0,0,0,0.45)', 'rgba(0,0,0,0.95)']} locations={[0, 0.25, 0.55, 1]} style={StyleSheet.absoluteFill} />
+        </Animated.View>
+        {/* Same size and spot as the loading screen logo, so it stays put (Yana, 2026-11-22). */}
+        <View pointerEvents="none" style={[StyleSheet.absoluteFill, styles.splashCenter]}>
+          <BrandMark height={56} tone="white" />
+        </View>
+        <SafeAreaView style={[styles.safe, { justifyContent: 'flex-end' }]}>
+          <Animated.View style={[styles.bottom, showRest]}>
             <Pressable onPress={() => go(1)} style={({ pressed }) => [styles.lime, pressed && { opacity: 0.85 }]}>
               <Text style={styles.limeText}>Get Started</Text>
             </Pressable>
             <Pressable onPress={logIn} hitSlop={10} style={styles.loginWrap}>
               <Text style={styles.login}>Log In</Text>
             </Pressable>
-          </View>
+          </Animated.View>
         </SafeAreaView>
       </View>
     );
@@ -133,7 +149,7 @@ export default function Welcome() {
 const styles = themed(() => StyleSheet.create({
   screen: { flex: 1, backgroundColor: '#000' },
   safe: { flex: 1, justifyContent: 'space-between' },
-  splashMid: { flex: 1, alignItems: 'center', justifyContent: 'flex-start', paddingTop: 28 }, // logo at the top (Yana, 2026-11-22)
+  splashCenter: { alignItems: 'center', justifyContent: 'center', paddingBottom: 20 }, // matches the loading screen
   city: { position: 'absolute', left: 0, right: 0, bottom: 0, height: H * 0.48 },
   posterMid: { flex: 1, alignItems: 'center', justifyContent: 'center', paddingBottom: H * 0.12 },
   posterTag: { fontFamily: fonts.logo, fontStyle: 'italic', fontSize: 22, lineHeight: 24, color: '#0A0A0A', textAlign: 'center', marginTop: 26 },

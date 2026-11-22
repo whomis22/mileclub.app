@@ -13,6 +13,11 @@ import { colors, themed, useTheme } from '@/theme';
 // logo in the centre and nothing else (2026-11-21: logo only, no wordmark). Then it fades away.
 const SHOW_MS = 1600;
 const FADE_MS = 350;
+const OPENED_AT = Date.now();
+// When the opening screen is gone: Welcome starts floating the logo up then (Yana, 2026-11-22).
+export function launchEndsIn() {
+  return Math.max(0, OPENED_AT + SHOW_MS + FADE_MS - 150 - Date.now());
+}
 
 export function LaunchScreen() {
   const { isDark } = useTheme();
