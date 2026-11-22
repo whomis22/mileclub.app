@@ -24,6 +24,8 @@ const SAMPLE: Record<City, { users: number; waitlist: number; referrers: { name:
   'New York': { users: 61, waitlist: 618, referrers: [{ name: 'Maya', count: 49 }, { name: 'Chris', count: 30 }, { name: 'Dani', count: 12 }] },
   Oslo: { users: 412, waitlist: 0, referrers: [{ name: 'Ingrid', count: 24 }, { name: 'Jonas', count: 11 }, { name: 'Nora', count: 7 }] },
   Vancouver: { users: 18, waitlist: 307, referrers: [{ name: 'Liam', count: 21 }, { name: 'Chloe', count: 13 }, { name: 'Ethan', count: 7 }] },
+  Toronto: { users: 21, waitlist: 356, referrers: [{ name: 'Priya', count: 24 }, { name: 'Marcus', count: 15 }, { name: 'Zoe', count: 8 }] },
+  Melbourne: { users: 16, waitlist: 274, referrers: [{ name: 'Lachlan', count: 19 }, { name: 'Isla', count: 12 }, { name: 'Ruby', count: 6 }] },
   'Los Angeles': { users: 27, waitlist: 489, referrers: [{ name: 'Mia', count: 35 }, { name: 'Jordan', count: 19 }, { name: 'Ava', count: 11 }] },
   'San Francisco': { users: 15, waitlist: 263, referrers: [{ name: 'Alex', count: 18 }, { name: 'Sam', count: 10 }, { name: 'Taylor', count: 6 }] },
 };

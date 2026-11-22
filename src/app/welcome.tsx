@@ -51,8 +51,6 @@ export default function Welcome() {
     anim.start();
     return () => anim.stop();
   }, [rise]);
-  // One full spin of the logo while the welcome screen fades in (Yana, 2026-11-22).
-  const spin = { transform: [{ rotate: rise.interpolate({ inputRange: [0, 1], outputRange: ['0deg', '360deg'] }) }] };
   const showRest = { opacity: rise.interpolate({ inputRange: [0, 0.6, 1], outputRange: [0, 0.7, 1], extrapolate: 'clamp' }) };
   const { saveProfile } = useStore();
   // Sign up / sign in are set aside for now (Yana, 2026-11-22): the code in auth.tsx stays,
@@ -111,9 +109,8 @@ export default function Welcome() {
         </Animated.View>
         {/* Same size and spot as the loading screen logo, so it stays put (Yana, 2026-11-22). */}
         <View pointerEvents="none" style={[StyleSheet.absoluteFill, styles.splashCenter]}>
-          <Animated.View style={spin}>
-            <BrandMark height={56} tone="white" />
-          </Animated.View>
+          {/* The logo already spun on the loading screen, so here it stays still. */}
+          <BrandMark height={56} tone="white" />
         </View>
         <SafeAreaView style={[styles.safe, { justifyContent: 'flex-end' }]}>
           <Animated.View style={[styles.bottom, showRest]}>

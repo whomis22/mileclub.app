@@ -127,6 +127,20 @@ export const NEIGHBORHOODS = {
   'West Hollywood': { lat: 34.09, lng: -118.3617 },
   'Downtown LA': { lat: 34.0407, lng: -118.2468 },
   'Echo Park': { lat: 34.0782, lng: -118.2606 },
+  // Toronto
+  'Queen West': { lat: 43.6465, lng: -79.4111 },
+  'The Annex': { lat: 43.6705, lng: -79.4068 },
+  'Liberty Village': { lat: 43.6383, lng: -79.4201 },
+  Leslieville: { lat: 43.6627, lng: -79.3326 },
+  'Kensington Market': { lat: 43.6547, lng: -79.4005 },
+  Yorkville: { lat: 43.6709, lng: -79.3932 },
+  // Melbourne
+  Fitzroy: { lat: -37.7983, lng: 144.9787 },
+  'St Kilda': { lat: -37.8676, lng: 144.9809 },
+  Richmond: { lat: -37.8182, lng: 145.0018 },
+  'South Yarra': { lat: -37.8389, lng: 144.9926 },
+  Brunswick: { lat: -37.7667, lng: 144.9603 },
+  'Melbourne CBD': { lat: -37.8136, lng: 144.9631 },
   // Stockholm (no longer a Mile Club city, kept so older profiles still work)
   'Södermalm': { lat: 59.315, lng: 18.071 },
   'Östermalm': { lat: 59.338, lng: 18.085 },
@@ -146,6 +160,8 @@ export const CITIES = [
   { id: 'San Francisco', label: 'San Francisco', hoods: ['Mission', 'Marina', 'SoMa', 'Hayes Valley', 'Noe Valley'] },
   { id: 'Vancouver', label: 'Vancouver', hoods: ['Kitsilano', 'Gastown', 'Mount Pleasant', 'Yaletown', 'West End', 'Commercial Drive'] },
   { id: 'Oslo', label: 'Oslo', hoods: ['Grünerløkka', 'Frogner', 'Majorstuen', 'Sentrum', 'Gamle Oslo', 'Aker Brygge'] },
+  { id: 'Toronto', label: 'Toronto', hoods: ['Queen West', 'The Annex', 'Liberty Village', 'Leslieville', 'Kensington Market', 'Yorkville'] },
+  { id: 'Melbourne', label: 'Melbourne', hoods: ['Fitzroy', 'St Kilda', 'Richmond', 'South Yarra', 'Brunswick', 'Melbourne CBD'] },
   { id: 'Los Angeles', label: 'Los Angeles', hoods: ['Santa Monica', 'Silver Lake', 'Venice', 'West Hollywood', 'Downtown LA', 'Echo Park'] },
 ] as const satisfies readonly { id: string; label: string; hoods: readonly Neighborhood[] }[];
 export type City = (typeof CITIES)[number]['id'];

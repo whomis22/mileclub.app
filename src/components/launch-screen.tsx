@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Animated, Platform, StyleSheet, View } from 'react-native';
+import { Animated, Easing, Platform, StyleSheet, View } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 
 import { BrandMark } from '@/components/ui';
@@ -24,6 +24,17 @@ export function LaunchScreen() {
   const [opacity] = useState(() => new Animated.Value(1));
   const [visible, setVisible] = useState(true);
   const [scale] = useState(() => new Animated.Value(1));
+  const [turn] = useState(() => new Animated.Value(0));
+
+  // The logo spins once every time the app opens (Yana, 2026-11-22).
+  useEffect(() => {
+    const spin = Animated.sequence([
+      Animated.delay(150),
+      Animated.timing(turn, { toValue: 1, duration: 1100, easing: Easing.inOut(Easing.cubic), useNativeDriver: true }),
+    ]);
+    spin.start();
+    return () => spin.stop();
+  }, [turn]);
 
   useEffect(() => {
     if (Platform.OS === 'web') return;
@@ -58,7 +69,7 @@ export function LaunchScreen() {
     <Animated.View style={[StyleSheet.absoluteFill, styles.screen, { opacity }]}>
       <StatusBar style={isDark ? 'light' : 'dark'} />
       <View style={styles.center}>
-        <Animated.View style={{ transform: [{ scale }] }}>
+        <Animated.View style={{ transform: [{ scale }, { rotate: turn.interpolate({ inputRange: [0, 1], outputRange: ['0deg', '360deg'] }) }] }}>
           <BrandMark height={56} />
         </Animated.View>
       </View>
