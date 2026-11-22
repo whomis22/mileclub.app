@@ -39,7 +39,8 @@ export function friendlyError(e: unknown): string {
     return 'Too many tries in a short time. Please wait a minute and try again.';
   if (m.includes('email not confirmed')) return 'Please confirm your email first. Check your inbox for the code.';
   if (m.includes('signups not allowed') || m.includes('user not found')) return 'We couldn’t find an account with that email.';
-  if (m.includes('network') || m.includes('fetch')) return 'No connection. Check your internet and try again.';
+  // Also shows when the server itself is asleep or down, so don't blame the person's WiFi (Yana, 2026-11-22).
+  if (m.includes('network') || m.includes('fetch')) return 'We can’t reach the Mile Club server right now. Please try again in a minute.';
   if (m.includes('password')) return msg;
   return 'Something went wrong. Please try again.';
 }
