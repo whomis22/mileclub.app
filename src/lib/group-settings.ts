@@ -1,4 +1,4 @@
-import { Storage } from 'expo-sqlite/kv-store';
+import { Storage } from '@/lib/kv';
 import { useSyncExternalStore } from 'react';
 
 // Settings for the Mile Club Members group chat, kept on this phone until there's a server.

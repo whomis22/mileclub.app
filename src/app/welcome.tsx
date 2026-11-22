@@ -1,135 +1,192 @@
-import * as AppleAuthentication from 'expo-apple-authentication';
+import Feather from '@expo/vector-icons/Feather';
 import { Image } from 'expo-image';
+import { LinearGradient } from 'expo-linear-gradient';
 import { router, type Href } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
-import { useEffect, useState } from 'react';
-import { Alert, Platform, Pressable, StyleSheet, Text, View } from 'react-native';
+import { useEffect, useRef, useState } from 'react';
+import { Animated, Dimensions, Easing, Pressable, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { Logo } from '@/components/ui';
-import { colors, fonts, radius, space, themed, useTheme } from '@/theme';
+import { launchEndsIn } from '@/components/launch-screen';
+import { BrandMark } from '@/components/ui';
+import { CITIES } from '@/data/options';
+import type { Profile } from '@/data/types';
+import { homeFor } from '@/lib/home';
+import { useStore } from '@/state/store';
+import { fonts, radius, space, themed, useTheme } from '@/theme';
 
-// Welcome: logo and Log in at the top, a fanned stack of run photo cards,
-// "Find your running crew." and the Join button at the bottom.
+// Welcome, copied from Yana's design board (2026-11-21): splash with the mc logo,
+// three photo onboarding slides, then the Sign Up / Log In screen.
+// Splash: black-and-white night run in dark mode, white poster in light mode.
+const LIME = '#B9E769';
+const H = Dimensions.get('window').height;
 
-const CARDS = [
-  { photo: require('../../assets/images/photos/dusk.png'), title: 'Sunrise 5K', style: { left: '6%', top: 36, transform: [{ rotate: '-10deg' }] } },
-  { photo: require('../../assets/images/photos/lake.png'), title: 'Riverside', style: { right: '6%', top: 16, transform: [{ rotate: '9deg' }] } },
-] as const;
+const OSLO_HOOD = CITIES.find((c) => c.id === 'Oslo')!.hoods[0];
+const DEMO_PROFILE: Profile = {
+  firstName: 'Yana', username: 'yana', age: 27, city: 'Oslo', neighborhood: OSLO_HOOD,
+  activities: ['running', 'pilates', 'yoga', 'tennis'], level: 'Intermediate',
+  goals: ['Meet new people', 'Stay consistent', 'Try new things'],
+  availability: ['Weekday evenings', 'Weekend mornings'], groupSize: 'Small group (3–6)', social: 'A bit of both',
+};
+
+const SLIDES = [
+  { photo: require('../../assets/images/photos/board-ob1.jpg'), title: 'Meet\nworkout\npartners.', sub: 'Find people into\nyour sport, goals and vibe.' },
+  { photo: require('../../assets/images/photos/board-ob2.jpg'), title: 'Explore\nactivities.', sub: 'Running, padel, Pilates,\nyoga, gym and more.' },
+  { photo: require('../../assets/images/photos/board-ob3.jpg'), title: 'Build\nyour community.', sub: 'Make friends. Stay active.\nBe part of something bigger.' },
+];
 
 export default function Welcome() {
   const { isDark } = useTheme();
-  const logIn = () => router.push('/login' as Href);
-  const signUp = () => router.push('/signup');
-  const [appleReady, setAppleReady] = useState(false);
-
+  const [step, setStep] = useState(0); // 0 = splash, 1-3 = onboarding
+  const [fade] = useState(() => new Animated.Value(1));
+  const busy = useRef(false);
+  // Opening (Yana, 2026-11-22): the logo stays in the middle, where the loading screen
+  // had it, while the photo and buttons fade in around it.
+  const [rise] = useState(() => new Animated.Value(0));
   useEffect(() => {
-    if (Platform.OS !== 'ios') return;
-    AppleAuthentication.isAvailableAsync().then(setAppleReady).catch(() => setAppleReady(false));
-  }, []);
+    const anim = Animated.sequence([
+      Animated.delay(launchEndsIn()),
+      Animated.timing(rise, { toValue: 1, duration: 900, easing: Easing.inOut(Easing.cubic), useNativeDriver: true }),
+    ]);
+    anim.start();
+    return () => anim.stop();
+  }, [rise]);
+  const showRest = { opacity: rise.interpolate({ inputRange: [0, 0.6, 1], outputRange: [0, 0.7, 1], extrapolate: 'clamp' }) };
+  const { saveProfile } = useStore();
+  // Sign up / sign in are set aside for now (Yana, 2026-11-22): the code in auth.tsx stays,
+  // but Get Started goes straight to profile setup and Log In opens the app with a demo profile.
+  // To bring real accounts back: route these to '/auth' and '/auth?tab=login' again.
+  const signUp = () => router.push('/onboarding' as Href);
+  const logIn = () => {
+    saveProfile(DEMO_PROFILE);
+    router.replace(homeFor(DEMO_PROFILE));
+  };
 
-  // Sign in with Apple: Apple confirms who the person is and (the first time
-  // only) shares their name and email. We then skip straight to the rest of
-  // sign-up. There's no server yet, so the Apple sign-in isn't stored anywhere.
-  async function continueWithApple() {
-    try {
-      const credential = await AppleAuthentication.signInAsync({
-        requestedScopes: [
-          AppleAuthentication.AppleAuthenticationScope.FULL_NAME,
-          AppleAuthentication.AppleAuthenticationScope.EMAIL,
-        ],
-      });
-      const fullName = [credential.fullName?.givenName, credential.fullName?.familyName].filter(Boolean).join(' ');
-      router.push({
-        pathname: '/signup',
-        params: { apple: '1', name: fullName, email: credential.email ?? '' },
-      });
-    } catch (e) {
-      if ((e as { code?: string }).code === 'ERR_REQUEST_CANCELED') return;
-      Alert.alert('Apple sign-in didn’t work', 'Please try again, or tap Join Mile Club to sign up with email.');
-    }
+  function go(next: number) {
+    if (busy.current) return;
+    busy.current = true;
+    Animated.timing(fade, { toValue: 0, duration: 160, useNativeDriver: true }).start(() => {
+      setStep(next);
+      Animated.timing(fade, { toValue: 1, duration: 260, useNativeDriver: true }).start(() => (busy.current = false));
+    });
   }
 
+  if (step === 0 && !isDark) {
+    return (
+      <View style={[styles.screen, { backgroundColor: '#FFFFFF' }]}>
+        <StatusBar style="dark" />
+        <View style={styles.city}>
+          <Image source={require('../../assets/images/photos/board-ob3.jpg')} style={StyleSheet.absoluteFill} contentFit="cover" />
+          <LinearGradient colors={['#FFFFFF', 'rgba(255,255,255,0)', 'rgba(255,255,255,0)', '#FFFFFF']} locations={[0, 0.35, 0.55, 0.95]} style={StyleSheet.absoluteFill} />
+        </View>
+        <SafeAreaView style={styles.safe}>
+          <View style={styles.posterMid}>
+            <BrandMark height={64} tone="black" />
+            <Text style={styles.posterTag}>A COMMUNITY{'\n'}IN MOTION.</Text>
+            <Text style={styles.posterSub}>Find your people.{'\n'}Find your place.{'\n'}Get moving.</Text>
+            <View style={styles.swoosh} />
+          </View>
+          <View style={styles.bottom}>
+            <Pressable onPress={() => go(1)} style={({ pressed }) => [styles.lime, pressed && { opacity: 0.85 }]}>
+              <Text style={styles.limeText}>Get Started</Text>
+            </Pressable>
+            <Pressable onPress={logIn} hitSlop={10} style={styles.loginWrap}>
+              <Text style={[styles.login, { color: '#0A0A0A' }]}>Log In</Text>
+            </Pressable>
+          </View>
+        </SafeAreaView>
+      </View>
+    );
+  }
+
+  if (step === 0) {
+    return (
+      <View style={styles.screen}>
+        <StatusBar style="light" />
+        <Animated.View style={[StyleSheet.absoluteFill, showRest]}>
+          <Image source={require('../../assets/images/photos/board-splash.jpg')} style={StyleSheet.absoluteFill} contentFit="cover" />
+          <LinearGradient colors={['rgba(0,0,0,0.6)', 'rgba(0,0,0,0.15)', 'rgba(0,0,0,0.45)', 'rgba(0,0,0,0.95)']} locations={[0, 0.25, 0.55, 1]} style={StyleSheet.absoluteFill} />
+        </Animated.View>
+        {/* Same size and spot as the loading screen logo, so it stays put (Yana, 2026-11-22). */}
+        <View pointerEvents="none" style={[StyleSheet.absoluteFill, styles.splashCenter]}>
+          {/* The logo already spun on the loading screen, so here it stays still. */}
+          <BrandMark height={56} tone="white" />
+        </View>
+        <SafeAreaView style={[styles.safe, { justifyContent: 'flex-end' }]}>
+          <Animated.View style={[styles.bottom, showRest]}>
+            <Pressable onPress={() => go(1)} style={({ pressed }) => [styles.lime, pressed && { opacity: 0.85 }]}>
+              <Text style={styles.limeText}>Get Started</Text>
+            </Pressable>
+            <Pressable onPress={logIn} hitSlop={10} style={styles.loginWrap}>
+              <Text style={styles.login}>Log In</Text>
+            </Pressable>
+          </Animated.View>
+        </SafeAreaView>
+      </View>
+    );
+  }
+
+  const slide = SLIDES[step - 1]!;
+  const last = step === SLIDES.length;
   return (
-    <SafeAreaView style={styles.screen}>
-      <StatusBar style={isDark ? "light" : "dark"} />
-      <View style={styles.top}>
-        <Logo size={34} />
-        <Pressable onPress={logIn} hitSlop={12}>
-          <Text style={styles.login}>Log in</Text>
-        </Pressable>
-      </View>
-
-      <View style={styles.stack}>
-        {CARDS.map((c) => (
-          <View key={c.title} style={[styles.card, styles.back, c.style]}>
-            <Image source={c.photo} style={StyleSheet.absoluteFill} contentFit="cover" />
-            <Text style={styles.cardTitle}>{c.title}</Text>
-          </View>
-        ))}
-        <View style={[styles.card, styles.front]}>
-          <Image source={require('../../assets/images/photos/park.png')} style={StyleSheet.absoluteFill} contentFit="cover" />
-          <View style={styles.going}>
-            <Text style={styles.goingText}>6 going</Text>
-          </View>
-          <View>
-            <Text style={[styles.cardTitle, { fontSize: 28 }]}>Park loop</Text>
-            <Text style={styles.cardMeta}>SAT · 08:00 · EASY</Text>
-          </View>
-        </View>
-      </View>
-
-      <View style={styles.bottom}>
-        <Text style={styles.hero}>
-          Find your <Text style={styles.heroItalic}>running crew.</Text>
-        </Text>
-        <View style={{ gap: space.md }}>
-          {appleReady ? (
-            <AppleAuthentication.AppleAuthenticationButton
-              buttonType={AppleAuthentication.AppleAuthenticationButtonType.CONTINUE}
-              buttonStyle={AppleAuthentication.AppleAuthenticationButtonStyle.BLACK}
-              cornerRadius={27}
-              style={styles.appleButton}
-              onPress={continueWithApple}
-            />
-          ) : null}
-          <Pressable onPress={signUp} style={({ pressed }) => [styles.join, pressed && { opacity: 0.8 }]}>
-            <Text style={styles.joinText}>Join Mile Club</Text>
+    <View style={styles.screen}>
+      <StatusBar style="light" />
+      <Animated.View style={[StyleSheet.absoluteFill, { opacity: fade }]}>
+        <Image source={slide.photo} style={styles.photo} contentFit="cover" transition={200} />
+        <LinearGradient colors={['rgba(0,0,0,0)', 'rgba(0,0,0,0.75)', '#000']} locations={[0.3, 0.55, 0.72]} style={StyleSheet.absoluteFill} />
+      </Animated.View>
+      <SafeAreaView style={styles.safe}>
+        <View style={styles.top}>
+          <Pressable onPress={() => go(step - 1)} hitSlop={12} accessibilityLabel="Back" style={{ opacity: 0.8 }}>
+            <Feather name="chevron-left" size={24} color="#FFFFFF" />
           </Pressable>
-          <Text style={styles.coach}>
-            Are you a coach?{' '}
-            <Text style={styles.coachLink} onPress={signUp}>
-              Host sessions
-            </Text>
-          </Text>
-          <Text style={styles.terms}>
-            By joining, you agree to our Terms, Privacy Policy and Community Guidelines.
-          </Text>
+          {!last ? (
+            <Pressable onPress={() => go(SLIDES.length)} hitSlop={12}>
+              <Text style={styles.skip}>Skip</Text>
+            </Pressable>
+          ) : null}
         </View>
-      </View>
-    </SafeAreaView>
+        <Animated.View style={[styles.copy, { opacity: fade }]}>
+          <Text style={styles.title}>{slide.title}</Text>
+          <Text style={styles.sub}>{slide.sub}</Text>
+        </Animated.View>
+        <View style={styles.dots}>
+          {SLIDES.map((_, k) => (
+            <View key={k} style={[styles.dot, k <= step - 1 && styles.dotOn]} />
+          ))}
+        </View>
+        <View style={styles.bottom}>
+          <Pressable onPress={last ? signUp : () => go(step + 1)} style={({ pressed }) => [styles.lime, pressed && { opacity: 0.85 }]}>
+            <Text style={styles.limeText}>{last ? 'Join Mile Club' : 'Next'}</Text>
+            {!last ? <Feather name="arrow-right" size={18} color="#000" /> : null}
+          </Pressable>
+        </View>
+      </SafeAreaView>
+    </View>
   );
 }
 
 const styles = themed(() => StyleSheet.create({
-  screen: { flex: 1, backgroundColor: colors.bg },
-  top: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 28, paddingTop: space.md },
-  login: { fontFamily: fonts.sansSemi, fontSize: 14, color: colors.ink },
-  stack: { flex: 1, minHeight: 320, marginTop: space.lg },
-  card: { position: 'absolute', borderRadius: 28, overflow: 'hidden', padding: 16, justifyContent: 'flex-end' },
-  back: { width: '52%', height: '72%' },
-  front: { width: '58%', height: '78%', left: '21%', top: 90, justifyContent: 'space-between', borderRadius: 30 },
-  cardTitle: { fontFamily: fonts.serifItalic, fontSize: 19, color: colors.onBrand },
-  cardMeta: { fontFamily: fonts.sansMedium, fontSize: 10, letterSpacing: 1.2, color: colors.onBrand, marginTop: 4 },
-  going: { alignSelf: 'flex-start', backgroundColor: colors.peach, borderRadius: radius.pill, paddingVertical: 5, paddingHorizontal: 10 },
-  goingText: { fontFamily: fonts.sansSemi, fontSize: 11, color: colors.onPeach },
-  bottom: { paddingHorizontal: 28, paddingBottom: space.lg, gap: space.xl },
-  hero: { fontFamily: fonts.serif, fontSize: 32, lineHeight: 42, color: colors.ink, textAlign: 'center' },
-  heroItalic: { fontFamily: fonts.serifItalic },
-  appleButton: { width: '100%', height: 54 },
-  join: { height: 54, borderRadius: radius.pill, backgroundColor: colors.olive, alignItems: 'center', justifyContent: 'center' },
-  joinText: { fontFamily: fonts.sansSemi, fontSize: 15, color: colors.onBrand },
-  coach: { fontFamily: fonts.sans, fontSize: 13, color: colors.muted, textAlign: 'center' },
-  coachLink: { fontFamily: fonts.sansSemi, color: colors.link },
-  terms: { fontFamily: fonts.sans, fontSize: 11, color: colors.muted, textAlign: 'center', lineHeight: 15 },
+  screen: { flex: 1, backgroundColor: '#000' },
+  safe: { flex: 1, justifyContent: 'space-between' },
+  splashCenter: { alignItems: 'center', justifyContent: 'center', paddingBottom: 20 }, // matches the loading screen
+  city: { position: 'absolute', left: 0, right: 0, bottom: 0, height: H * 0.48 },
+  posterMid: { flex: 1, alignItems: 'center', justifyContent: 'center', paddingBottom: H * 0.12 },
+  posterTag: { fontFamily: fonts.logo, fontStyle: 'italic', fontSize: 22, lineHeight: 24, color: '#0A0A0A', textAlign: 'center', marginTop: 26 },
+  posterSub: { fontFamily: fonts.sansMedium, fontSize: 16, lineHeight: 22, color: '#2A2A2A', textAlign: 'center', marginTop: 18 },
+  swoosh: { width: 90, height: 3, borderRadius: 2, backgroundColor: LIME, marginTop: 16, transform: [{ rotate: '-8deg' }] },
+  photo: { position: 'absolute', top: 0, left: 0, right: 0, height: H * 0.7 },
+  top: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 18, paddingTop: 6 },
+  skip: { fontFamily: fonts.sansSemi, fontSize: 15, color: '#FFFFFF' },
+  copy: { flex: 1, justifyContent: 'flex-end', paddingHorizontal: 26, gap: 14 },
+  title: { fontFamily: fonts.serif, fontSize: 40, lineHeight: 44, color: '#FFFFFF', letterSpacing: -1 },
+  sub: { fontFamily: fonts.sans, fontSize: 16, lineHeight: 23, color: 'rgba(255,255,255,0.85)' },
+  dots: { flexDirection: 'row', gap: 10, justifyContent: 'center', marginTop: 40, marginBottom: 24 },
+  dot: { width: 7, height: 7, borderRadius: 4, backgroundColor: 'rgba(255,255,255,0.35)' },
+  dotOn: { backgroundColor: LIME },
+  bottom: { paddingHorizontal: 24, paddingBottom: space.lg, gap: space.md },
+  lime: { height: 56, borderRadius: radius.pill, backgroundColor: LIME, alignItems: 'center', justifyContent: 'center', flexDirection: 'row', gap: 8 },
+  limeText: { fontFamily: fonts.sansBold, fontSize: 16, color: '#000' },
+  loginWrap: { alignSelf: 'center', paddingVertical: 6 },
+  login: { fontFamily: fonts.sansSemi, fontSize: 15, color: '#FFFFFF' },
 }));

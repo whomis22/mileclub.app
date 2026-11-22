@@ -6,11 +6,12 @@ import { activityInfo } from '@/data/options';
 import { euro } from '@/data/roles';
 import { friendlyDate } from '@/lib/format';
 import type { RequestStatus } from '@/state/store';
-import { colors, radius, space, themed } from '@/theme';
+import { colors, radius, space, themed, useTheme } from '@/theme';
 
 import { Avatar, Badge, Card } from './ui';
 
 export function SessionCard({ s, mine, status }: { s: CoachSession; mine?: boolean; status?: RequestStatus }) {
+  useTheme();
   const coach = findCoach(s.coachId);
   const left = s.spots - s.booked;
   return (

@@ -1,13 +1,17 @@
-import { Storage } from 'expo-sqlite/kv-store';
+import { Storage } from '@/lib/kv';
 import { createContext, useContext, useEffect, useState, type ReactNode } from 'react';
 
 import { sampleActivities } from '@/data/activities';
 import { sampleSessions, type CoachSession } from '@/data/coaches';
+import type { ChatThread } from '@/data/messages';
+import type { ActivityId } from '@/data/options';
 import type { Role } from '@/data/roles';
 import { PEOPLE } from '@/data/people';
 import type { Activity, Profile } from '@/data/types';
 import { canSeeRun } from '@/lib/meet';
+import { pushProfile, supabase } from '@/lib/supabase';
 
+import { useTheme } from '@/theme';
 export type RequestStatus = 'pending' | 'accepted' | 'declined';
 
 // Someone asking to book one of the user's own coach sessions.
@@ -20,16 +24,25 @@ export type RunRequest = { id: string; activityId: string; personId: string; sta
 export type MyPost = { id: string; uri?: string; caption: string; at: number; archived?: boolean; edited?: boolean }; // no uri = text-only post
 
 // A comment under any Explore post. authorId is 'me' or a sample person id.
-export type PostComment = { id: string; authorId: string; text: string; at: number };
+export type PostComment = { id: string; authorId: string; text: string; at: number; gif?: string };
 
 // A call the user made, shown as a line in the chat with that person.
 export type CallLog = { id: string; personId: string; video: boolean; secs: number; answered: boolean; at: number; incoming?: boolean };
 
 // A heads-up for the user: a host answered their request to join.
-export type Notice = { id: string; kind: 'accepted' | 'declined'; activityId?: string; sessionId?: string; at: number; read?: boolean };
+export type Notice = { id: string; kind: 'accepted' | 'declined' | 'welcome'; activityId?: string; sessionId?: string; at: number; read?: boolean };
+
+// A private session: only the friends the user invites can see it (Yana, 2026-11-21).
+// Once everyone says yes and there are 4+ people, a group chat "<Host>'s Corner" opens.
+export type PrivateSession = {
+  id: string; type: ActivityId; title: string; date: string; time: string; place: string;
+  invited: string[]; answers: Record<string, RequestStatus>; at: number; chatId?: string;
+};
+export const CORNER_MIN = 4; // people incl. the host
 
 // Demo: sample coaches and hosts answer a request after this long.
 const DEMO_REPLY_MS = 20000;
+const PRIVATE_REPLY_MS = 4000; // demo: each invited friend says yes a few seconds after the last
 
 type State = {
   profile: Profile | null;
@@ -51,6 +64,10 @@ type State = {
   calls: CallLog[]; // call history, shown in chats
   notices: Notice[]; // newest first
   admin: boolean; // Mile Club admin (mock switch in the side menu): can call anyone
+  privateSessions: PrivateSession[]; // invite-only sessions the user made, newest first
+  corners: ChatThread[]; // group chats made for private sessions
+  planJoins: string[]; // Explore plans the user joined (ids from data/plans)
+  welcomed?: boolean; // got the welcome notification (Yana, 2026-11-22)
 };
 
 type Store = State & {
@@ -80,15 +97,24 @@ type Store = State & {
   deletePost: (id: string) => void;
   editPost: (id: string, caption: string, uri?: string) => void;
   archivePost: (id: string, archived: boolean) => void;
-  addComment: (postId: string, text: string) => void;
+  addComment: (postId: string, text: string, gif?: string) => void;
   deleteComment: (postId: string, commentId: string) => void;
   cancelBooking: (sessionId: string) => void;
   block: (personId: string) => void;
+  createPrivate: (input: Omit<PrivateSession, 'id' | 'answers' | 'at' | 'chatId'>) => PrivateSession;
+  cancelPrivate: (id: string) => void;
+  togglePlan: (id: string) => void;
   reset: () => void;
 };
 
 const KEY = 'mileclub-state-v1';
-const empty: State = { profile: null, myActivities: [], joined: [], blocked: [], skipped: [], kudos: [], mySessions: [], booked: [], requests: {}, incoming: [], runRequests: {}, runIncoming: [], following: [], myPosts: [], comments: {}, calls: [], notices: [], admin: false };
+const empty: State = { profile: null, myActivities: [], joined: [], blocked: [], skipped: [], kudos: [], mySessions: [], booked: [], requests: {}, incoming: [], runRequests: {}, runIncoming: [], following: [], myPosts: [], comments: {}, calls: [], notices: [], admin: false, privateSessions: [], corners: [], planJoins: [] };
+
+// Every member gets one welcome notification (Yana, 2026-11-22).
+function withWelcome(s: State): State {
+  if (!s.profile || s.welcomed) return s;
+  return { ...s, welcomed: true, notices: [{ id: `welcome-${Date.now()}`, kind: 'welcome', at: Date.now() }, ...(s.notices ?? [])] };
+}
 
 function load(): State {
   try {
@@ -96,7 +122,7 @@ function load(): State {
     if (!raw) return empty;
     const s: State = { ...empty, ...JSON.parse(raw) };
     for (const id of s.booked) s.requests = { ...s.requests, [id]: { status: 'accepted', at: 0 } };
-    return { ...s, booked: [] };
+    return withWelcome({ ...s, booked: [] });
   } catch {
     return empty;
   }
@@ -107,6 +133,7 @@ const samples = sampleActivities();
 const sampleCoachSessions = sampleSessions();
 
 export function StoreProvider({ children }: { children: ReactNode }) {
+  useTheme();
   const [state, setState] = useState<State>(load);
 
   const update = (fn: (s: State) => State) =>
@@ -138,7 +165,9 @@ export function StoreProvider({ children }: { children: ReactNode }) {
         const runDue = Object.entries(prev.runRequests ?? {}).filter(
           ([, r]) => r.status === 'pending' && Date.now() - r.at > DEMO_REPLY_MS,
         );
-        if (!due.length && !runDue.length) return prev;
+        const privDue = (prev.privateSessions ?? []).some((ps) =>
+          ps.invited.some((pid, i) => ps.answers[pid] === 'pending' && Date.now() - ps.at > PRIVATE_REPLY_MS * (i + 1)));
+        if (!due.length && !runDue.length && !privDue) return prev;
         const now = Date.now();
         const notices = [...(prev.notices ?? [])];
         const requests = { ...prev.requests };
@@ -156,7 +185,29 @@ export function StoreProvider({ children }: { children: ReactNode }) {
           if (!declined && !joined.includes(id)) joined.push(id);
           notices.unshift({ id: `n${now}${id}`, kind: declined ? 'declined' : 'accepted', activityId: id, at: now });
         }
-        const next = { ...prev, requests, runRequests, joined, notices };
+        // Demo: invited friends say yes one by one. When everyone has, and there are 4+ people,
+        // the session gets its own group chat with a welcome message.
+        let corners = prev.corners ?? [];
+        const privateSessions = (prev.privateSessions ?? []).map((ps) => {
+          const answers = { ...ps.answers };
+          ps.invited.forEach((pid, i) => {
+            if (answers[pid] === 'pending' && now - ps.at > PRIVATE_REPLY_MS * (i + 1)) answers[pid] = 'accepted';
+          });
+          const next: PrivateSession = { ...ps, answers };
+          const allIn = ps.invited.every((pid) => answers[pid] === 'accepted');
+          if (allIn && !ps.chatId && ps.invited.length + 1 >= CORNER_MIN) {
+            const host = prev.profile?.firstName ?? 'Your';
+            const chat: ChatThread = {
+              id: `corner-${ps.id}`, kind: 'group', name: `${host}’s Corner`, time: 'Now', unread: true,
+              sessionId: ps.id, members: ps.invited,
+              messages: [{ id: `w${now}`, from: 'admin', text: `Welcome to ${host}’s Corner! Here you can plan and update each other before and after the session.`, at: now }],
+            };
+            corners = [chat, ...corners];
+            next.chatId = chat.id;
+          }
+          return next;
+        });
+        const next = { ...prev, requests, runRequests, joined, notices, privateSessions, corners };
         try {
           Storage.setItemSync(KEY, JSON.stringify(next));
         } catch {}
@@ -201,7 +252,11 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     statusOf: (id) => state.requests[id]?.status,
     respond: (rid, status) =>
       update((s) => ({ ...s, incoming: s.incoming.map((r) => (r.id === rid ? { ...r, status } : r)) })),
-    saveProfile: (profile) => update((s) => ({ ...s, profile })),
+    saveProfile: (profile) => {
+      update((s) => withWelcome({ ...s, profile }));
+      // Also save it to the person's Mile Club account (if they're logged in).
+      pushProfile(profile).catch(() => {});
+    },
     createActivity: (input) => {
       const activity: Activity = { ...input, id: `me-${Date.now()}`, participants: ['me'], hostId: 'me' };
       // Demo: a couple of people ask to join straight away, so there are requests to accept or decline.
@@ -261,18 +316,37 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     archivePost: (id, archived) =>
       update((s) => ({ ...s, myPosts: s.myPosts.map((p) => (p.id === id ? { ...p, archived } : p)) })),
     deletePost: (id) => update((s) => ({ ...s, myPosts: s.myPosts.filter((p) => p.id !== id) })),
-    addComment: (postId, text) =>
+    addComment: (postId, text, gif) =>
       update((s) => ({
         ...s,
         comments: {
           ...s.comments,
-          [postId]: [...(s.comments[postId] ?? []), { id: `c${Date.now()}`, authorId: 'me', text: text.trim(), at: Date.now() }],
+          [postId]: [...(s.comments[postId] ?? []), { id: `c${Date.now()}`, authorId: 'me', text: text.trim(), at: Date.now(), ...(gif ? { gif } : {}) }],
         },
       })),
     deleteComment: (postId, cid) =>
       update((s) => ({ ...s, comments: { ...s.comments, [postId]: (s.comments[postId] ?? []).filter((c) => c.id !== cid) } })),
+    createPrivate: (input) => {
+      const ps: PrivateSession = { ...input, id: `ps${Date.now()}`, at: Date.now(), answers: Object.fromEntries(input.invited.map((p) => [p, 'pending' as const])) };
+      update((s) => ({ ...s, privateSessions: [ps, ...(s.privateSessions ?? [])] }));
+      return ps;
+    },
+    togglePlan: (id) =>
+      update((s) => {
+        const list = s.planJoins ?? [];
+        return { ...s, planJoins: list.includes(id) ? list.filter((x) => x !== id) : [...list, id] };
+      }),
+    cancelPrivate: (id) =>
+      update((s) => ({
+        ...s,
+        privateSessions: (s.privateSessions ?? []).filter((p) => p.id !== id),
+        corners: (s.corners ?? []).filter((c) => c.sessionId !== id),
+      })),
     block: (personId) => update((s) => ({ ...s, blocked: [...s.blocked, personId] })),
-    reset: () => update(() => empty),
+    reset: () => {
+      update(() => empty);
+      supabase.auth.signOut().catch(() => {});
+    },
   };
 
   return <Ctx.Provider value={store}>{children}</Ctx.Provider>;

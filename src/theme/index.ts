@@ -1,71 +1,90 @@
-import { Storage } from 'expo-sqlite/kv-store';
+import { Storage } from '@/lib/kv';
+import { Appearance } from 'react-native';
 import { useSyncExternalStore } from 'react';
 
-// Mile Club look: Rich Olive (brand, buttons), Warm Cream (backgrounds),
-// Soft Peach (highlights, likes, social bits). Logo: olive m + peach c on cream.
-// Dark mode is "True black" (picked by Yana 2026-11-01): pure black background,
-// cream text, same olive and peach.
+// Mile Club colours (Yana, 2026-11-21): Midnight Forest #102A27 (main brand),
+// Fresh Lime #B9E769 (signature accent), Cloud White #F7F7F2 (light background),
+// Slate Grey #777F79 (secondary text). Dark mode is a near-black forest with a green glow,
+// lime buttons (Dribbble fitness look Yana sent). Older names (olive, peach) are kept
+// so every screen picks the new colours up: olive = forest, peach = lime.
 const light = {
-  bg: '#F7F1E6', // warm cream
-  card: '#FFFFFF',
-  sand: '#EDE5D6', // slightly darker cream for fields and chat bubbles
-  ink: '#262A1C',
-  muted: '#6E6A5E',
-  line: '#E0D7C6',
-  edge: '#D8CFBE', // outlines of round buttons and fields
-  track: '#E6DDCC', // empty part of progress bars
-  dashed: '#B9AE98',
-  off: '#CFC8B6', // disabled button
-  offText: '#F3EDE2',
-  inkBg: '#262A1C', // dark panels (earnings, coach dashboard)
-  link: '#556B2F', // olive text and links
-  olive: '#556B2F',
-  oliveDark: '#2F3D29',
-  oliveSoft: '#E3E6D3',
-  peach: '#F6C6A8',
-  peachDeep: '#F4B595',
-  black: '#111111',
-  onBrand: '#F7F1E6', // text on olive, photos and dark panels
-  onPeach: '#262A1C', // text on peach
-  overlay: 'rgba(38,42,28,0.55)',
+  // Design board, light version (Yana, 2026-11-21): white pages, soft grey cards,
+  // lime buttons with black text, black secondary buttons, lime chat bubbles.
+  bg: '#FFFFFF',
+  card: '#F4F4F7',
+  sand: '#F0F0F4', // fields and chat bubbles
+  ink: '#0A0A0A',
+  muted: '#86868B',
+  line: '#ECECF0',
+  edge: '#E2E2E8', // outlines of round buttons and fields
+  track: '#ECECF0', // empty part of progress bars
+  dashed: '#B5B5BA',
+  off: '#DCDCE0', // disabled button
+  offText: '#FFFFFF',
+  inkBg: '#0A0A0A', // dark panels (earnings, coach dashboard)
+  link: '#4E7D12', // dark lime, readable on white
+  olive: '#B9E769', // main buttons: Fresh Lime
+  oliveDark: '#102A27',
+  oliveSoft: '#EEF8DC',
+  peach: '#B9E769',
+  peachDeep: '#A5D951',
+  black: '#0A0A0A',
+  onBrand: '#000000', // text on lime
+  onPeach: '#000000',
+  cta: '#B9E769',
+  onCta: '#000000',
+  violet: '#0A0A0A', // light board uses black for the second button colour
+  onViolet: '#FFFFFF',
+  mine: '#B9E769', // my chat bubbles
+  onMine: '#000000',
+  glow: 'rgba(0,0,0,0)',
+  overlay: 'rgba(0,0,0,0.5)',
   // Older names still used around the app, mapped onto the new palette.
-  accent: '#556B2F',
-  accentSoft: '#E3E6D3',
-  green: '#556B2F',
-  greenSoft: '#E3E6D3',
-  purple: '#9A5B3C', // warm brown, used for the coach share in the 80/20 split
-  danger: '#A1402A',
+  accent: '#B9E769',
+  accentSoft: '#EEF8DC',
+  green: '#4E7D12',
+  greenSoft: '#EEF8DC',
+  purple: '#6C4CF1', // coach share in the 80/20 split
+  danger: '#E5484D',
 };
 
 const dark: typeof light = {
+  // Design board (Yana, 2026-11-21): true black, near-black cards, lime buttons, purple accents.
   bg: '#000000',
   card: '#141414',
-  sand: '#1C1C1C',
-  ink: '#F7F1E6',
-  muted: '#9A968C',
-  line: '#262626',
-  edge: '#333333',
-  track: '#262626',
-  dashed: '#555555',
-  off: '#2A2A2A',
-  offText: '#777777',
-  inkBg: '#2F3D29',
-  link: '#C5D49A',
-  olive: '#556B2F',
-  oliveDark: '#2F3D29',
-  oliveSoft: '#1F2618',
-  peach: '#F6C6A8',
-  peachDeep: '#F4B595',
-  black: '#111111',
-  onBrand: '#F7F1E6',
-  onPeach: '#262A1C',
+  sand: '#1C1C1E',
+  ink: '#FFFFFF',
+  muted: '#9A9A9E',
+  line: '#232325',
+  edge: '#2C2C2E',
+  track: '#232325',
+  dashed: '#48484A',
+  off: '#232325',
+  offText: '#6E6E73',
+  inkBg: '#1C1C1E',
+  link: '#B9E769',
+  olive: '#B9E769', // main buttons are lime on black
+  oliveDark: '#102A27',
+  oliveSoft: '#1E2615',
+  peach: '#B9E769',
+  peachDeep: '#A5D951',
+  black: '#000000',
+  onBrand: '#000000', // text on lime
+  onPeach: '#000000',
+  cta: '#B9E769',
+  onCta: '#000000',
+  violet: '#6C4CF1',
+  onViolet: '#FFFFFF',
+  mine: '#6C4CF1', // my chat bubbles: purple on black
+  onMine: '#FFFFFF',
+  glow: 'rgba(0,0,0,0)', // no glow: flat black like the board
   overlay: 'rgba(0,0,0,0.7)',
-  accent: '#556B2F',
-  accentSoft: '#1F2618',
-  green: '#556B2F',
-  greenSoft: '#1F2618',
-  purple: '#C98B68',
-  danger: '#E8956F',
+  accent: '#B9E769',
+  accentSoft: '#1E2615',
+  green: '#B9E769',
+  greenSoft: '#1E2615',
+  purple: '#6C4CF1',
+  danger: '#FF5A5F',
 };
 
 // Light or dark, switched from the side menu. The app always starts in light
@@ -79,10 +98,17 @@ function readPref(): ThemePref {
     const v = Storage.getItemSync(PREF_KEY);
     if (v === 'light' || v === 'dark') return v;
   } catch {}
-  return 'light';
+  return 'dark'; // everyone starts in dark mode, light is a switch away (Yana, 2026-11-22)
 }
 
 let mode: ThemePref = readPref();
+// Native parts (keyboard, alerts, switches, sheets) follow the app's choice too.
+function applyNative(m: ThemePref) {
+  try {
+    Appearance.setColorScheme(m);
+  } catch {}
+}
+applyNative(mode);
 
 // One shared colour object. Switching light/dark swaps its values in place and
 // tells every screen to redraw, so the change is instant (no restart).
@@ -105,8 +131,9 @@ export function setThemeMode(next: ThemePref) {
   if (next === mode) return;
   mode = next;
   Object.assign(colors, palettes[next]);
-  saveThemePref(next);
+  applyNative(next);
   listeners.forEach((fn) => fn());
+  saveThemePref(next);
 }
 
 // Screens call this so they redraw when the theme changes.
@@ -133,12 +160,13 @@ export function saveThemePref(pref: ThemePref) {
 }
 
 export const fonts = {
-  serif: 'Lora_600SemiBold',
-  serifItalic: 'Lora_600SemiBold_Italic',
-  sans: 'Karla_400Regular',
-  sansMedium: 'Karla_500Medium',
-  sansSemi: 'Karla_600SemiBold',
-  sansBold: 'Karla_700Bold',
+  // Blend look (Yana, 2026-11-13): Sora headings + Plus Jakarta Sans text.
+  serif: 'Sora_700Bold',
+  serifItalic: 'Sora_600SemiBold',
+  sans: 'PlusJakartaSans_400Regular',
+  sansMedium: 'PlusJakartaSans_500Medium',
+  sansSemi: 'PlusJakartaSans_600SemiBold',
+  sansBold: 'PlusJakartaSans_700Bold',
   logo: 'Outfit_800ExtraBold',
 } as const;
 

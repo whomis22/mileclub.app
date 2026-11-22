@@ -41,7 +41,7 @@ function tilesFor(personId: string): Tile[] {
 
 const TABS = [
   { id: 'posts', icon: '▦', label: 'Posts' },
-  { id: 'runs', icon: '🏃', label: 'Runs' },
+  { id: 'runs', icon: '🏃', label: 'Plans' },
   { id: 'tagged', icon: '◎', label: 'Tagged' },
 ] as const;
 
@@ -58,9 +58,9 @@ export default function PersonDetail() {
   if (!p || !profile) return null;
 
   const c = isDark
-    ? { bg: '#000000', ink: '#F5F5F5', muted: '#A8A8A8', line: '#262626', pill: '#262626', tile: '#121212' }
-    : { bg: '#FFFFFF', ink: '#000000', muted: '#737373', line: '#DBDBDB', pill: '#EFEFEF', tile: '#F2F2F2' };
-  const olive = isDark ? '#8FA567' : '#556B2F';
+    ? { bg: '#050D0C', ink: '#F7F7F2', muted: '#9AA29C', line: '#1B2C29', pill: '#152523', tile: '#0F1D1B' }
+    : { bg: '#F7F7F2', ink: '#102A27', muted: '#777F79', line: '#E3E6DF', pill: '#ECEEE7', tile: '#ECEEE7' };
+  const olive = isDark ? '#B9E769' : '#102A27';
 
   const score = matchScore(profile, p);
   const theirs = activities.filter((a) => a.participants.includes(p.id) || a.hostId === p.id);
@@ -123,16 +123,16 @@ export default function PersonDetail() {
         <View style={s.bio}>
           <Text style={[s.name, { color: c.ink }]}>{p.firstName}</Text>
           <Text style={[s.meta, { color: c.muted }]}>
-            {p.isCaptain ? 'Run host' : 'Member'} · {km}
+            {p.isCaptain ? 'Host' : 'Member'} · {km}
           </Text>
           <Text style={[s.bioText, { color: c.ink }]}>{p.experience}</Text>
-          <Text style={[s.match, { color: olive }]}>{score}% match with you</Text>
+          <Text style={[s.match, { color: olive }]}>{score}% in common with you</Text>
         </View>
 
         <View style={s.btnRow}>
           <Pressable
             onPress={() => toggleFollow(p.id)}
-            style={[s.btn, { backgroundColor: follows ? c.pill : '#556B2F' }]}
+            style={[s.btn, { backgroundColor: follows ? c.pill : '#102A27' }]}
             accessibilityLabel={follows ? `Unfollow ${p.firstName}` : `Follow ${p.firstName}`}>
             <Text style={[s.btnText, { color: follows ? c.ink : '#FFFFFF' }]}>{follows ? 'Following' : 'Follow'}</Text>
           </Pressable>
@@ -142,7 +142,7 @@ export default function PersonDetail() {
             </Pressable>
           ) : (
             <Pressable
-              onPress={() => Alert.alert('Message after a session', `Once you’re accepted into a run with ${p.firstName}, you can message each other.`)}
+              onPress={() => Alert.alert('Message after a session', `Once you’re accepted into a plan with ${p.firstName}, you can message each other.`)}
               style={[s.btn, { backgroundColor: c.pill, flex: 1.4 }]}>
               <Text style={[s.btnText, { color: c.muted, fontSize: 13 }]} numberOfLines={1} adjustsFontSizeToFit>
                 Message after a session
@@ -219,6 +219,7 @@ export default function PersonDetail() {
 }
 
 function Count({ n, label, c }: { n: string; label: string; c: { ink: string; muted: string } }) {
+  useTheme();
   return (
     <View style={s.count}>
       <Text style={[s.countN, { color: c.ink }]}>{n}</Text>

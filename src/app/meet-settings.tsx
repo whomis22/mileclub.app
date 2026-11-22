@@ -30,12 +30,12 @@ export default function MeetSettings() {
 
       <Card style={styles.card}>
         <Text style={styles.title}>
-          {meet === 'women' ? 'You’ll only see runs hosted by women, and women in People near you.' : meet === 'men' ? 'You’ll only see runs hosted by men, and men in People near you.' : 'You’ll see runs and people from everyone.'}
+          {meet === 'women' ? 'You’ll only see plans hosted by women, and women in People near you.' : meet === 'men' ? 'You’ll only see plans hosted by men, and men in People near you.' : 'You’ll see plans and people from everyone.'}
         </Text>
         <Body muted>
           {profile.gender === 'Woman'
-            ? 'You can also host Women only runs: pick “Women only” when you create a run.'
-            : 'Runs marked Women only are only shown to women.'}
+            ? 'You can also host Women only plans: pick “Women only” when you create one.'
+            : 'Plans marked Women only are only shown to women.'}
         </Body>
         <Body muted>🔒 Nobody else can see this setting.</Body>
       </Card>

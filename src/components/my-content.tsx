@@ -9,7 +9,7 @@ import { findPerson } from '@/data/people';
 import { agoLabel } from '@/data/comments';
 import { openPostActions } from '@/lib/post-actions';
 import { useStore, type MyPost } from '@/state/store';
-import { colors, fonts, radius, space, themed } from '@/theme';
+import { colors, fonts, radius, space, themed, useTheme } from '@/theme';
 
 const TABS = [
   { id: 'posts', label: 'Posts' },
@@ -19,6 +19,7 @@ const TABS = [
 
 // On your own profile: your posts, what you've done, and posts you've archived.
 export function MyContent() {
+  useTheme();
   const { myPosts, activities, comments, kudos, archivePost, deletePost } = useStore();
   const [tab, setTab] = useState<(typeof TABS)[number]['id']>('posts');
   const { width } = useWindowDimensions();
@@ -82,7 +83,7 @@ export function MyContent() {
       {tab === 'activity' ? (
         <View style={{ gap: space.sm }}>
           <View style={styles.statsRow}>
-            <Stat n={myRuns.length} label="runs" />
+            <Stat n={myRuns.length} label="plans" />
             <Stat n={live.length} label="posts" />
             <Stat n={myComments.length} label="comments" />
             <Stat n={kudos.length} label="likes" />
@@ -101,7 +102,7 @@ export function MyContent() {
               <Text style={styles.rowTime}>{agoLabel(c.at)}</Text>
             </View>
           ))}
-          {!myRuns.length && !myComments.length ? <Text style={styles.emptyText}>Join a run or comment on a post and it shows up here.</Text> : null}
+          {!myRuns.length && !myComments.length ? <Text style={styles.emptyText}>Join a plan or comment on a post and it shows up here.</Text> : null}
         </View>
       ) : null}
 
@@ -135,6 +136,7 @@ export function MyContent() {
 }
 
 function Stat({ n, label }: { n: number; label: string }) {
+  useTheme();
   return (
     <View style={{ flex: 1, alignItems: 'center' }}>
       <Text style={styles.statN}>{n}</Text>

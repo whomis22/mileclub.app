@@ -1,29 +1,71 @@
+import { LinearGradient } from 'expo-linear-gradient';
 import { Image } from 'expo-image';
-import type { ReactNode } from 'react';
-import { Pressable, ScrollView, StyleSheet, Text, View, type ViewStyle } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { useState, type ReactNode } from 'react';
+import { Pressable, RefreshControl, ScrollView, StyleSheet, Text, View, type ViewStyle } from 'react-native';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { colors, getThemeMode, fonts, radius, space, themed } from '@/theme';
+import { colors, getThemeMode, fonts, radius, space, themed, useTheme } from '@/theme';
 
-export function Screen({ children, scroll = true, edges = ['top'] }: {
+// Soft glow at the top of a screen: forest green in dark mode, a hint of lime in light.
+export function BgGlow({ height = 360 }: { height?: number }) {
+  useTheme();
+  return (
+    <LinearGradient
+      pointerEvents="none"
+      colors={[colors.glow, 'transparent']}
+      style={{ position: 'absolute', top: 0, left: 0, right: 0, height }}
+    />
+  );
+}
+
+// Every scrolling page can be pulled down to refresh. onRefresh returns how many
+// new things arrived; with none, a small "No new feed" pill shows and the page
+// stays as it was.
+export function Screen({ children, scroll = true, edges = ['top'], onRefresh, nothingNew = 'No new feed', newLabel = 'new post' }: {
   children: ReactNode;
   scroll?: boolean;
   edges?: ('top' | 'bottom')[];
+  onRefresh?: () => number;
+  nothingNew?: string;
+  newLabel?: string;
 }) {
+  useTheme();
+  const insets = useSafeAreaInsets();
+  const [refreshing, setRefreshing] = useState(false);
+  const [toast, setToast] = useState<string | null>(null);
+  function refresh() {
+    setRefreshing(true);
+    setTimeout(() => {
+      const n = onRefresh ? onRefresh() : 0;
+      setRefreshing(false);
+      setToast(n > 0 ? `${n} ${newLabel}${n > 1 ? 's' : ''}` : nothingNew);
+      setTimeout(() => setToast(null), 2200);
+    }, 900);
+  }
   return (
     <SafeAreaView style={styles.screen} edges={edges}>
+      <BgGlow />
       {scroll ? (
-        <ScrollView contentContainerStyle={styles.scroll} keyboardShouldPersistTaps="handled">
+        <ScrollView
+          contentContainerStyle={styles.scroll}
+          keyboardShouldPersistTaps="handled"
+          refreshControl={<RefreshControl refreshing={refreshing} onRefresh={refresh} tintColor={colors.olive} colors={[colors.olive]} />}>
           {children}
         </ScrollView>
       ) : (
         children
       )}
+      {toast ? (
+        <View pointerEvents="none" style={[styles.toastWrap, { top: (edges.includes('top') ? insets.top : 0) + 10 }]}>
+          <Text style={styles.toast}>{toast}</Text>
+        </View>
+      ) : null}
     </SafeAreaView>
   );
 }
 
 export function Title({ children, sub }: { children: ReactNode; sub?: ReactNode }) {
+  useTheme();
   return (
     <View style={{ marginBottom: space.lg }}>
       <Text style={styles.title}>{children}</Text>
@@ -33,22 +75,27 @@ export function Title({ children, sub }: { children: ReactNode; sub?: ReactNode 
 }
 
 export function Label({ children }: { children: ReactNode }) {
+  useTheme();
   return <Text style={styles.label}>{children}</Text>;
 }
 
 export function Body({ children, muted, style }: { children: ReactNode; muted?: boolean; style?: object }) {
+  useTheme();
   return <Text style={[styles.body, muted && { color: colors.muted }, style]}>{children}</Text>;
 }
 
 export function Button({ title, onPress, variant = 'primary', disabled, style }: {
   title: string;
   onPress: () => void;
-  variant?: 'primary' | 'secondary' | 'ghost' | 'danger';
+  variant?: 'primary' | 'secondary' | 'alt' | 'soft' | 'ghost' | 'danger';
   disabled?: boolean;
   style?: ViewStyle;
 }) {
-  const bg = { primary: colors.olive, secondary: colors.peach, ghost: 'transparent', danger: 'transparent' }[variant];
-  const fg = { primary: colors.onBrand, secondary: colors.onPeach, ghost: colors.ink, danger: colors.danger }[variant];
+  useTheme();
+  // Lime pill for the main action, forest for the second one (2026-11-21 look).
+  // alt = black in light mode, purple in dark mode (design board).
+  const bg = { primary: colors.cta, secondary: colors.olive, alt: colors.violet, soft: colors.card, ghost: 'transparent', danger: 'transparent' }[variant];
+  const fg = { primary: colors.onCta, secondary: colors.onBrand, alt: colors.onViolet, soft: colors.ink, ghost: colors.ink, danger: colors.danger }[variant];
   return (
     <Pressable
       onPress={onPress}
@@ -65,6 +112,7 @@ export function Button({ title, onPress, variant = 'primary', disabled, style }:
 }
 
 export function Chip({ label, selected, onPress }: { label: string; selected?: boolean; onPress?: () => void }) {
+  useTheme();
   return (
     <Pressable
       onPress={onPress}
@@ -76,10 +124,12 @@ export function Chip({ label, selected, onPress }: { label: string; selected?: b
 }
 
 export function Chips({ children }: { children: ReactNode }) {
+  useTheme();
   return <View style={styles.chips}>{children}</View>;
 }
 
 export function Card({ children, onPress, style }: { children: ReactNode; onPress?: () => void; style?: ViewStyle }) {
+  useTheme();
   if (!onPress) return <View style={[styles.card, style]}>{children}</View>;
   return (
     <Pressable onPress={onPress} style={({ pressed }) => [styles.card, pressed && { opacity: 0.85 }, style]}>
@@ -89,6 +139,7 @@ export function Card({ children, onPress, style }: { children: ReactNode; onPres
 }
 
 export function Avatar({ name, color, uri, size = 48 }: { name: string; color?: string; uri?: string; size?: number }) {
+  useTheme();
   const box = { width: size, height: size, borderRadius: size / 2 };
   if (uri) return <Image source={{ uri }} style={box} />;
   return (
@@ -99,6 +150,7 @@ export function Avatar({ name, color, uri, size = 48 }: { name: string; color?: 
 }
 
 export function Badge({ label, tone = 'accent' }: { label: string; tone?: 'accent' | 'green' | 'plain' }) {
+  useTheme();
   const bg = { accent: colors.peach, green: colors.oliveSoft, plain: colors.sand }[tone];
   const fg = { accent: colors.onPeach, green: colors.link, plain: colors.muted }[tone];
   return (
@@ -110,7 +162,9 @@ export function Badge({ label, tone = 'accent' }: { label: string; tone?: 'accen
 
 const styles = themed(() => StyleSheet.create({
   screen: { flex: 1, backgroundColor: colors.bg },
-  scroll: { padding: space.xl, paddingBottom: 48 },
+  scroll: { paddingHorizontal: 20, paddingTop: 8, paddingBottom: 48 }, // one 20px side margin on every page
+  toastWrap: { position: 'absolute', left: 0, right: 0, alignItems: 'center', zIndex: 50 },
+  toast: { backgroundColor: colors.olive, color: colors.onBrand, fontFamily: fonts.sansSemi, fontSize: 13, paddingVertical: 8, paddingHorizontal: 16, borderRadius: 999, overflow: 'hidden' },
   title: { fontSize: 30, fontFamily: fonts.serif, color: colors.ink, lineHeight: 40 },
   sub: { fontSize: 15, fontFamily: fonts.sans, color: colors.muted, marginTop: space.xs, lineHeight: 22 },
   label: {
@@ -135,7 +189,8 @@ const styles = themed(() => StyleSheet.create({
 
 // The Mile Club mark: an olive "m" with a peach "c" tucked over its last leg.
 export function Logo({ size = 40, m, c = colors.peachDeep }: { size?: number; m?: string; c?: string }) {
-  const mColor = m ?? (getThemeMode() === 'dark' ? colors.onBrand : colors.olive);
+  useTheme();
+  const mColor = m ?? (getThemeMode() === 'dark' ? '#FFFFFF' : colors.olive);
   return (
     <View style={{ flexDirection: 'row' }} accessibilityLabel="Mile Club" accessible>
       <Text style={{ fontFamily: fonts.logo, fontSize: size, lineHeight: size * 1.15, color: mColor }}>m</Text>
@@ -144,8 +199,27 @@ export function Logo({ size = 40, m, c = colors.peachDeep }: { size?: number; m?
   );
 }
 
+// The MILE CLUB wordmark (Yana's new logo, 2026-11-21). Black in light mode, white in dark.
+const MARKS = {
+  black: require('../../assets/images/brand/wordmark-black.png'),
+  white: require('../../assets/images/brand/wordmark-white.png'),
+};
+export function BrandMark({ height = 28, tone }: { height?: number; tone?: keyof typeof MARKS }) {
+  useTheme();
+  const t = tone ?? (getThemeMode() === 'dark' ? 'white' : 'black');
+  return <Image source={MARKS[t]} style={{ height, width: height * (1200 / 293) }} contentFit="contain" accessibilityLabel="Mile Club" />;
+}
+
+// Small square app icon, used for Mile Club group chats: black tile in light mode, white in dark.
+const TILES = { black: require('../../assets/images/brand/tile-black.png'), white: require('../../assets/images/brand/tile-white.png') };
+export function BrandTile({ size = 50, radius: r = 16 }: { size?: number; radius?: number }) {
+  useTheme();
+  return <Image source={TILES[getThemeMode() === 'dark' ? 'white' : 'black']} style={{ width: size, height: size, borderRadius: r }} contentFit="cover" accessibilityLabel="Mile Club" />;
+}
+
 // Round outline button that opens the side menu.
 export function MenuButton({ onPress }: { onPress: () => void }) {
+  useTheme();
   return (
     <Pressable onPress={onPress} accessibilityLabel="Open menu" style={({ pressed }) => [shared.iconBtn, pressed && { opacity: 0.6 }]}>
       <View style={{ gap: 4 }}>
@@ -158,6 +232,7 @@ export function MenuButton({ onPress }: { onPress: () => void }) {
 }
 
 export function IconButton({ label, onPress, children, filled }: { label: string; onPress: () => void; children: ReactNode; filled?: boolean }) {
+  useTheme();
   return (
     <Pressable
       onPress={onPress}
@@ -175,3 +250,9 @@ const shared = themed(() => ({
   } as ViewStyle,
   bar: { height: 2, borderRadius: 1, backgroundColor: colors.ink } as ViewStyle,
 }));
+
+// The wordmark under the logo: heavy italic capitals.
+export function Wordmark({ size = 34, color }: { size?: number; color: string }) {
+  return <Text style={{ fontFamily: fonts.logo, fontSize: size, lineHeight: size * 0.98, color, textAlign: 'center', fontStyle: 'italic', letterSpacing: -0.5 }}>MILE{'\n'}CLUB</Text>;
+}
+

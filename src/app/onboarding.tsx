@@ -13,11 +13,12 @@ import {
   MEET,
   GROUP_SIZES,
   LEVELS,
-  NEIGHBORHOOD_NAMES,
+  CITIES,
   SOCIAL,
 } from '@/data/options';
 import type { Profile } from '@/data/types';
 import { ROLES, type Role } from '@/data/roles';
+import { detectCity } from '@/lib/cities';
 import { homeFor } from '@/lib/home';
 import { useStore } from '@/state/store';
 import { colors, getThemeMode, setThemeMode, fonts, palettes, radius, space, themed, type ThemePref, useTheme } from '@/theme';
@@ -32,6 +33,7 @@ const STEPS = ['Join as', 'You', 'Where', 'Move', 'Goals', 'When', 'Vibe', 'Look
 
 // A small drawing of the Home screen in light or dark, for the "Light or dark?" step.
 function LookPreview({ mode, selected, onPress }: { mode: ThemePref; selected: boolean; onPress: () => void }) {
+  useTheme();
   const p = palettes[mode];
   return (
     <Pressable
@@ -69,12 +71,13 @@ function LookPreview({ mode, selected, onPress }: { mode: ThemePref; selected: b
 
 export default function Onboarding() {
   useTheme();
-  const { saveProfile } = useStore();
+  const { saveProfile, profile } = useStore();
   const [step, setStep] = useState(0);
   const [agreed, setAgreed] = useState(false);
   const [look, setLook] = useState<ThemePref>(getThemeMode());
-  const params = useLocalSearchParams<{ firstName?: string; age?: string; photoUri?: string }>();
-  const [d, setD] = useState<Draft>({
+  const params = useLocalSearchParams<{ firstName?: string; age?: string; photoUri?: string; edit?: string }>();
+  // Edit Profile opens this with edit=1: start from the saved profile.
+  const [d, setD] = useState<Draft>(params.edit === '1' && profile ? { ...profile } : {
     activities: [],
     goals: [],
     availability: [],
@@ -83,11 +86,24 @@ export default function Onboarding() {
     photoUri: params.photoUri,
   });
   const set = (patch: Partial<Draft>) => setD((prev) => ({ ...prev, ...patch }));
+  // City from location first (Yana, 2026-11-21); picking by hand is the fallback.
+  const [locating, setLocating] = useState(false);
+  const [locNote, setLocNote] = useState('');
+  async function useMyLocation() {
+    setLocating(true);
+    const r = await detectCity();
+    setLocating(false);
+    if (r.city) {
+      set({ city: r.city, neighborhood: d.city === r.city ? d.neighborhood : undefined });
+      setLocNote(`📍 Found you in ${r.city}`);
+    } else if (r.denied) setLocNote('Location is off. Pick your city below.');
+    else setLocNote(r.place ? `Mile Club isn’t in ${r.place} yet. Pick the closest city below.` : 'Couldn’t find you. Pick your city below.');
+  }
 
   const valid = [
     !!d.role,
     !!d.firstName?.trim() && !!d.age && d.age >= 18 && d.age <= 99 && !!d.gender,
-    !!d.neighborhood,
+    !!d.city && !!d.neighborhood,
     d.activities.length > 0 && !!d.level,
     d.goals.length > 0,
     d.availability.length > 0,
@@ -144,7 +160,7 @@ export default function Onboarding() {
                   <Pressable key={r} onPress={() => set({ role: r })} style={[styles.role, on && styles.roleOn]}>
                     <View style={{ flex: 1 }}>
                       <Text style={[styles.roleName, on && { color: colors.onBrand }]}>
-                        {r === 'member' ? 'I want to run' : 'I’m a coach'}
+                        {r === 'member' ? 'I want to join in' : 'I’m a coach'}
                       </Text>
                       <Text style={[styles.rolePitch, on && { color: colors.oliveSoft }]}>{ROLES[r].pitch}</Text>
                     </View>
@@ -178,6 +194,8 @@ export default function Onboarding() {
                 placeholderTextColor={colors.muted}
                 style={styles.input}
                 autoCapitalize="words"
+                autoComplete="given-name"
+                textContentType="givenName"
               />
               <Label>Age</Label>
               <TextInput
@@ -213,14 +231,34 @@ export default function Onboarding() {
 
           {step === 2 && (
             <>
-              <Text style={styles.q}>Which neighbourhood are you in?</Text>
-              <Body muted>We use this to find people and activities close by.</Body>
+              <Text style={styles.q}>Which city are you in?</Text>
+              <Body muted>We use this to find people and plans close by. You can change it later in Settings.</Body>
               <View style={{ height: space.lg }} />
+              <Button title={locating ? 'Finding you…' : '📍  Use my location'} variant="soft" onPress={useMyLocation} disabled={locating} />
+              {locNote ? <Body muted>{locNote}</Body> : null}
+              <View style={{ height: space.md }} />
               <Chips>
-                {NEIGHBORHOOD_NAMES.map((n) => (
-                  <Chip key={n} label={n} selected={d.neighborhood === n} onPress={() => set({ neighborhood: n })} />
+                {CITIES.map((c) => (
+                  <Chip
+                    key={c.id}
+                    label={c.label}
+                    selected={d.city === c.id}
+                    onPress={() => set({ city: c.id, neighborhood: d.city === c.id ? d.neighborhood : undefined })}
+                  />
                 ))}
               </Chips>
+              {d.city ? (
+                <>
+                  <View style={{ height: space.xl }} />
+                  <Text style={styles.q}>And which neighbourhood?</Text>
+                  <View style={{ height: space.md }} />
+                  <Chips>
+                    {(CITIES.find((c) => c.id === d.city)?.hoods ?? []).map((n) => (
+                      <Chip key={n} label={n} selected={d.neighborhood === n} onPress={() => set({ neighborhood: n })} />
+                    ))}
+                  </Chips>
+                </>
+              ) : null}
             </>
           )}
 
@@ -324,11 +362,19 @@ export default function Onboarding() {
                 You’ll be meeting people in real life. Meet in public places, tell a friend where you’re going, and
                 report anyone who makes you uncomfortable.
               </Body>
+              <View style={styles.rule}>
+                <Text style={styles.ruleTitle}>Show up, or cancel in time</Text>
+                <Text style={styles.ruleText}>
+                  People plan around you. If you miss 3 plans without cancelling, your account is paused for 3 months.
+                </Text>
+              </View>
               <Label>Emergency contact (optional)</Label>
               <TextInput
                 value={d.emergencyContact ?? ''}
                 onChangeText={(emergencyContact) => set({ emergencyContact })}
                 placeholder="Name and phone number"
+                autoComplete="tel"
+                textContentType="telephoneNumber"
                 placeholderTextColor={colors.muted}
                 style={styles.input}
               />
@@ -337,7 +383,7 @@ export default function Onboarding() {
                   {agreed && <Text style={{ color: colors.onBrand, fontWeight: '900' }}>✓</Text>}
                 </View>
                 <Text style={styles.agreeText}>
-                  I agree to the community guidelines: be kind, show up, respect everyone’s pace.
+                  I agree to the community guidelines: be kind, show up (3 no-shows = 3-month pause), respect everyone’s pace.
                 </Text>
               </Pressable>
             </>
@@ -353,6 +399,9 @@ export default function Onboarding() {
 }
 
 const styles = themed(() => StyleSheet.create({
+  rule: { backgroundColor: colors.oliveSoft, borderRadius: 16, padding: 14, gap: 4, marginTop: 12 },
+  ruleTitle: { fontFamily: fonts.sansBold, fontSize: 14, color: colors.ink },
+  ruleText: { fontFamily: fonts.sans, fontSize: 13, lineHeight: 18, color: colors.ink },
   screen: { flex: 1, backgroundColor: colors.bg },
   header: { flexDirection: 'row', alignItems: 'center', gap: space.lg, paddingHorizontal: space.xl, paddingTop: space.sm },
   backBtn: { width: 44, height: 44, borderRadius: 22, borderWidth: 1, borderColor: colors.edge, alignItems: 'center', justifyContent: 'center' },
@@ -397,10 +446,10 @@ const styles = themed(() => StyleSheet.create({
   phoneAvatar: { width: 14, height: 14, borderRadius: 7 },
   phoneLine: { height: 3, borderRadius: 2 },
   phoneTitle: { fontFamily: fonts.serif, fontSize: 14, lineHeight: 16, marginTop: 10 },
-  phoneCard: { flex: 1, marginTop: 8, borderRadius: 14, backgroundColor: '#2F3D29', padding: 8, justifyContent: 'flex-end' },
+  phoneCard: { flex: 1, marginTop: 8, borderRadius: 14, backgroundColor: '#102A27', padding: 8, justifyContent: 'flex-end' },
   phoneCardText: { fontFamily: fonts.serifItalic, fontSize: 13, color: '#F7F1E6' },
   phoneJoin: { width: 34, height: 10, borderRadius: 5, backgroundColor: '#F7F1E6', marginTop: 5 },
-  phoneNav: { height: 18, borderRadius: 9, backgroundColor: '#556B2F', marginTop: 8, flexDirection: 'row', alignItems: 'center', paddingHorizontal: 3, gap: 5 },
+  phoneNav: { height: 18, borderRadius: 9, backgroundColor: '#102A27', marginTop: 8, flexDirection: 'row', alignItems: 'center', paddingHorizontal: 3, gap: 5 },
   phoneNavOn: { width: 26, height: 12, borderRadius: 6, backgroundColor: '#F7F1E6' },
   phoneNavDot: { width: 5, height: 5, borderRadius: 3, backgroundColor: '#D9DDC4' },
   lookTick: { width: 26, height: 26, borderRadius: 13, borderWidth: 1.5, borderColor: colors.dashed, alignItems: 'center', justifyContent: 'center' },

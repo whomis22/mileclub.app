@@ -5,28 +5,33 @@ import { router, useLocalSearchParams, type Href } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { useEffect, useState } from 'react';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Alert, Animated, Easing, PanResponder, Platform, Pressable, StyleSheet, Text, Vibration, View } from 'react-native';
+import { Alert, Animated, Easing, Platform, Pressable, StyleSheet, Text, Vibration, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import Feather from '@expo/vector-icons/Feather';
+import { Image } from 'expo-image';
 
+import { BrandMark } from '@/components/ui';
 import { findCoach } from '@/data/coaches';
+import { faceFor } from '@/data/faces';
 import { findPerson } from '@/data/people';
 import { friendlyDate } from '@/lib/format';
+import { stopRinging } from '@/lib/ringing';
 import { useStore } from '@/state/store';
-import { fonts } from '@/theme';
+import { fonts, useTheme } from '@/theme';
 
-// "Big photo" on black, always dark whatever the app's light/dark setting.
+// iPhone-style call screen, always dark whatever the app's light/dark setting.
 const C = {
   bg: '#000000',
   text: '#F2ECDF',
   muted: '#A1A1A1',
   btn: '#1F1F1F',
   chip: '#262626',
-  olive: '#556B2F',
+  olive: '#102A27',
   cream: '#F7F1E6',
   peach: '#F4B595',
   peachText: '#3A2210',
-  red: '#D2422E',
-  green: '#4E9A3A',
+  red: '#EB4E3D',
+  green: '#34C759',
   ring2: '#3A3A3A',
 };
 
@@ -36,8 +41,11 @@ type Phase = 'ringing' | 'live' | 'ended';
 // Your own camera shows for real in video calls; the other person is pretend
 // until Mile Club has a calling service and a server.
 export default function Call() {
-  const { id, video, incoming: inc } = useLocalSearchParams<{ id: string; video?: string; incoming?: string }>();
-  const incoming = inc === '1';
+  useTheme();
+  const { id, video, incoming: inc, answer } = useLocalSearchParams<{ id: string; video?: string; incoming?: string; answer?: string }>();
+  // answer=1: picked up from the call banner, so go straight into the call.
+  const answeredFromBanner = answer === '1';
+  const incoming = inc === '1' || answeredFromBanner;
   // Mile Club's own ringtone (soft marimba chimes), only when someone calls you.
   const ringtone = useAudioPlayer(require('../../../assets/sounds/ringtone.m4a'));
   const { activities, logCall } = useStore();
@@ -46,7 +54,9 @@ export default function Call() {
   const name = p?.firstName ?? c?.name ?? 'Member';
   const shared = activities.find((a) => (a.participants.includes(id) || a.hostId === id) && (a.participants.includes('me') || a.hostId === 'me'));
 
-  const [phase, setPhase] = useState<Phase>('ringing');
+  const [phase, setPhase] = useState<Phase>(answeredFromBanner ? 'live' : 'ringing');
+  // The banner hands the ringing over to this screen.
+  useEffect(() => stopRinging(), []);
   const [secs, setSecs] = useState(0);
   const [muted, setMuted] = useState(false);
   const [speaker, setSpeaker] = useState(false);
@@ -120,7 +130,6 @@ export default function Call() {
   }
 
   const clock = `${Math.floor(secs / 60)}:${String(secs % 60).padStart(2, '0')}`;
-  const scale = (k: number) => ({ transform: [{ scale: pulse.interpolate({ inputRange: [0, 1], outputRange: [1, 1 + k] }) }] });
   const initial = name[0];
 
   // Video call: their video full screen (pretend), you in the corner.
@@ -157,33 +166,71 @@ export default function Call() {
   }
 
   const hue = p?.color ?? c?.color ?? C.olive;
+  const remindMe = () => {
+    end();
+    Alert.alert('Reminder set', `We’ll remind you to call ${name} back in an hour.`);
+  };
+  const messageInstead = () => {
+    Vibration.cancel();
+    ringtone.pause();
+    logCall({ personId: id, video: videoOn, secs: 0, answered: false, incoming });
+    router.replace(`/chat/${id}` as Href);
+  };
+  const soon = (what: string) => Alert.alert(what, 'Coming soon to Mile Club calls.');
+
+  // Someone is calling you: layout #24 (Yana, 2026-11-22). Black, MILE CLUB
+  // wordmark on top, bold name, what they do, lime Accept and red Decline.
+  if (phase === 'ringing' && incoming) {
+    const face = p ? faceFor(p.id) : undefined;
+    const line = p ? [face?.work?.split(' · ')[0], p.neighborhood].filter(Boolean).join(' · ') : c ? 'Coach' : '';
+    return (
+      <View style={[s.screen, { backgroundColor: '#000' }]}>
+        <StatusBar style="light" />
+        <SafeAreaView style={s.fill} edges={['top', 'bottom']}>
+          <View style={i.top}>
+            <BrandMark height={26} tone="white" />
+            {face?.photo ? <Image source={{ uri: face.photo }} style={i.photo} /> : null}
+            <Text style={i.label}>{videoOn ? 'Mile Club Video' : 'Mile Club Audio'}</Text>
+            <Text style={i.name} numberOfLines={1} adjustsFontSizeToFit>{name}</Text>
+            {line ? <Text style={i.line} numberOfLines={1}>{line}</Text> : null}
+            {shared ? (
+              <View style={i.chip}>
+                <Feather name="calendar" size={13} color="#fff" />
+                <Text style={i.chipText} numberOfLines={1}>You’re both in {shared.title}</Text>
+              </View>
+            ) : null}
+          </View>
+          <View style={i.bottom}>
+            <View style={i.row}>
+              <Btn icon="clock" label="Remind me" size={54} bg="rgba(255,255,255,0.14)" onPress={remindMe} />
+              <Btn icon="message-circle" label="Message" size={54} bg="rgba(255,255,255,0.14)" onPress={messageInstead} />
+            </View>
+            <View style={i.row}>
+              <Btn icon="phone" end label="Decline" size={76} bg={C.red} onPress={end} />
+              <Btn icon={videoOn ? 'video' : 'phone'} label="Accept" size={76} bg={LIME} fg="#000" onPress={accept} />
+            </View>
+          </View>
+        </SafeAreaView>
+      </View>
+    );
+  }
+
+  // Looks like an iPhone call: blurred dark colour behind, thin white name at
+  // the top, system font, round buttons. (A real phone-call screen when the app
+  // is closed needs CallKit and a proper app build, so this is in-app only.)
   return (
     <View style={s.screen}>
       <StatusBar style="light" />
-      {/* Big photo: their picture fills the top and fades into black. */}
-      <View style={[s.hero, { backgroundColor: hue }]}>
-        <Animated.Text style={[s.heroLetter, phase === 'ringing' ? scale(0.04) : null]}>{initial}</Animated.Text>
-        <LinearGradient
-          colors={['rgba(0,0,0,0.35)', 'rgba(0,0,0,0)', 'rgba(0,0,0,0.6)', '#000']}
-          locations={[0, 0.3, 0.75, 1]}
-          style={StyleSheet.absoluteFill}
-        />
-      </View>
+      <LinearGradient colors={[hue, '#1C1C1E', '#000']} locations={[0, 0.55, 1]} style={StyleSheet.absoluteFill} />
+      <View style={[StyleSheet.absoluteFill, { backgroundColor: 'rgba(0,0,0,0.45)' }]} />
       <SafeAreaView style={s.fill} edges={['top', 'bottom']}>
-        <Text style={s.label}>MILE CLUB CALL</Text>
-        <View style={s.info}>
-          <Text style={s.name}>{name}</Text>
-          <Text style={s.status}>
-            {phase === 'ringing'
-              ? incoming
-                ? videoOn ? 'Wants to video call…' : 'Calling you…'
-                : videoOn ? 'Video calling…' : 'Calling…'
-              : phase === 'live'
-                ? clock
-                : `Call ended · ${clock}`}
-            {muted && phase === 'live' ? '  ·  Muted' : ''}
-          </Text>
-          {shared ? (
+        <View style={s.top}>
+          <Text style={s.label}>{videoOn ? 'Mile Club Video' : 'Mile Club Audio'}</Text>
+          <Text style={s.name} numberOfLines={1} adjustsFontSizeToFit>{name}</Text>
+          {phase === 'ringing' && !incoming ? <Text style={s.sub}>calling…</Text> : null}
+          {phase === 'live' ? <Text style={s.sub}>{clock}{muted ? '  ·  muted' : ''}</Text> : null}
+          {phase === 'ended' ? <Text style={s.sub}>Call ended</Text> : null}
+          {shared && phase === 'ringing' ? (
             <Text style={s.shared} numberOfLines={1}>
               You’re both in {shared.title} · {friendlyDate(shared.date)}
             </Text>
@@ -191,47 +238,33 @@ export default function Call() {
         </View>
 
         {phase === 'ringing' && incoming ? (
-          <>
-            <View style={s.miniRow}>
-              <Round icon="⏰" label="Remind me" onPress={() => {
-                end();
-                Alert.alert('Reminder set', `We’ll remind you to call ${name} back in an hour.`);
-              }} />
-              <Round icon="📞" label="Decline" red onPress={end} />
-              <Round icon="💬" label="Message" onPress={() => {
-                Vibration.cancel();
-                ringtone.pause();
-                logCall({ personId: id, video: videoOn, secs: 0, answered: false, incoming });
-                router.replace(`/chat/${id}` as Href);
-              }} />
+          <View style={s.bottom}>
+            <View style={s.smallRow}>
+              <Round small icon="⏰" label="Remind Me" onPress={remindMe} />
+              <Round small icon="💬" label="Message" onPress={messageInstead} />
             </View>
-            <SlideToAnswer onAnswer={accept} />
-          </>
+            <View style={s.answerRow}>
+              <Round big icon="📞" label="Decline" red onPress={end} />
+              <Round big icon={videoOn ? '🎥' : '📞'} label="Accept" accept onPress={accept} />
+            </View>
+          </View>
         ) : (
-          <View style={s.voiceBar}>
-            {phase === 'live' ? (
-              <>
-                <Round small icon={muted ? '🔇' : '🎙️'} label={muted ? 'Unmute' : 'Mute'} on={muted} onPress={() => setMuted(!muted)} />
-                <Round small icon="🔊" label="Speaker" on={speaker} onPress={() => setSpeaker(!speaker)} />
-                <Round small icon="🎥" label="Video" onPress={() => setVideoOn(true)} />
-                <Round small icon="💬" label="Message" onPress={() => router.replace(`/chat/${id}` as Href)} />
-                <Round
-                  small
-                  icon="📍"
-                  label="Location"
-                  onPress={() => Alert.alert(`Share your location with ${name}?`, 'They will see where you are for the next hour.', [
-                    { text: 'Cancel', style: 'cancel' },
-                    { text: 'Share', onPress: () => Alert.alert('Location shared', `${name} can see where you are for the next hour.`) },
-                  ])}
-                />
-              </>
-            ) : (
-              <>
-                <Round small icon="🔊" label="Speaker" on={speaker} onPress={() => setSpeaker(!speaker)} />
-                <Round small icon={muted ? '🔇' : '🎙️'} label={muted ? 'Unmute' : 'Mute'} on={muted} onPress={() => setMuted(!muted)} />
-              </>
-            )}
-            <Round small icon="📞" label="End" red onPress={end} />
+          <View style={s.bottom}>
+            <View style={s.grid}>
+              <Round icon={muted ? '🔇' : '🎙️'} label="mute" on={muted} onPress={() => setMuted(!muted)} />
+              <Round icon="💬" label="message" onPress={() => router.replace(`/chat/${id}` as Href)} />
+              <Round icon="🔊" label="speaker" on={speaker} onPress={() => setSpeaker(!speaker)} />
+              <Round icon="➕" label="add call" onPress={() => soon('Group calls')} />
+              <Round icon="🎥" label="video" onPress={() => setVideoOn(true)} />
+              <Round
+                icon="👤"
+                label="profile"
+                onPress={() => router.push((p ? `/person/${id}` : `/coach/${id}`) as Href)}
+              />
+            </View>
+            <View style={s.endRow}>
+              <Round big icon="📞" label="" red onPress={end} disabled={phase === 'ended'} />
+            </View>
           </View>
         )}
         <Text style={s.note}>Demo call: {name} is pretend for now.</Text>
@@ -240,53 +273,47 @@ export default function Call() {
   );
 }
 
-// Drag the green button to the right to pick up, like an iPhone.
-function SlideToAnswer({ onAnswer }: { onAnswer: () => void }) {
-  const [x] = useState(() => new Animated.Value(0));
-  const [width, setWidth] = useState(0);
-  const max = Math.max(0, width - 64);
-  const pan = PanResponder.create({
-    onStartShouldSetPanResponder: () => true,
-    onMoveShouldSetPanResponder: () => true,
-    onPanResponderTerminationRequest: () => false,
-    onPanResponderMove: (_e, g) => x.setValue(Math.min(max, Math.max(0, g.dx))),
-    onPanResponderRelease: (_e, g) => {
-      // A full slide answers. A quick tap on the green button does too.
-      if (g.dx > max * 0.7 || Math.abs(g.dx) < 6) {
-        Animated.timing(x, { toValue: max, duration: 120, useNativeDriver: true }).start(onAnswer);
-      } else {
-        Animated.spring(x, { toValue: 0, useNativeDriver: true }).start();
-      }
-    },
-  });
+const LIME = '#B9E769';
+
+function Btn({ icon, label, size, bg, fg = '#fff', end, onPress }: {
+  icon: React.ComponentProps<typeof Feather>['name']; label: string; size: number; bg: string; fg?: string; end?: boolean; onPress: () => void;
+}) {
   return (
-    <View style={s.slide} onLayout={(e) => setWidth(e.nativeEvent.layout.width)}>
-      <Text style={s.slideText}>slide to answer</Text>
-      <Animated.View
-        style={[s.knob, { transform: [{ translateX: x }] }]}
-        accessible
-        accessibilityRole="button"
-        accessibilityLabel="Accept"
-        {...pan.panHandlers}>
-        <View style={s.knobIn}>
-          <Text style={s.knobIcon}>📞</Text>
-        </View>
-      </Animated.View>
-    </View>
+    <Pressable onPress={onPress} style={({ pressed }) => [i.btnWrap, pressed && { opacity: 0.7 }]} accessibilityLabel={label}>
+      <View style={{ width: size, height: size, borderRadius: size / 2, backgroundColor: bg, alignItems: 'center', justifyContent: 'center' }}>
+        <Feather name={icon} size={size * 0.38} color={fg} style={end ? { transform: [{ rotate: '135deg' }] } : undefined} />
+      </View>
+      <Text style={i.btnLabel}>{label}</Text>
+    </Pressable>
   );
 }
+
+const i = StyleSheet.create({
+  top: { alignItems: 'center', paddingHorizontal: 24, marginTop: 28, gap: 6 },
+  photo: { width: 96, height: 96, borderRadius: 48, marginTop: 34, marginBottom: 10, backgroundColor: '#1C1C1E' },
+  label: { fontFamily: fonts.sans, fontSize: 15, color: '#9A9A9E', marginTop: 4 },
+  name: { fontFamily: fonts.sansBold, fontSize: 44, color: '#fff', letterSpacing: -0.5 },
+  line: { fontFamily: fonts.sans, fontSize: 15, color: '#9A9A9E' },
+  chip: { flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: 'rgba(255,255,255,0.12)', borderRadius: 20, paddingVertical: 7, paddingHorizontal: 12, marginTop: 12, maxWidth: '100%' },
+  chipText: { fontFamily: fonts.sansMedium, fontSize: 13, color: '#fff', flexShrink: 1 },
+  bottom: { marginTop: 'auto', paddingHorizontal: 40, gap: 36, marginBottom: 30 },
+  row: { flexDirection: 'row', justifyContent: 'space-between' },
+  btnWrap: { width: 90, alignItems: 'center', gap: 8 },
+  btnLabel: { fontFamily: fonts.sansMedium, fontSize: 13, color: '#fff' },
+});
 
 function Round({ icon, label, onPress, on, red, accept, big, small, disabled }: {
   icon: string; label: string; onPress: () => void; on?: boolean; red?: boolean; accept?: boolean; big?: boolean; small?: boolean; disabled?: boolean;
 }) {
-  const size = big ? 74 : small ? 48 : 66;
-  const bg = red ? C.red : accept ? C.green : on ? C.peach : C.btn;
+  useTheme();
+  const size = big ? 74 : small ? 48 : 76;
+  const bg = red ? C.red : accept ? C.green : on ? '#FFFFFF' : 'rgba(255,255,255,0.18)';
   return (
-    <Pressable onPress={onPress} disabled={disabled} style={[s.roundWrap, small && { width: 52 }, disabled && { opacity: 0.4 }]} accessibilityLabel={label}>
+    <Pressable onPress={onPress} disabled={disabled} style={[s.roundWrap, disabled && { opacity: 0.4 }]} accessibilityLabel={label || 'End call'}>
       <View style={[s.round, { width: size, height: size, borderRadius: size / 2, backgroundColor: bg }]}>
-        <Text style={[s.roundIcon, { fontSize: big ? 28 : small ? 20 : 24 }, red && { transform: [{ rotate: '135deg' }] }]}>{icon}</Text>
+        <Text style={[{ fontSize: big ? 30 : small ? 20 : 28 }, red && { transform: [{ rotate: '135deg' }] }]}>{icon}</Text>
       </View>
-      {small ? null : <Text style={[s.roundLabel, on && { color: C.peach }]}>{label}</Text>}
+      {label ? <Text style={[s.roundLabel, small && { fontSize: 13 }]}>{label}</Text> : null}
     </Pressable>
   );
 }
@@ -294,25 +321,20 @@ function Round({ icon, label, onPress, on, red, accept, big, small, disabled }: 
 const s = StyleSheet.create({
   screen: { flex: 1, backgroundColor: C.bg },
   fill: { flex: 1 },
-  hero: { position: 'absolute', left: 0, right: 0, top: 0, height: '66%', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' },
-  heroLetter: { fontFamily: fonts.serif, fontSize: 220, color: 'rgba(255,255,255,0.85)', marginTop: -40 },
-  label: { fontFamily: fonts.sansBold, fontSize: 12, letterSpacing: 2.5, color: 'rgba(255,255,255,0.75)', textAlign: 'center', marginTop: 12 },
-  info: { marginTop: 'auto', paddingHorizontal: 24, gap: 4 },
-  name: { fontFamily: fonts.serif, fontSize: 44, color: C.text },
-  status: { fontFamily: fonts.sansMedium, fontSize: 16, color: C.muted, fontVariant: ['tabular-nums'] },
-  shared: { fontFamily: fonts.sans, fontSize: 13, color: C.peach, marginTop: 2 },
-  miniRow: { flexDirection: 'row', justifyContent: 'space-between', paddingHorizontal: 24, marginTop: 26 },
-  slide: { height: 72, borderRadius: 36, backgroundColor: 'rgba(255,255,255,0.1)', marginHorizontal: 20, marginTop: 22, marginBottom: 14, justifyContent: 'center', padding: 4 },
-  slideText: { position: 'absolute', left: 0, right: 0, textAlign: 'center', fontFamily: fonts.sansMedium, fontSize: 16, color: C.muted },
-  knob: { width: 64, height: 64, borderRadius: 32 },
-  knobIn: { flex: 1, borderRadius: 32, backgroundColor: C.green, alignItems: 'center', justifyContent: 'center' },
-  knobIcon: { fontSize: 26 },
-  roundWrap: { width: 76, alignItems: 'center', gap: 8 },
+  top: { alignItems: 'center', paddingHorizontal: 24, marginTop: 56, gap: 4 },
+  label: { fontSize: 17, color: 'rgba(255,255,255,0.6)' },
+  name: { fontSize: 40, fontWeight: '300', color: '#FFFFFF', letterSpacing: 0.3 },
+  sub: { fontSize: 17, color: 'rgba(255,255,255,0.6)', fontVariant: ['tabular-nums'] },
+  shared: { fontSize: 14, color: 'rgba(255,255,255,0.55)', marginTop: 10 },
+  bottom: { marginTop: 'auto', paddingHorizontal: 34, gap: 34, marginBottom: 18 },
+  smallRow: { flexDirection: 'row', justifyContent: 'space-between' },
+  answerRow: { flexDirection: 'row', justifyContent: 'space-between' },
+  grid: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between', rowGap: 22 },
+  endRow: { alignItems: 'center' },
+  roundWrap: { width: 84, alignItems: 'center', gap: 8 },
   round: { alignItems: 'center', justifyContent: 'center' },
-  roundIcon: { color: '#fff' },
-  roundLabel: { fontFamily: fonts.sans, fontSize: 13, color: C.muted },
-  voiceBar: { flexDirection: 'row', justifyContent: 'space-around', alignItems: 'center', backgroundColor: '#141414', borderRadius: 36, marginHorizontal: 16, marginTop: 24, marginBottom: 14, paddingVertical: 12, paddingHorizontal: 6 },
-  note: { fontFamily: fonts.sans, fontSize: 12, color: '#6B6B6B', textAlign: 'center', marginBottom: 8 },
+  roundLabel: { fontSize: 14, color: '#FFFFFF' },
+  note: { fontSize: 12, color: 'rgba(255,255,255,0.35)', textAlign: 'center', marginBottom: 8 },
   remote: { ...StyleSheet.absoluteFill, alignItems: 'center', justifyContent: 'center' },
   remoteLetter: { fontFamily: fonts.serif, fontSize: 200, color: 'rgba(242,236,223,0.18)' },
   videoTop: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', paddingHorizontal: 16, paddingTop: 8 },

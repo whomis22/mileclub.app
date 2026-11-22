@@ -1,10 +1,11 @@
 import { StyleSheet, Text, View } from 'react-native';
 
 import { euro, split } from '@/data/roles';
-import { colors, radius, space, themed } from '@/theme';
+import { colors, radius, space, themed, useTheme } from '@/theme';
 
 // Shows how a payment is shared: 80% to the coach, 20% to Mile Club.
 export function SplitBox({ gross, note }: { gross: number; note: string }) {
+  useTheme();
   const p = split(gross);
   return (
     <View style={styles.split}>

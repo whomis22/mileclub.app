@@ -4,7 +4,11 @@ import { Alert, KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleShee
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { authorName, useComments } from '@/components/comment-preview';
+import { Image } from 'expo-image';
+
+import { GifPicker } from '@/components/gif-picker';
 import { Avatar } from '@/components/ui';
+import { gifSource } from '@/data/gifs';
 import { agoLabel } from '@/data/comments';
 import { FEED, TEXT_POSTS } from '@/data/feed';
 import { findPerson } from '@/data/people';
@@ -17,6 +21,7 @@ export default function PostComments() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const { profile, myPosts, addComment, deleteComment } = useStore();
   const [text, setText] = useState('');
+  const [gifs, setGifs] = useState(false);
   const all = useComments(id);
 
   const sample = FEED.find((p) => p.id === id);
@@ -70,6 +75,7 @@ export default function PostComments() {
                     <Text style={styles.who}>{authorName(c.authorId, profile?.firstName)} </Text>
                     {c.text}
                   </Text>
+                  {c.gif ? <Image source={gifSource(c.gif)} style={styles.gif} contentFit="cover" autoplay /> : null}
                   <Text style={styles.time}>{agoLabel(c.at)}{isMe ? ' · hold to delete' : ''}</Text>
                 </View>
               </Pressable>
@@ -77,8 +83,19 @@ export default function PostComments() {
           })}
         </ScrollView>
 
+        {gifs ? (
+          <GifPicker
+            onPick={(g) => {
+              addComment(id, '', g);
+              setGifs(false);
+            }}
+          />
+        ) : null}
         <View style={styles.bar}>
           <Avatar name={profile?.firstName ?? 'You'} uri={profile?.photoUri} size={32} />
+          <Pressable onPress={() => setGifs(!gifs)} style={[styles.gifBtn, gifs && styles.gifBtnOn]} accessibilityLabel="Send a GIF">
+            <Text style={[styles.gifBtnText, gifs && { color: colors.onBrand }]}>GIF</Text>
+          </Pressable>
           <TextInput
             style={styles.input}
             placeholder={`Comment as ${profile?.firstName ?? 'you'}…`}
@@ -100,6 +117,10 @@ export default function PostComments() {
 
 const styles = themed(() => StyleSheet.create({
   screen: { flex: 1, backgroundColor: colors.bg },
+  gif: { width: 180, height: 135, borderRadius: 14, marginTop: 6, backgroundColor: colors.sand },
+  gifBtn: { height: 32, paddingHorizontal: 9, borderRadius: 9, borderWidth: 1.5, borderColor: colors.edge, alignItems: 'center', justifyContent: 'center' },
+  gifBtnOn: { backgroundColor: colors.olive, borderColor: colors.olive },
+  gifBtnText: { fontFamily: fonts.sansBold, fontSize: 12, color: colors.ink, letterSpacing: 0.5 },
   list: { padding: space.lg, gap: space.lg },
   row: { flexDirection: 'row', gap: space.md, alignItems: 'flex-start' },
   captionRow: { paddingBottom: space.lg, borderBottomWidth: 1, borderBottomColor: colors.line },

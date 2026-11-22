@@ -4,6 +4,8 @@ import { router, useLocalSearchParams } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { useMemo, useRef, useState, type ComponentRef, type Ref } from 'react';
 import {
+  ActivityIndicator,
+  Alert,
   FlatList,
   KeyboardAvoidingView,
   Modal,
@@ -19,12 +21,17 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { COUNTRIES, defaultCountry, flagOf, type Country } from '@/data/countries';
+import { homeFor } from '@/lib/home';
+import { claimUsername, fetchMyProfile, friendlyError, supabase } from '@/lib/supabase';
+import { useStore } from '@/state/store';
 import { colors, fonts, radius, space, themed, useTheme } from '@/theme';
 
 // Step-by-step sign-up, one task per screen:
 // account details -> verification code -> password -> photo -> username,
 // then on to the Mile Club profile questions.
-// There is no server yet, so nothing is really sent: any 6-digit code works.
+// Email sign-up is real: Mile Club's server (Supabase) emails a 6-digit code,
+// the code logs the person in, and the password and @username are saved to their account.
+// Phone sign-up needs a text-message provider, so it comes later.
 // Coming from "Continue with Apple", Apple has already checked the email, so the
 // code and password steps are skipped.
 
@@ -46,6 +53,7 @@ function Field({
   inputRef,
   ...props
 }: TextInputProps & { label: string; counter?: string; error?: string; inputRef?: Ref<ComponentRef<typeof TextInput>> }) {
+  useTheme();
   const [focused, setFocused] = useState(false);
   return (
     <View style={{ marginBottom: space.lg }}>
@@ -76,6 +84,7 @@ function Field({
 }
 
 function CountryPicker({ visible, onPick, onClose }: { visible: boolean; onPick: (c: Country) => void; onClose: () => void }) {
+  useTheme();
   const [q, setQ] = useState('');
   const list = useMemo(() => {
     const s = q.trim().toLowerCase().replace(/^\+/, '');
@@ -97,7 +106,13 @@ function CountryPicker({ visible, onPick, onClose }: { visible: boolean; onPick:
           placeholder="Search country or code"
           placeholderTextColor="#A39C8C"
           style={styles.search}
+          autoComplete="country"
+          textContentType="countryName"
           autoCorrect={false}
+          returnKeyType="search"
+          inputMode="search"
+          clearButtonMode="while-editing"
+          enablesReturnKeyAutomatically
         />
         <FlatList
           data={list}
@@ -123,9 +138,14 @@ function CountryPicker({ visible, onPick, onClose }: { visible: boolean; onPick:
 
 export default function SignUp() {
   const { isDark } = useTheme();
-  const params = useLocalSearchParams<{ apple?: string; name?: string; email?: string }>();
+  const { saveProfile } = useStore();
+  const [busy, setBusy] = useState(false);
+  const [problem, setProblem] = useState('');
+  const params = useLocalSearchParams<{ apple?: string; name?: string; email?: string; password?: string }>();
   const viaApple = params.apple === '1';
-  const flow = viaApple ? [0, 3, 4] : [0, 1, 2, 3, 4];
+  // A password from the Sign Up screen means the password step can be skipped.
+  const hasPassword = (params.password ?? '').length >= 8;
+  const flow = viaApple ? [0, 3, 4] : hasPassword ? [0, 1, 3, 4] : [0, 1, 2, 3, 4];
   const [pos, setPos] = useState(0);
   const step = flow[pos];
   const isLast = pos === flow.length - 1;
@@ -142,7 +162,7 @@ export default function SignUp() {
   const dayRef = useRef<ComponentRef<typeof TextInput>>(null);
   const [code, setCode] = useState('');
   const [resent, setResent] = useState(false);
-  const [password, setPassword] = useState('');
+  const [password, setPassword] = useState(params.password ?? '');
   const [showPassword, setShowPassword] = useState(false);
   const [photoUri, setPhotoUri] = useState<string | undefined>();
   const suggested = useMemo(() => {
@@ -167,24 +187,92 @@ export default function SignUp() {
 
   const canNext = [
     name.trim().length > 0 && contactOk && age !== null && !tooYoung,
-    code.length === 6,
+    code.length >= 6,
     password.length >= 8,
     true,
     /^[a-zA-Z0-9_]{3,15}$/.test(handle),
   ][step];
 
   function back() {
+    setProblem('');
     if (pos === 0) return router.back();
     setPos(pos - 1);
   }
 
-  function next() {
-    if (!canNext) return;
-    if (!isLast) return setPos(pos + 1);
+  function finish() {
     router.replace({
       pathname: '/onboarding',
       params: { firstName: name.trim().split(' ')[0], age: String(age), ...(photoUri ? { photoUri } : {}) },
     });
+  }
+
+  // Each step that talks to the server shows a spinner and a plain-English error if it fails.
+  async function run(task: () => Promise<boolean | void>) {
+    setBusy(true);
+    setProblem('');
+    try {
+      return await task();
+    } catch (e) {
+      setProblem(friendlyError(e));
+      return false;
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function sendCode() {
+    const { error } = await supabase.auth.signInWithOtp({
+      email: contact.trim().toLowerCase(),
+      options: { shouldCreateUser: true, data: { name: name.trim(), age } },
+    });
+    if (error) throw error;
+  }
+
+  async function next() {
+    if (!canNext || busy) return;
+    if (step === 0 && !viaApple) {
+      const ok = await run(sendCode);
+      if (ok === false) return;
+      setCode('');
+      setResent(false);
+    }
+    if (step === 1) {
+      const ok = await run(async () => {
+        const { error } = await supabase.auth.verifyOtp({ email: contact.trim().toLowerCase(), token: code, type: 'email' });
+        if (error) throw error;
+        if (hasPassword) {
+          const { error: pwError } = await supabase.auth.updateUser({ password });
+          if (pwError) throw pwError;
+        }
+        // Already a member? Bring their profile back and skip the rest.
+        const existing = await fetchMyProfile();
+        if (existing) {
+          saveProfile(existing);
+          router.dismissAll();
+          router.replace(homeFor(existing));
+          return false;
+        }
+      });
+      if (ok === false) return;
+    }
+    if (step === 2) {
+      const ok = await run(async () => {
+        const { error } = await supabase.auth.updateUser({ password });
+        if (error) throw error;
+      });
+      if (ok === false) return;
+    }
+    if (step === 4) {
+      const ok = await run(async () => {
+        if (!(await claimUsername(handle.toLowerCase(), name.trim()))) {
+          setProblem(`@${handle} is taken. Try another one.`);
+          return false;
+        }
+      });
+      if (ok === false) return;
+    }
+    if (!isLast) return setPos(pos + 1);
+    finish();
   }
 
   async function pickPhoto() {
@@ -222,7 +310,7 @@ export default function SignUp() {
               <Text style={styles.title}>
                 Create your <Text style={styles.titleItalic}>account</Text>
               </Text>
-              <Field label="Name" value={name} onChangeText={(t) => setName(t.slice(0, 50))} counter={`${name.length} / 50`} autoCapitalize="words" autoFocus />
+              <Field label="Name" value={name} onChangeText={(t) => setName(t.slice(0, 50))} counter={`${name.length} / 50`} autoCapitalize="words" autoComplete="name" textContentType="name" autoFocus />
               {viaApple ? (
                 <View style={styles.appleNote}>
                   <Text style={styles.appleNoteText}> Signed in with Apple{contact ? ` · ${contact}` : ''}</Text>
@@ -246,6 +334,8 @@ export default function SignUp() {
                           value={contact}
                           onChangeText={(t) => setContact(t.replace(/[^0-9 ]/g, '').slice(0, 18))}
                           keyboardType="phone-pad"
+                          autoComplete="tel"
+                          textContentType="telephoneNumber"
                           autoCorrect={false}
                           error={contact.length > 4 && !contactOk ? 'Please enter a valid phone number.' : undefined}
                         />
@@ -257,6 +347,8 @@ export default function SignUp() {
                       value={contact}
                       onChangeText={setContact}
                       keyboardType="email-address"
+                      autoComplete="email"
+                      textContentType="emailAddress"
                       autoCapitalize="none"
                       autoCorrect={false}
                       error={contact.length > 4 && !contactOk ? 'Please enter a valid email.' : undefined}
@@ -264,7 +356,11 @@ export default function SignUp() {
                   )}
                   <Pressable
                     onPress={() => {
-                      setUsePhone(!usePhone);
+                      if (!usePhone) {
+                        Alert.alert('Phone sign-up is coming soon', 'For now, please join with your email.');
+                        return;
+                      }
+                      setUsePhone(false);
                       setContact('');
                     }}
                     style={{ marginTop: -space.sm, marginBottom: space.lg }}>
@@ -291,6 +387,7 @@ export default function SignUp() {
                     }}
                     keyboardType="number-pad"
                     maxLength={2}
+                    autoComplete="birthdate-day"
                     placeholder="DD"
                   />
                 </View>
@@ -310,6 +407,7 @@ export default function SignUp() {
                     }}
                     keyboardType="number-pad"
                     maxLength={2}
+                    autoComplete="birthdate-month"
                     placeholder="MM"
                   />
                 </View>
@@ -324,6 +422,7 @@ export default function SignUp() {
                     }}
                     keyboardType="number-pad"
                     maxLength={4}
+                    autoComplete="birthdate-year"
                     placeholder="YYYY"
                   />
                 </View>
@@ -339,11 +438,16 @@ export default function SignUp() {
                 We sent you a <Text style={styles.titleItalic}>code</Text>
               </Text>
               <Text style={styles.help}>Enter it below to verify {usePhone ? fullPhone : contact.trim()}.</Text>
-              <Field label="Verification code" value={code} onChangeText={(t) => setCode(t.replace(/[^0-9]/g, '').slice(0, 6))} keyboardType="number-pad" autoFocus />
-              <Pressable onPress={() => setResent(true)}>
-                <Text style={styles.link}>{resent ? 'New code sent.' : usePhone ? 'Didn’t receive a text?' : 'Didn’t receive an email?'}</Text>
+              <Field label="Verification code" value={code} onChangeText={(t) => setCode(t.replace(/[^0-9]/g, '').slice(0, 8))} keyboardType="number-pad" autoComplete="one-time-code" textContentType="oneTimeCode" autoFocus />
+              <Pressable
+                disabled={busy}
+                onPress={async () => {
+                  const ok = await run(sendCode);
+                  if (ok !== false) setResent(true);
+                }}>
+                <Text style={styles.link}>{resent ? 'New code sent. Check your inbox.' : 'Didn’t receive an email? Send a new code'}</Text>
               </Pressable>
-              <Text style={styles.testNote}>Test version: any 6 numbers work for now.</Text>
+              <Text style={styles.testNote}>Can’t find it? Check your spam folder too.</Text>
             </>
           )}
 
@@ -353,7 +457,7 @@ export default function SignUp() {
                 You’ll need a <Text style={styles.titleItalic}>password</Text>
               </Text>
               <Text style={styles.help}>Make sure it’s 8 characters or more.</Text>
-              <Field label="Password" value={password} onChangeText={setPassword} secureTextEntry={!showPassword} autoCapitalize="none" autoCorrect={false} autoFocus />
+              <Field label="Password" value={password} onChangeText={setPassword} secureTextEntry={!showPassword} autoCapitalize="none" autoCorrect={false} autoComplete="new-password" textContentType="newPassword" passwordRules="minlength: 8;" autoFocus />
               <Pressable onPress={() => setShowPassword(!showPassword)}>
                 <Text style={styles.link}>{showPassword ? 'Hide password' : 'Show password'}</Text>
               </Pressable>
@@ -365,7 +469,7 @@ export default function SignUp() {
               <Text style={styles.title}>
                 Pick a profile <Text style={styles.titleItalic}>picture</Text>
               </Text>
-              <Text style={styles.help}>Have a favourite photo? Add it now so your running buddies know who to look for.</Text>
+              <Text style={styles.help}>Have a favourite photo? Add it now so the people you meet know who to look for.</Text>
               <Pressable onPress={pickPhoto} style={styles.photo}>
                 {photoUri ? <Image source={{ uri: photoUri }} style={styles.photoImg} /> : <Text style={styles.photoPlus}>+</Text>}
               </Pressable>
@@ -383,6 +487,8 @@ export default function SignUp() {
                 value={username ? `@${username}` : ''}
                 placeholder={`@${suggested}`}
                 onChangeText={(t) => setUsername(t.replace(/^@/, '').replace(/[^a-zA-Z0-9_]/g, '').slice(0, 15))}
+                autoComplete="username-new"
+                textContentType="username"
                 autoCapitalize="none"
                 autoCorrect={false}
               />
@@ -391,11 +497,16 @@ export default function SignUp() {
         </ScrollView>
 
         <View style={styles.footer}>
+          {problem ? <Text style={[styles.error, { textAlign: 'center' }]}>{problem}</Text> : null}
           <Pressable
             onPress={next}
-            disabled={!canNext}
+            disabled={!canNext || busy}
             style={({ pressed }) => [styles.next, !canNext && styles.nextOff, pressed && { opacity: 0.85 }]}>
-            <Text style={[styles.nextText, !canNext && styles.nextTextOff]}>{nextLabel}</Text>
+            {busy ? (
+              <ActivityIndicator color={colors.onBrand} />
+            ) : (
+              <Text style={[styles.nextText, !canNext && styles.nextTextOff]}>{nextLabel}</Text>
+            )}
           </Pressable>
           {skippable ? (
             <Pressable
@@ -403,7 +514,7 @@ export default function SignUp() {
                 if (step === 3) setPhotoUri(undefined);
                 if (step === 4) setUsername('');
                 if (!isLast) setPos(pos + 1);
-                else next();
+                else finish(); // no @username yet: they can pick one later
               }}
               style={({ pressed }) => [styles.skip, pressed && { opacity: 0.7 }]}>
               <Text style={styles.skipText}>Skip for now</Text>

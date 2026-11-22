@@ -1,823 +1,246 @@
-import { Image } from "expo-image";
-import { Redirect, router, type Href } from "expo-router";
-import { useState } from "react";
-import {
-  Pressable,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TextInput,
-  View,
-} from "react-native";
+import Feather from '@expo/vector-icons/Feather';
+import Ionicons from '@expo/vector-icons/Ionicons';
+import { Image } from 'expo-image';
+import { Redirect, router, type Href } from 'expo-router';
+import { useState, type ReactNode } from 'react';
+import * as Haptics from 'expo-haptics';
+import { Animated, Pressable, StyleSheet, Text, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import {
-  CommentPreview,
-  openComments,
-  useComments,
-} from "@/components/comment-preview";
-import { CommentsSheet } from "@/components/comments-sheet";
-import { SessionCard } from "@/components/session-card";
-import { openPostActions } from "@/lib/post-actions";
-import { PHOTOS } from "@/data/photos";
-import { Avatar, MenuButton, Screen } from "@/components/ui";
-import { agoLabel } from "@/data/comments";
-import { FEED, TEXT_POSTS, type TextPost } from "@/data/feed";
-import { COACHES } from "@/data/coaches";
-import { PEOPLE, findPerson } from "@/data/people";
-import { hoursAgoLabel } from "@/lib/time";
-import { useStore } from "@/state/store";
-import { colors, fonts, radius, space, themed, useTheme } from "@/theme";
+import { CommentPreview, openComments, useComments } from '@/components/comment-preview';
+import { CommentsSheet } from '@/components/comments-sheet';
+import { Avatar, BrandMark, Screen } from '@/components/ui';
+import { useCity } from '@/lib/use-city';
+import { agoLabel } from '@/data/comments';
+import { faceFor } from '@/data/faces';
+import { cityOf } from '@/data/options';
+import { findPerson } from '@/data/people';
+import { openPostActions } from '@/lib/post-actions';
+import { hoursAgoLabel } from '@/lib/time';
+import { MentionText } from '@/components/mentions';
+import { PremiumNudge } from '@/components/premium-nudge';
+import { useStore } from '@/state/store';
+import { colors, fonts, space, themed, useTheme } from '@/theme';
 
-const FILTERS = ["All", "Following", "Nearby", "Coaches"] as const;
+// Home feed, copied from Yana's design board (2026-11-21): logo + bell,
+// "Create a post...", then posts with text, a photo, likes, comments and save.
+const un = (id: string) => `https://images.unsplash.com/photo-${id}?w=900&h=600&fit=crop&q=70`;
 
-function CommentButton({ postId }: { postId: string }) {
-  const n = useComments(postId).length;
+type Post = { id: string; personId: string; handle: string; hoursAgo: number; text: string; photo?: string | number; likes: number };
+
+const POSTS: Post[] = [
+  { id: 'b1', personId: 'sanne', handle: 'sannefit', hoursAgo: 2, text: 'Post run in the park 🏃‍♀️\nAnyone down for another run tonight?', photo: require('../../../assets/images/photos/run-london.jpg'), likes: 247 },
+  { id: 'b2', personId: 'mateo', handle: 'mateo.padel', hoursAgo: 3, text: 'Padel later? 7pm', photo: require('../../../assets/images/photos/padel.jpg'), likes: 86 },
+  { id: 'b3', personId: 'amira', handle: 'amira.flow', hoursAgo: 5, text: 'Lunchtime yoga is the reset I needed. Who wants to join tomorrow? 🧘‍♀️', photo: un('1544367567-0f2fcb009e0b'), likes: 132 },
+  { id: 'b4', personId: 'lucas', handle: 'lucas.lifts', hoursAgo: 6, text: 'Leg day done. Looking for a gym buddy at 6pm this week 💪', photo: un('1534438327276-14e5300c3a48'), likes: 64 },
+  { id: 't1', personId: 'amira', handle: 'amira.flow', hoursAgo: 1, text: 'Unpopular opinion: the best part of any workout is the coffee after. Who agrees? ☕', likes: 58 },
+  { id: 't2', personId: 'noah', handle: 'noah.serves', hoursAgo: 4, text: 'Moved here 3 months ago and still don’t know many people. Today I said hi to my whole padel group. Small wins 🙌', likes: 112 },
+  { id: 'b5', personId: 'femke', handle: 'femke.outdoors', hoursAgo: 8, text: 'Long walk then sauna this Sunday. Who’s in?', likes: 41 },
+  { id: 'b6', personId: 'tom', handle: 'tom.sunrise', hoursAgo: 11, text: 'Sunrise run + coffee tomorrow 06:30. All paces welcome ☕', photo: require('../../../assets/images/photos/football.jpg'), likes: 158 },
+  { id: 'b7', personId: 'yasmin', handle: 'yasmin.tries', hoursAgo: 7, text: 'First reformer pilates class done and my legs are shaking 😅 Thanks @amira.flow for dragging me along!', photo: require('../../../assets/images/photos/explore-pilates.jpg'), likes: 203 },
+  { id: 'b8', personId: 'daan', handle: 'daan.rides', hoursAgo: 9, text: '60km before breakfast. Saturday group ride is open, all speeds welcome 🚴', photo: require('../../../assets/images/photos/explore-cycling.jpg'), likes: 174 },
+  { id: 't3', personId: 'lotte', handle: 'lotte.runs', hoursAgo: 10, text: 'Reminder that a slow run is still a run. Proud of everyone who showed up tonight 💚', likes: 96 },
+  { id: 'b9', personId: 'femke', handle: 'femke.outdoors', hoursAgo: 13, text: 'Gym, then 20 minutes in the sauna. This is self care 🧖‍♀️', photo: require('../../../assets/images/photos/explore-sauna.jpg'), likes: 121 },
+  { id: 'b10', personId: 'noah', handle: 'noah.serves', hoursAgo: 15, text: 'Doubles with @mateo.padel tonight. We lost every set and laughed the whole time 🎾', photo: require('../../../assets/images/photos/explore-padel.jpg'), likes: 88 },
+  { id: 't4', personId: 'tom', handle: 'tom.sunrise', hoursAgo: 17, text: 'Met 3 new people on this morning’s run. One of them is a chef too. Mile Club is a small world ☕', likes: 143 },
+  { id: 'b11', personId: 'lucas', handle: 'lucas.lifts', hoursAgo: 20, text: 'Pickup basketball Sunday at 11. Need 4 more, any level 🏀', photo: require('../../../assets/images/photos/explore-basketball.jpg'), likes: 57 },
+  { id: 'b12', personId: 'sanne', handle: 'sannefit', hoursAgo: 23, text: 'New 5k PB! 27:41 🥳 Couldn’t have done it without my Thursday crew', photo: require('../../../assets/images/photos/explore-running.jpg'), likes: 312 },
+  { id: 't5', personId: 'yasmin', handle: 'yasmin.tries', hoursAgo: 26, text: 'What should I try next week? Climbing, boxing or sauna? Vote in the comments 👇', likes: 74 },
+  { id: 'b13', personId: 'amira', handle: 'amira.flow', hoursAgo: 30, text: 'Park yoga with Mile Club this Saturday 9am. Bring a mat and a friend 🌿', photo: require('../../../assets/images/photos/explore-yoga.jpg'), likes: 189 },
+  { id: 'b14', personId: 'mateo', handle: 'mateo.padel', hoursAgo: 34, text: 'Push day with @lucas.lifts. Who’s joining us Thursday? 💪', photo: require('../../../assets/images/photos/explore-gym.jpg'), likes: 66 },
+  { id: 't6', personId: 'daan', handle: 'daan.rides', hoursAgo: 38, text: 'Looking for other engineers who like a lunchtime run. Networking but make it sweaty 😄', likes: 101 },
+];
+
+function greeting(h = new Date().getHours()) {
+  return h < 5 ? 'Good evening' : h < 12 ? 'Good morning' : h < 18 ? 'Good afternoon' : 'Good evening';
+}
+
+// A 40px round button, so every icon at the top lines up on the same centre line.
+function Round({ label, onPress, children }: { label: string; onPress: () => void; children: ReactNode }) {
+  useTheme();
   return (
-    <Pressable
-      onPress={() => openComments(postId)}
-      style={styles.action}
-      accessibilityLabel="Comments"
-    >
-      <Text style={styles.bubble}>💬</Text>
-      <Text style={styles.count}>{n}</Text>
+    <Pressable onPress={onPress} accessibilityLabel={label} hitSlop={4} style={({ pressed }) => [styles.round, pressed && { transform: [{ scale: 0.92 }], opacity: 0.8 }]}>
+      {children}
     </Pressable>
   );
 }
 
-// A text-only post, like a tweet.
-function TextPostCard({
-  id,
-  name,
-  color,
-  photoUri,
-  when,
-  text,
-  likes,
-  onOpenPerson,
-  onMore,
-}: {
-  id: string;
-  name: string;
-  color?: string;
-  photoUri?: string;
-  when: string;
-  text: string;
-  likes: number;
-  onOpenPerson?: () => void;
-  onMore?: () => void;
-}) {
-  const { kudos, toggleKudos } = useStore();
-  const liked = kudos.includes(id);
+// Heart that pops when you like a post, with a light tap on the phone.
+function LikeButton({ liked, count, onPress }: { liked: boolean; count: number; onPress: () => void }) {
+  useTheme();
+  const [scale] = useState(() => new Animated.Value(1));
+  function tap() {
+    if (!liked) {
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => {});
+      scale.setValue(0.7);
+      Animated.spring(scale, { toValue: 1, friction: 3, tension: 160, useNativeDriver: true }).start();
+    }
+    onPress();
+  }
   return (
-    <View style={styles.tweet}>
-      <View style={styles.tweetHead}>
+    <Pressable onPress={tap} style={styles.action} accessibilityLabel={liked ? 'Unlike' : 'Like'} hitSlop={8}>
+      <Animated.View style={{ transform: [{ scale }] }}>
+        <Ionicons name={liked ? 'heart' : 'heart-outline'} size={21} color={liked ? '#FF4D6D' : colors.ink} />
+      </Animated.View>
+      <Text style={styles.count}>{count}</Text>
+    </Pressable>
+  );
+}
+
+function PostCard({
+  id, name, handle, photoUri, color, when, text, photo, likes, onOpenPerson, onMore,
+}: {
+  id: string; name: string; handle: string; photoUri?: string; color?: string; when: string; text: string;
+  photo?: string | number; likes: number; onOpenPerson?: () => void; onMore?: () => void;
+}) {
+  useTheme();
+  const { kudos, toggleKudos, profile } = useStore();
+  const [saved, setSaved] = useState(false);
+  const liked = kudos.includes(id);
+  const comments = useComments(id).length;
+  return (
+    <View style={styles.post}>
+      <View style={styles.head}>
         <Pressable onPress={onOpenPerson}>
-          <Avatar name={name} color={color} uri={photoUri} size={38} />
+          <Avatar name={name} color={color} uri={photoUri} size={40} />
         </Pressable>
         <Pressable style={{ flex: 1 }} onPress={onOpenPerson}>
-          <Text style={styles.name}>{name}</Text>
+          <Text style={styles.handle}>{handle}</Text>
           <Text style={styles.meta}>{when}</Text>
         </Pressable>
-        {onMore ? (
-          <Pressable onPress={onMore} hitSlop={10}>
-            <Text style={styles.dots}>•••</Text>
-          </Pressable>
-        ) : null}
-      </View>
-      <Text style={styles.tweetText}>{text}</Text>
-      <View style={styles.actions}>
-        <Pressable
-          onPress={() => toggleKudos(id)}
-          style={styles.action}
-          accessibilityLabel="Like"
-        >
-          <Text style={[styles.heart, liked && { color: colors.peachDeep }]}>
-            {liked ? "♥" : "♡"}
-          </Text>
-          <Text style={styles.count}>{likes + (liked ? 1 : 0)}</Text>
+        <Pressable onPress={onMore} hitSlop={10} accessibilityLabel="More">
+          <Ionicons name="ellipsis-horizontal" size={18} color={colors.muted} />
         </Pressable>
-        <CommentButton postId={id} />
+      </View>
+      <MentionText text={text} style={[styles.text, !photo && styles.thought]} me={profile} />
+      {photo ? (
+        <View style={styles.photo}>
+          <Image source={typeof photo === 'string' ? { uri: photo } : photo} style={StyleSheet.absoluteFill} contentFit="cover" transition={250} cachePolicy="memory-disk" recyclingKey={id} />
+        </View>
+      ) : null}
+      <View style={styles.actions}>
+        <LikeButton liked={liked} count={likes + (liked ? 1 : 0)} onPress={() => toggleKudos(id)} />
+        <Pressable onPress={() => openComments(id)} style={styles.action} accessibilityLabel="Comments">
+          <Ionicons name="chatbubble-outline" size={19} color={colors.ink} />
+          <Text style={styles.count}>{comments}</Text>
+        </Pressable>
+        <View style={{ flex: 1 }} />
+        <Pressable onPress={() => setSaved(!saved)} hitSlop={8} accessibilityLabel="Save">
+          <Ionicons name={saved ? 'bookmark' : 'bookmark-outline'} size={20} color={colors.ink} />
+        </Pressable>
       </View>
       <CommentPreview postId={id} />
     </View>
   );
 }
 
-function SampleTextPost({ post }: { post: TextPost }) {
-  const person = findPerson(post.personId);
-  if (!person) return null;
-  return (
-    <TextPostCard
-      id={post.id}
-      name={person.firstName}
-      color={person.color}
-      when={hoursAgoLabel(post.hoursAgo)}
-      text={post.text}
-      likes={post.likes}
-      onOpenPerson={() => router.push(`/person/${person.id}`)}
-    />
-  );
-}
-
-function duration(min: number) {
-  const h = Math.floor(min / 60);
-  return h ? `${h}h ${min % 60}m` : `${min}m`;
-}
-
-export default function Explore() {
+export default function Home() {
   useTheme();
-  const {
-    profile,
-    kudos,
-    toggleKudos,
-    blocked,
-    following,
-    toggleFollow,
-    myPosts,
-    sessions,
-    statusOf,
-    archivePost,
-    deletePost,
-  } = useStore();
-  const [filter, setFilter] = useState<(typeof FILTERS)[number]>("All");
-  const [query, setQuery] = useState("");
-  const [searching, setSearching] = useState(false);
+  const here = useCity();
+  const insets = useSafeAreaInsets();
+  const { profile, blocked, myPosts, archivePost, deletePost } = useStore();
+  const [pulls, setPulls] = useState(0);
   if (!profile) return <Redirect href="/welcome" />;
-
-  const textPosts = TEXT_POSTS.filter((t) => !blocked.includes(t.personId));
-  let posts = FEED.filter((p) => !blocked.includes(p.personId));
-  if (filter === "Following")
-    posts = posts.filter((p) => following.includes(p.personId));
-  if (filter === "Nearby")
-    posts = posts.filter(
-      (p) => findPerson(p.personId)?.neighborhood === profile.neighborhood,
-    );
-  if (filter === "Coaches") posts = [];
+  const city = here.city ?? profile.city ?? cityOf(profile.neighborhood) ?? '';
+  const where = (h: number) => `${hoursAgoLabel(h)}${city ? ` · ${city}` : ''}`;
 
   return (
-    <Screen>
+    <View style={{ flex: 1 }}>
+    <Screen onRefresh={() => { setPulls(pulls + 1); return 0; }}>
       <View style={styles.top}>
-        <MenuButton onPress={() => router.push("/menu")} />
-        <Text style={styles.title}>For You</Text>
-        <Pressable
-          style={styles.iconBtn}
-          onPress={() => {
-            setSearching(!searching);
-            setQuery("");
-          }}
-          accessibilityLabel="Search people"
-        >
-          <Text style={styles.iconText}>{searching ? "✕" : "🔍"}</Text>
-        </Pressable>
-        <Pressable
-          style={styles.iconBtn}
-          onPress={() => router.push("/new-post" as Href)}
-          accessibilityLabel="New post"
-        >
-          <Text style={styles.iconPlus}>＋</Text>
+        <View style={styles.logoMid} pointerEvents="none">
+          <BrandMark height={24} />
+        </View>
+        {/* the menu button floats above the feed instead (see below) */}
+        <View style={{ width: 40 }} />
+        <View style={{ flex: 1 }} />
+        <Round label="Notifications" onPress={() => router.push('/notifications' as Href)}>
+          <Ionicons name="notifications-outline" size={19} color={colors.ink} />
+        </Round>
+      </View>
+
+      <View style={styles.hello}>
+        <Text style={styles.helloText}>{greeting()}, {profile.firstName}</Text>
+        <Pressable style={styles.cityRow} onPress={here.city ? undefined : here.ask} disabled={!!here.city} hitSlop={8} accessibilityLabel={here.city ? `You're in ${here.city}` : 'Turn on location'}>
+          <Ionicons name={here.city ? 'location' : 'location-outline'} size={14} color={colors.muted} />
+          <Text style={styles.cityText} numberOfLines={1}>{here.city ?? 'Set your location'}</Text>
         </Pressable>
       </View>
 
-      {!searching ? (
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          style={styles.stories}
-          contentContainerStyle={styles.storiesIn}
-        >
-          <Pressable
-            style={styles.story}
-            onPress={() => router.push("/new-post" as Href)}
-          >
-            <View style={styles.storyAdd}>
-              <Text style={styles.storyAddText}>＋</Text>
-            </View>
-            <Text style={styles.storyName}>Your post</Text>
-          </Pressable>
-          {[...PEOPLE]
-            .filter((p) => !blocked.includes(p.id))
-            .sort(
-              (a, b) =>
-                Number(following.includes(b.id)) -
-                Number(following.includes(a.id)),
-            )
-            .map((p) => (
-              <Pressable
-                key={p.id}
-                style={styles.story}
-                onPress={() => router.push(`/person/${p.id}`)}
-              >
-                <View style={styles.storyRing}>
-                  <View style={styles.storyGap}>
-                    <Avatar name={p.firstName} color={p.color} size={58} />
-                  </View>
-                </View>
-                <Text style={styles.storyName} numberOfLines={1}>
-                  {p.firstName}
-                </Text>
-              </Pressable>
-            ))}
-          <Pressable
-            style={styles.story}
-            onPress={() => router.push("/people")}
-          >
-            <View style={styles.storyAdd}>
-              <Text style={styles.storyAddText}>→</Text>
-            </View>
-            <Text style={styles.storyName}>See all</Text>
-          </Pressable>
-        </ScrollView>
-      ) : null}
+      <Pressable style={styles.create} onPress={() => router.push('/new-post' as Href)} accessibilityLabel="Create a post">
+        <Avatar name={profile.firstName} uri={profile.photoUri} size={32} />
+        <Text style={styles.createText}>What’s on your mind?</Text>
+        <Feather name="image" size={18} color={colors.muted} style={{ marginRight: 8 }} />
+      </Pressable>
 
-      <View style={[styles.search, !searching && { display: "none" }]}>
-        <Text style={styles.searchIcon}>🔍</Text>
-        <TextInput
-          value={query}
-          onChangeText={setQuery}
-          placeholder="Search people by name"
-          placeholderTextColor={colors.muted}
-          style={styles.searchInput}
-          autoCorrect={false}
-          returnKeyType="search"
-          autoFocus
+      <PremiumNudge profile={profile} />
+
+      {myPosts.filter((p) => !p.archived).map((mp) => (
+        <PostCard
+          key={mp.id}
+          id={mp.id}
+          name={profile.firstName}
+          handle={profile.username ?? profile.firstName.toLowerCase()}
+          photoUri={profile.photoUri}
+          when={`${agoLabel(mp.at)}${city ? ` · ${city}` : ''}`}
+          text={mp.caption}
+          photo={mp.uri}
+          likes={0}
+          onMore={() => openPostActions(mp, { archivePost, deletePost })}
         />
-        {query ? (
-          <Pressable onPress={() => setQuery("")} hitSlop={10}>
-            <Text style={styles.searchClear}>✕</Text>
-          </Pressable>
-        ) : null}
-      </View>
+      ))}
 
-      {query.trim() ? (
-        <View style={{ gap: space.sm }}>
-          {[
-            ...PEOPLE.filter((p) => !blocked.includes(p.id)).map((p) => ({
-              id: p.id,
-              name: p.firstName,
-              color: p.color,
-              sub: p.neighborhood,
-              href: `/person/${p.id}`,
-            })),
-            ...COACHES.map((c) => ({
-              id: c.id,
-              name: c.name,
-              color: c.color,
-              sub: `Coach · ${c.headline}`,
-              href: `/coach/${c.id}`,
-            })),
-          ]
-            .filter((r) =>
-              r.name.toLowerCase().includes(query.trim().toLowerCase()),
-            )
-            .map((r) => (
-              <Pressable
-                key={r.id}
-                style={styles.result}
-                onPress={() => router.push(r.href as Href)}
-              >
-                <Avatar name={r.name} color={r.color} size={44} />
-                <View style={{ flex: 1 }}>
-                  <Text style={styles.name}>{r.name}</Text>
-                  <Text style={styles.meta} numberOfLines={1}>
-                    {r.sub}
-                  </Text>
-                </View>
-                <Text style={styles.meta}>›</Text>
-              </Pressable>
-            ))}
-          {![
-            ...PEOPLE.map((p) => p.firstName),
-            ...COACHES.map((c) => c.name),
-          ].some((n) =>
-            n.toLowerCase().includes(query.trim().toLowerCase()),
-          ) ? (
-            <Text style={styles.empty}>
-              No one called “{query.trim()}” yet.
-            </Text>
-          ) : null}
-        </View>
-      ) : null}
-
-      <View style={query.trim() ? { display: "none" } : undefined}>
-        <View style={styles.tabs}>
-          {FILTERS.map((f) => (
-            <Pressable key={f} onPress={() => setFilter(f)}>
-              <Text style={[styles.tab, filter === f && styles.tabOn]}>
-                {f}
-              </Text>
-            </Pressable>
-          ))}
-        </View>
-
-        {!profile.gender ? (
-          <Pressable
-            style={styles.meetBanner}
-            onPress={() => router.push("/meet-settings" as Href)}
-          >
-            <Text style={styles.meetTitle}>
-              New: choose who you meet up with
-            </Text>
-            <Text style={styles.meetSub}>
-              Everyone, women only or men only. Tap to set it →
-            </Text>
-          </Pressable>
-        ) : null}
-
-        {filter !== "Nearby" && filter !== "Following"
-          ? myPosts
-              .filter((mp) => !mp.archived)
-              .map((mp) => {
-                const liked = kudos.includes(mp.id);
-                const askDelete = () =>
-                  openPostActions(mp, { archivePost, deletePost });
-                if (!mp.uri)
-                  return (
-                    <TextPostCard
-                      key={mp.id}
-                      id={mp.id}
-                      name={profile.firstName}
-                      photoUri={profile.photoUri}
-                      when={`Your post · ${agoLabel(mp.at)}`}
-                      text={mp.caption}
-                      likes={0}
-                      onMore={askDelete}
-                    />
-                  );
-                return (
-                  <View key={mp.id} style={styles.post}>
-                    <View style={styles.head}>
-                      <Avatar
-                        name={profile.firstName}
-                        uri={profile.photoUri}
-                        size={38}
-                      />
-                      <View style={{ flex: 1 }}>
-                        <Text style={styles.name}>{profile.firstName}</Text>
-                        <Text style={styles.meta}>
-                          Your post · {agoLabel(mp.at)}
-                        </Text>
-                      </View>
-                      <Pressable onPress={askDelete} hitSlop={10}>
-                        <Text style={styles.dots}>•••</Text>
-                      </Pressable>
-                    </View>
-                    <View style={styles.photo}>
-                      <Image
-                        source={{ uri: mp.uri }}
-                        style={StyleSheet.absoluteFill}
-                        contentFit="cover"
-                      />
-                    </View>
-                    <View style={styles.actions}>
-                      <Pressable
-                        onPress={() => toggleKudos(mp.id)}
-                        style={styles.action}
-                        accessibilityLabel="Like"
-                      >
-                        <Text
-                          style={[
-                            styles.heart,
-                            liked && { color: colors.peachDeep },
-                          ]}
-                        >
-                          {liked ? "♥" : "♡"}
-                        </Text>
-                        <Text style={styles.count}>{liked ? 1 : 0}</Text>
-                      </Pressable>
-                      <CommentButton postId={mp.id} />
-                    </View>
-                    {mp.caption ? (
-                      <Text style={styles.caption}>
-                        <Text style={{ fontFamily: fonts.sansSemi }}>
-                          {profile.firstName}{" "}
-                        </Text>
-                        {mp.caption}
-                      </Text>
-                    ) : null}
-                    <CommentPreview postId={mp.id} />
-                  </View>
-                );
-              })
-          : null}
-
-        {filter === "Coaches" ? (
-          <View style={styles.coaches}>
-            <Text style={styles.sectionLabel}>COACHES NEAR YOU</Text>
-            {COACHES.map((c) => (
-              <Pressable
-                key={c.id}
-                style={styles.coachRow}
-                onPress={() => router.push(`/coach/${c.id}` as Href)}
-              >
-                <Avatar name={c.name} color={c.color} size={46} />
-                <View style={{ flex: 1 }}>
-                  <Text style={styles.name}>{c.name}</Text>
-                  <Text style={styles.meta} numberOfLines={1}>
-                    {c.headline}
-                  </Text>
-                  <Text style={styles.meta}>
-                    ★ {c.rating.toFixed(1)} · {c.neighborhood}
-                  </Text>
-                </View>
-                <Text style={styles.meta}>›</Text>
-              </Pressable>
-            ))}
-            <Text style={[styles.sectionLabel, { marginTop: space.lg }]}>
-              UPCOMING SESSIONS
-            </Text>
-            {sessions
-              .filter((x) => x.coachId !== "me")
-              .sort((a, b) => (a.date + a.time).localeCompare(b.date + b.time))
-              .slice(0, 4)
-              .map((x) => (
-                <SessionCard key={x.id} s={x} status={statusOf(x.id)} />
-              ))}
-            <Pressable
-              style={styles.seeAll}
-              onPress={() => router.navigate("/train" as Href)}
-            >
-              <Text style={styles.seeAllText}>See all coach sessions →</Text>
-            </Pressable>
-          </View>
-        ) : null}
-
-        {filter !== "Coaches" && posts.length === 0 ? (
-          <Text style={styles.empty}>
-            {filter === "Following"
-              ? "Follow people to see their runs here."
-              : "Nothing here yet."}
-          </Text>
-        ) : null}
-
-        {posts.map((post, i) => {
-          const person = findPerson(post.personId);
-          if (!person) return null;
-          const liked = kudos.includes(post.id);
-          const follows = following.includes(person.id);
-          const tp = filter === "All" ? textPosts[i] : undefined;
-          return (
-            <View key={post.id}>
-              <View style={styles.post}>
-                <View style={styles.head}>
-                  <Pressable
-                    onPress={() => router.push(`/person/${person.id}`)}
-                  >
-                    <Avatar
-                      name={person.firstName}
-                      color={person.color}
-                      size={38}
-                    />
-                  </Pressable>
-                  <Pressable
-                    style={{ flex: 1 }}
-                    onPress={() => router.push(`/person/${person.id}`)}
-                  >
-                    <Text style={styles.name}>
-                      {person.firstName}
-                      <Text style={styles.meta}>
-                        {" · "}
-                        {hoursAgoLabel(post.hoursAgo)}
-                      </Text>
-                    </Text>
-                    <Text style={styles.meta} numberOfLines={1}>
-                      {post.place}
-                      {post.withCount ? ` · ran with ${post.withCount}` : ""}
-                    </Text>
-                  </Pressable>
-                  <Pressable
-                    onPress={() => toggleFollow(person.id)}
-                    hitSlop={8}
-                  >
-                    <Text
-                      style={follows ? styles.followingText : styles.followText}
-                    >
-                      {follows ? "Following" : "Follow"}
-                    </Text>
-                  </Pressable>
-                </View>
-
-                <View style={styles.photo}>
-                  <Image
-                    source={PHOTOS[FEED.indexOf(post) % PHOTOS.length]}
-                    style={StyleSheet.absoluteFill}
-                    contentFit="cover"
-                  />
-                  <View style={styles.overlay}>
-                    <Text style={styles.postTitle} numberOfLines={1}>
-                      {post.title}
-                    </Text>
-                    <Text style={styles.stats}>
-                      {[
-                        post.distanceKm
-                          ? `${post.distanceKm.toFixed(1)} km`
-                          : "",
-                        post.pace ?? "",
-                        duration(post.minutes),
-                      ]
-                        .filter(Boolean)
-                        .join("  ·  ")}
-                    </Text>
-                  </View>
-                </View>
-
-                <View style={styles.actions}>
-                  <Pressable
-                    onPress={() => toggleKudos(post.id)}
-                    style={styles.action}
-                    accessibilityLabel="Like"
-                  >
-                    <Text
-                      style={[
-                        styles.heart,
-                        liked && { color: colors.peachDeep },
-                      ]}
-                    >
-                      {liked ? "♥" : "♡"}
-                    </Text>
-                    <Text style={styles.count}>
-                      {post.kudos + (liked ? 1 : 0)}
-                    </Text>
-                  </Pressable>
-                  <CommentButton postId={post.id} />
-                </View>
-                {post.note ? (
-                  <Text style={styles.caption}>
-                    <Text style={{ fontFamily: fonts.sansSemi }}>
-                      {person.firstName}{" "}
-                    </Text>
-                    {post.note}
-                  </Text>
-                ) : null}
-                <CommentPreview postId={post.id} />
-              </View>
-              {tp ? <SampleTextPost post={tp} /> : null}
-            </View>
-          );
-        })}
-      </View>
+      {[...POSTS].sort((a, b) => a.hoursAgo - b.hoursAgo).filter((p) => !blocked.includes(p.personId)).map((p) => {
+        const person = findPerson(p.personId);
+        return (
+          <PostCard
+            key={p.id}
+            id={p.id}
+            name={person?.firstName ?? p.handle}
+            handle={p.handle}
+            color={person?.color}
+            photoUri={faceFor(p.personId)?.photo}
+            when={where(p.hoursAgo)}
+            text={p.text}
+            photo={p.photo}
+            likes={p.likes}
+            onOpenPerson={() => router.push(`/person/${p.personId}`)}
+            onMore={() => router.push(`/person/${p.personId}`)}
+          />
+        );
+      })}
       <CommentsSheet />
     </Screen>
+      {/* Side menu button stays on screen while you scroll (Yana, 2026-11-21). */}
+      <View style={[styles.menuFloat, { top: insets.top + 10 }]}>
+        <Round label="Open menu" onPress={() => router.push('/menu')}>
+          <Ionicons name="menu" size={20} color={colors.ink} />
+        </Round>
+      </View>
+    </View>
   );
 }
 
-const styles = themed(() =>
-  StyleSheet.create({
-    top: { flexDirection: "row", alignItems: "center", gap: space.md },
-    title: {
-      flex: 1,
-      fontFamily: fonts.serif,
-      fontSize: 30,
-      color: colors.ink,
-    },
-    people: { display: "none" },
-    peopleText: {
-      fontFamily: fonts.sansMedium,
-      color: colors.ink,
-      fontSize: 12,
-    },
-    followingText: {
-      fontFamily: fonts.sansMedium,
-      fontSize: 13,
-      color: colors.muted,
-    },
-    iconBtn: {
-      width: 40,
-      height: 40,
-      borderRadius: 20,
-      borderWidth: 1,
-      borderColor: colors.line,
-      alignItems: "center",
-      justifyContent: "center",
-    },
-    iconText: { fontSize: 15, color: colors.ink },
-    iconPlus: { fontSize: 20, color: colors.ink, marginTop: -2 },
-    stories: { marginHorizontal: -space.xl, marginTop: space.lg },
-    storiesIn: { paddingHorizontal: space.xl, gap: 14 },
-    story: { alignItems: "center", gap: 6, width: 66 },
-    storyRing: {
-      padding: 2.5,
-      borderRadius: 40,
-      borderWidth: 2,
-      borderColor: colors.peach,
-    },
-    storyGap: { padding: 2, borderRadius: 36, backgroundColor: colors.bg },
-    storyAdd: {
-      width: 66,
-      height: 66,
-      borderRadius: 33,
-      borderWidth: 1.5,
-      borderStyle: "dashed",
-      borderColor: colors.muted,
-      alignItems: "center",
-      justifyContent: "center",
-    },
-    storyAddText: { fontSize: 22, color: colors.muted },
-    storyName: { fontFamily: fonts.sans, fontSize: 11, color: colors.muted },
-    coaches: { gap: space.md },
-    sectionLabel: {
-      fontFamily: fonts.sansBold,
-      fontSize: 11,
-      letterSpacing: 1.5,
-      color: colors.muted,
-    },
-    coachRow: {
-      flexDirection: "row",
-      alignItems: "center",
-      gap: space.md,
-      backgroundColor: colors.card,
-      borderRadius: radius.lg,
-      borderWidth: 1,
-      borderColor: colors.line,
-      padding: space.md,
-    },
-    seeAll: { alignSelf: "center", paddingVertical: space.md },
-    seeAllText: {
-      fontFamily: fonts.sansSemi,
-      fontSize: 14,
-      color: colors.olive,
-    },
-    tabs: {
-      flexDirection: "row",
-      gap: 22,
-      marginTop: space.lg,
-      marginBottom: space.lg,
-    },
-    tab: {
-      fontFamily: fonts.sans,
-      fontSize: 14,
-      color: colors.muted,
-      paddingBottom: 6,
-    },
-    tabOn: {
-      fontFamily: fonts.sansSemi,
-      color: colors.ink,
-      borderBottomWidth: 1.5,
-      borderBottomColor: colors.ink,
-    },
-    empty: {
-      fontFamily: fonts.sans,
-      color: colors.muted,
-      textAlign: "center",
-      marginTop: space.xl,
-    },
-    post: { marginBottom: space.xl },
-    head: {
-      flexDirection: "row",
-      alignItems: "center",
-      gap: space.md,
-      marginBottom: space.md,
-    },
-    name: { fontFamily: fonts.sansSemi, fontSize: 14, color: colors.ink },
-    meta: {
-      fontFamily: fonts.sans,
-      fontSize: 12,
-      color: colors.muted,
-      marginTop: 1,
-    },
-    follow: {},
-    following: {},
-    followText: {
-      fontFamily: fonts.sansBold,
-      fontSize: 13,
-      color: colors.olive,
-    },
-    photo: {
-      marginHorizontal: -space.xl,
-      aspectRatio: 1,
-      backgroundColor: colors.oliveDark,
-    },
-    overlay: {
-      position: "absolute",
-      left: space.lg,
-      right: space.lg,
-      bottom: space.lg,
-      gap: 2,
-    },
-    postTitle: {
-      fontFamily: fonts.serifItalic,
-      fontSize: 22,
-      color: "#fff",
-      textShadowColor: "rgba(0,0,0,0.4)",
-      textShadowRadius: 8,
-    },
-    stats: {
-      fontFamily: fonts.sansSemi,
-      fontSize: 12,
-      color: "#fff",
-      textShadowColor: "rgba(0,0,0,0.4)",
-      textShadowRadius: 6,
-    },
-    actions: {
-      flexDirection: "row",
-      alignItems: "center",
-      gap: space.lg,
-      marginTop: space.md,
-    },
-    action: { flexDirection: "row", alignItems: "center", gap: 6 },
-    heart: { fontSize: 22, color: colors.ink },
-    count: { fontFamily: fonts.sansSemi, fontSize: 13, color: colors.ink },
-    place: {
-      flex: 1,
-      textAlign: "right",
-      fontFamily: fonts.sans,
-      fontSize: 12,
-      color: colors.muted,
-    },
-    bubble: { fontSize: 18 },
-    search: {
-      flexDirection: "row",
-      alignItems: "center",
-      gap: 8,
-      backgroundColor: colors.card,
-      borderRadius: radius.pill,
-      borderWidth: 1,
-      borderColor: colors.line,
-      paddingHorizontal: 14,
-      marginTop: space.md,
-    },
-    searchIcon: { fontSize: 14 },
-    searchInput: {
-      flex: 1,
-      paddingVertical: 10,
-      fontFamily: fonts.sans,
-      fontSize: 15,
-      color: colors.ink,
-    },
-    searchClear: { fontSize: 14, color: colors.muted },
-    result: {
-      flexDirection: "row",
-      alignItems: "center",
-      gap: space.md,
-      backgroundColor: colors.card,
-      borderRadius: radius.lg,
-      padding: space.md,
-    },
-    meetBanner: {
-      backgroundColor: colors.oliveSoft,
-      borderRadius: radius.lg,
-      padding: space.lg,
-      marginBottom: space.lg,
-      gap: 2,
-    },
-    meetTitle: { fontFamily: fonts.sansSemi, fontSize: 14, color: colors.ink },
-    meetSub: { fontFamily: fonts.sans, fontSize: 13, color: colors.muted },
-    tweet: {
-      marginHorizontal: -space.xl,
-      paddingHorizontal: space.xl,
-      paddingVertical: space.lg,
-      borderTopWidth: StyleSheet.hairlineWidth,
-      borderBottomWidth: StyleSheet.hairlineWidth,
-      borderColor: colors.line,
-      marginBottom: space.xl,
-    },
-    tweetHead: { flexDirection: "row", alignItems: "center", gap: space.md },
-    tweetText: {
-      fontFamily: fonts.sans,
-      fontSize: 17,
-      lineHeight: 25,
-      color: colors.ink,
-      marginTop: space.md,
-    },
-    dots: {
-      fontFamily: fonts.sansBold,
-      fontSize: 14,
-      color: colors.muted,
-      letterSpacing: 1,
-    },
-    composer: {
-      flexDirection: "row",
-      alignItems: "center",
-      gap: space.md,
-      backgroundColor: colors.card,
-      borderRadius: radius.lg,
-      borderWidth: 1,
-      borderColor: colors.line,
-      padding: space.md,
-      marginBottom: space.xl,
-    },
-    composerText: {
-      flex: 1,
-      fontFamily: fonts.sans,
-      fontSize: 14,
-      color: colors.muted,
-    },
-    composerBtn: {
-      backgroundColor: colors.olive,
-      borderRadius: radius.pill,
-      paddingVertical: 8,
-      paddingHorizontal: 14,
-    },
-    composerBtnText: {
-      fontFamily: fonts.sansSemi,
-      fontSize: 13,
-      color: colors.onBrand,
-    },
-    caption: {
-      fontFamily: fonts.sans,
-      fontSize: 14,
-      lineHeight: 20,
-      color: colors.ink,
-      marginTop: space.sm,
-    },
-  }),
-);
+const styles = themed(() => StyleSheet.create({
+  top: { flexDirection: 'row', alignItems: 'center', gap: 10, height: 44, marginBottom: space.md },
+  menuFloat: { position: 'absolute', left: 20, borderRadius: 20, shadowColor: '#000', shadowOpacity: 0.12, shadowRadius: 8, shadowOffset: { width: 0, height: 2 }, elevation: 4 },
+  round: { width: 40, height: 40, borderRadius: 20, backgroundColor: colors.card, alignItems: 'center', justifyContent: 'center' },
+  logo: { height: 44, justifyContent: 'center', marginTop: -6 },
+  logoMid: { position: 'absolute', left: 0, right: 0, top: -6, bottom: 0, alignItems: 'center', justifyContent: 'center' },
+  hello: { marginBottom: space.md, gap: 3 },
+  helloText: { fontFamily: fonts.serif, fontSize: 24, color: colors.ink, letterSpacing: -0.4 },
+  cityRow: { flexDirection: 'row', alignItems: 'center', gap: 4, alignSelf: 'flex-start' },
+  cityText: { fontFamily: fonts.sansSemi, fontSize: 13, color: colors.muted, flexShrink: 1 },
+  create: { flexDirection: 'row', alignItems: 'center', gap: 12, height: 52, backgroundColor: colors.card, borderRadius: 999, paddingHorizontal: 10, marginBottom: space.sm },
+  createText: { flex: 1, fontFamily: fonts.sans, fontSize: 14, color: colors.muted },
+  post: { paddingVertical: space.md, borderBottomWidth: 1, borderBottomColor: colors.line },
+  head: { flexDirection: 'row', alignItems: 'center', gap: 10 },
+  handle: { fontFamily: fonts.sansBold, fontSize: 14, color: colors.ink },
+  meta: { fontFamily: fonts.sans, fontSize: 12, color: colors.muted, marginTop: 1 },
+  text: { fontFamily: fonts.sansMedium, fontSize: 15, lineHeight: 21, color: colors.ink, marginTop: 10 },
+  thought: { fontSize: 17, lineHeight: 24 },
+  photo: { height: 210, borderRadius: 16, overflow: 'hidden', marginTop: 10, backgroundColor: colors.card },
+  actions: { flexDirection: 'row', alignItems: 'center', gap: 18, marginTop: 10 },
+  action: { flexDirection: 'row', alignItems: 'center', gap: 5 },
+  count: { fontFamily: fonts.sansSemi, fontSize: 13, color: colors.ink },
+}));

@@ -111,9 +111,9 @@ export default function Studio() {
         )}
 
         <Pressable style={styles.joinCard} onPress={() => router.navigate('/now')}>
-          <Text style={styles.joinTitle}>Run with others too</Text>
-          <Text style={styles.empty}>Coaches can join group runs like everyone else. Swipe through what’s on this week.</Text>
-          <Text style={styles.joinLink}>Find a run →</Text>
+          <Text style={styles.joinTitle}>Join in too</Text>
+          <Text style={styles.empty}>Coaches can join plans like everyone else. Swipe through what’s on this week.</Text>
+          <Text style={styles.joinLink}>Find something to do →</Text>
         </Pressable>
       </ScrollView>
     </SafeAreaView>
@@ -131,10 +131,10 @@ const styles = themed(() =>
     italic: { fontFamily: fonts.serifItalic },
     money: { marginTop: space.lg, borderRadius: 28, backgroundColor: colors.oliveDark, padding: 22 },
     moneyKicker: { fontFamily: fonts.sansSemi, fontSize: 10, letterSpacing: 2, color: colors.peach },
-    moneyValue: { fontFamily: fonts.serif, fontSize: 38, color: colors.onBrand, marginTop: 6 },
+    moneyValue: { fontFamily: fonts.serif, fontSize: 38, color: '#FFFFFF', marginTop: 6 },
     moneyRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 6 },
     moneySmall: { fontFamily: fonts.sans, fontSize: 12, color: '#E3E6D3' },
-    moneyLink: { fontFamily: fonts.sansSemi, fontSize: 13, color: colors.onBrand },
+    moneyLink: { fontFamily: fonts.sansSemi, fontSize: 13, color: '#FFFFFF' },
     host: { marginTop: space.md, height: 54, borderRadius: radius.pill, backgroundColor: colors.olive, alignItems: 'center', justifyContent: 'center' },
     hostText: { fontFamily: fonts.sansSemi, fontSize: 15, color: colors.onBrand },
     section: { fontFamily: fonts.serif, fontSize: 19, color: colors.ink, marginTop: space.xl, marginBottom: space.sm },

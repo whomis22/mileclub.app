@@ -18,8 +18,11 @@ import {
 } from "react-native-safe-area-context";
 
 import { LocationCard } from "@/components/location-card";
-import { Avatar, Logo } from "@/components/ui";
-import { findThread, type ChatMessage } from "@/data/messages";
+import { MentionSuggestions, MentionText } from "@/components/mentions";
+import { Avatar, BrandTile } from "@/components/ui";
+import { faceFor } from "@/data/faces";
+import Feather from "@expo/vector-icons/Feather";
+import { findThread, MEMBERS_GROUP_ID, SUPPORT_ID, type ChatMessage } from "@/data/messages";
 import { NEIGHBORHOODS } from "@/data/options";
 import { findPerson } from "@/data/people";
 import * as Location from "expo-location";
@@ -32,7 +35,8 @@ import { colors, fonts, radius, space, themed, useTheme } from "@/theme";
 export default function Chat() {
   useTheme();
   const { id } = useLocalSearchParams<{ id: string }>();
-  const thread = findThread(id);
+  const { corners } = useStore();
+  const thread = findThread(id) ?? (corners ?? []).find((c) => c.id === id);
   const settings = useGroupSettings();
   const [messages, setMessages] = useState<ChatMessage[]>(
     thread?.messages ?? [],
@@ -54,7 +58,7 @@ export default function Chat() {
   const isGroup = thread.kind === "group";
   const person = thread.personId ? findPerson(thread.personId) : undefined;
   // Mock: you are a regular member, so when "Only admins can post" is on you can read and react, not send.
-  const canSend = !isGroup || !settings.adminsOnly;
+  const canSend = !isGroup || thread.id !== MEMBERS_GROUP_ID || !settings.adminsOnly;
   // Calls and location sharing are only for people you follow.
   const follows = !!person && following.includes(person.id);
 
@@ -194,6 +198,10 @@ export default function Chat() {
     ]);
     setDraft("");
     setReplyTo(null);
+    // Demo: customer service answers (no real support team behind it yet).
+    if (thread!.id === SUPPORT_ID) {
+      setTimeout(() => setMessages((m) => [...m, { id: `${Date.now()}`, from: "them", text: "Thanks for your message! Someone from the Mile Club team will reply here soon. 💚" }]), 1500);
+    }
   }
 
   // Messages and calls in time order (sample messages first, they have no time).
@@ -247,12 +255,12 @@ export default function Chat() {
               : { backgroundColor: colors.card },
           ]}
         >
-          <Text style={[styles.callGlyph, mine && { color: colors.onBrand }]}>
+          <Text style={[styles.callGlyph, mine && { color: colors.onMine }]}>
             {c.video ? "🎥" : mine ? "📞↗" : "📞↙"}
           </Text>
         </View>
         <View style={{ flex: 1 }}>
-          <Text style={[styles.callTitle, mine && { color: colors.onBrand }]}>
+          <Text style={[styles.callTitle, mine && { color: colors.onMine }]}>
             {c.answered
               ? c.video
                 ? "Video call"
@@ -264,7 +272,7 @@ export default function Chat() {
           <Text
             style={[
               styles.callSub,
-              mine && { color: colors.onBrand, opacity: 0.75 },
+              mine && { color: colors.onMine, opacity: 0.75 },
             ]}
           >
             {c.answered ? dur : "Tap to call back"}
@@ -274,7 +282,7 @@ export default function Chat() {
           <Text
             style={[
               styles.callTime,
-              mine && { color: colors.onBrand, opacity: 0.75 },
+              mine && { color: colors.onMine, opacity: 0.75 },
             ]}
           >
             {new Date(m.at).toLocaleTimeString([], {
@@ -286,6 +294,8 @@ export default function Chat() {
       </View>
     );
   }
+
+  const lastMineId = [...timeline].reverse().find((x) => x.from === "me")?.id;
 
   function renderMsg(m: ChatMessage) {
     const mine = m.from === "me";
@@ -319,10 +329,12 @@ export default function Chat() {
             {callBubble(m)}
           </Pressable>
         ) : (
+          <View style={{ flexDirection: "row", alignItems: "center", gap: 8, maxWidth: "86%" }}>
+          {!mine && person ? <Avatar name={thread!.name} color={person.color} uri={faceFor(person.id)?.photo} size={30} /> : null}
           <Pressable
             onLongPress={() => setSelected(m)}
             delayLongPress={300}
-            style={[styles.bubble, mine ? styles.mine : styles.theirs]}
+            style={[styles.bubble, mine ? styles.mine : styles.theirs, { maxWidth: "100%" }]}
           >
             {m.from === "admin" ? (
               <Text style={styles.admin}>Mile Club · Admin</Text>
@@ -331,22 +343,22 @@ export default function Chat() {
               <View
                 style={[
                   styles.quote,
-                  mine && { borderLeftColor: colors.onBrand },
+                  mine && { borderLeftColor: colors.onMine },
                 ]}
               >
                 <Text
-                  style={[styles.quoteText, mine && { color: colors.onBrand }]}
+                  style={[styles.quoteText, mine && { color: colors.onMine }]}
                   numberOfLines={2}
                 >
                   {m.reply}
                 </Text>
               </View>
             ) : null}
-            <Text style={[styles.text, mine && { color: colors.onBrand }]}>
-              {m.text}
-            </Text>
+            <MentionText text={m.text} style={[styles.text, mine && { color: colors.onMine }]} me={profile} linkColor={mine ? colors.onMine : undefined} />
           </Pressable>
+          </View>
         )}
+        {mine && m.id === lastMineId ? <Text style={styles.delivered}>Delivered</Text> : null}
         {reactions[m.id] ? (
           <Pressable
             onPress={() => setReactions((r) => ({ ...r, [m.id]: "" }))}
@@ -390,36 +402,44 @@ export default function Chat() {
           accessibilityLabel="Back"
           style={styles.back}
         >
-          <Text style={styles.backText}>‹</Text>
+          <Feather name="arrow-left" size={22} color={colors.ink} />
         </Pressable>
         {isGroup ? (
-          <View style={styles.groupIcon}>
-            <Logo size={18} m={colors.bg} />
-          </View>
+          <BrandTile size={40} radius={12} />
+        ) : thread.id === SUPPORT_ID ? (
+          <View style={styles.supportIcon}><Feather name="headphones" size={19} color={colors.onMine} /></View>
         ) : (
-          <Avatar name={thread.name} color={person?.color} size={42} />
+          <Avatar name={thread.name} color={person?.color} uri={person ? faceFor(person.id)?.photo : undefined} size={40} />
         )}
         <View style={{ flex: 1 }}>
           <Text style={styles.name}>{thread.name}</Text>
-          <Text style={styles.sub}>
-            {isGroup ? "Everyone who joins Mile Club" : "Active now"}
-          </Text>
+          {isGroup ? (
+            <Text style={styles.sub} numberOfLines={1}>{thread.members ? `You, ${thread.members.map((m) => findPerson(m)?.firstName ?? m).join(", ")}` : "Everyone who joins Mile Club"}</Text>
+          ) : (
+            <View style={{ flexDirection: "row", alignItems: "center", gap: 4 }}>
+              <Text style={styles.sub}>Online</Text>
+              <View style={styles.online} />
+            </View>
+          )}
         </View>
         {person ? (
           <>
-            <Pressable
-              onPress={() => call()}
-              style={styles.call}
-              accessibilityLabel={`Call ${thread.name}`}
-            >
-              <Text style={styles.callText}>📞</Text>
-            </Pressable>
             <Pressable
               onPress={() => setMenuOpen(true)}
               style={styles.more}
               accessibilityLabel="More options"
             >
-              <Text style={styles.moreText}>•••</Text>
+              <Feather name="more-horizontal" size={22} color={colors.ink} />
+            </Pressable>
+          </>
+        ) : null}
+        {isGroup && thread.id !== MEMBERS_GROUP_ID ? (
+          <>
+            <Pressable onPress={() => router.push(`/group-call/${thread.id}` as Href)} style={styles.more} accessibilityLabel="Group call">
+              <Feather name="phone" size={20} color={colors.ink} />
+            </Pressable>
+            <Pressable onPress={() => router.push(`/group-call/${thread.id}?video=1` as Href)} style={styles.more} accessibilityLabel="Group video call">
+              <Feather name="video" size={21} color={colors.ink} />
             </Pressable>
           </>
         ) : null}
@@ -454,7 +474,7 @@ export default function Chat() {
       >
         <ScrollView contentContainerStyle={styles.list}>
           {isGroup ? (
-            <Text style={styles.system}>You joined Mile Club Members</Text>
+            <Text style={styles.system}>{thread.sessionId ? "Everyone said yes, so this chat was made for your session" : "You joined Mile Club Members"}</Text>
           ) : (
             <Text style={styles.day}>TODAY</Text>
           )}
@@ -480,31 +500,26 @@ export default function Chat() {
                 </Pressable>
               </View>
             ) : null}
+            <MentionSuggestions value={draft} onChange={setDraft} me={profile} style={{ marginHorizontal: 12, marginBottom: 6 }} />
             <View style={styles.composer}>
-              {person ? (
-                <Pressable
-                  onPress={askLocation}
-                  style={styles.pinBtn}
-                  accessibilityLabel="Send location"
-                >
-                  <Text style={styles.pinText}>📍</Text>
-                </Pressable>
-              ) : null}
+              <View style={styles.inputWrap}>
               <TextInput
                 value={draft}
                 onChangeText={setDraft}
-                placeholder={`Message ${thread.name}`}
+                placeholder="Type a message..."
                 placeholderTextColor={colors.muted}
                 style={styles.input}
                 onSubmitEditing={send}
                 returnKeyType="send"
               />
+              <Feather name="smile" size={20} color={colors.muted} />
+              </View>
               <Pressable
                 onPress={send}
                 style={styles.send}
                 accessibilityLabel="Send"
               >
-                <Text style={styles.sendText}>↑</Text>
+                <Feather name="send" size={18} color={colors.onMine} style={{ marginLeft: -2, marginTop: 1 }} />
               </Pressable>
             </View>
           </>
@@ -672,6 +687,7 @@ export default function Chat() {
 
 const styles = themed(() =>
   StyleSheet.create({
+    supportIcon: { width: 40, height: 40, borderRadius: 12, backgroundColor: colors.mine, alignItems: 'center', justifyContent: 'center' },
     screen: { flex: 1, backgroundColor: colors.bg },
     head: {
       flexDirection: "row",
@@ -679,15 +695,21 @@ const styles = themed(() =>
       gap: space.md,
       paddingHorizontal: space.lg,
       paddingVertical: space.md,
-      borderBottomWidth: 1,
-      borderBottomColor: colors.line,
+    },
+    online: { width: 7, height: 7, borderRadius: 4, backgroundColor: "#34C759" },
+    delivered: { fontFamily: fonts.sans, fontSize: 11, color: colors.muted, marginTop: 4, marginRight: 4 },
+    inputWrap: {
+      flex: 1,
+      flexDirection: "row",
+      alignItems: "center",
+      height: 48,
+      borderRadius: 24,
+      backgroundColor: colors.card,
+      paddingRight: 14,
     },
     back: {
-      width: 44,
+      width: 36,
       height: 44,
-      borderRadius: 22,
-      borderWidth: 1,
-      borderColor: colors.line,
       alignItems: "center",
       justifyContent: "center",
     },
@@ -700,8 +722,8 @@ const styles = themed(() =>
       alignItems: "center",
       justifyContent: "center",
     },
-    name: { fontFamily: fonts.serif, fontSize: 20, color: colors.ink },
-    sub: { fontFamily: fonts.sansMedium, fontSize: 12, color: colors.link },
+    name: { fontFamily: fonts.sansBold, fontSize: 16, color: colors.ink },
+    sub: { fontFamily: fonts.sansMedium, fontSize: 12, color: colors.muted },
     call: {
       width: 40,
       height: 40,
@@ -714,9 +736,6 @@ const styles = themed(() =>
     more: {
       width: 40,
       height: 40,
-      borderRadius: 20,
-      borderWidth: 1,
-      borderColor: colors.line,
       alignItems: "center",
       justifyContent: "center",
     },
@@ -807,8 +826,8 @@ const styles = themed(() =>
       paddingHorizontal: 14,
       borderRadius: 20,
     },
-    theirs: { backgroundColor: colors.sand, borderBottomLeftRadius: 6 },
-    mine: { backgroundColor: colors.olive, borderBottomRightRadius: 6 },
+    theirs: { backgroundColor: colors.card, borderBottomLeftRadius: 6 },
+    mine: { backgroundColor: colors.mine, borderBottomRightRadius: 6 },
     admin: {
       fontFamily: fonts.sansSemi,
       fontSize: 12,
@@ -844,25 +863,22 @@ const styles = themed(() =>
     },
     input: {
       flex: 1,
-      height: 46,
-      borderRadius: 23,
-      borderWidth: 1,
-      borderColor: colors.line,
+      height: 48,
       paddingHorizontal: space.lg,
       fontFamily: fonts.sans,
       fontSize: 15,
       color: colors.ink,
     },
     send: {
-      width: 46,
-      height: 46,
-      borderRadius: 23,
-      backgroundColor: colors.olive,
+      width: 44,
+      height: 44,
+      borderRadius: 22,
+      backgroundColor: colors.mine,
       alignItems: "center",
       justifyContent: "center",
     },
     sendText: {
-      color: colors.onBrand,
+      color: colors.onMine,
       fontSize: 22,
       fontFamily: fonts.sansBold,
     },

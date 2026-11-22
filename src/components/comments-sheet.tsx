@@ -4,8 +4,11 @@ import { useState } from 'react';
 import { Alert, KeyboardAvoidingView, Modal, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { MentionSuggestions, MentionText } from '@/components/mentions';
 import { authorName, openComments, useComments, useOpenComments } from '@/components/comment-preview';
+import { GifPicker } from '@/components/gif-picker';
 import { Avatar } from '@/components/ui';
+import { gifSource } from '@/data/gifs';
 import { agoLabel } from '@/data/comments';
 import { FEED, TEXT_POSTS } from '@/data/feed';
 import { findPerson } from '@/data/people';
@@ -16,6 +19,7 @@ import { colors, fonts, radius, space, themed, useTheme } from '@/theme';
 // TikTok-style comments: a sheet over the bottom of the screen while the post
 // stays visible above it, even with the keyboard open.
 export function CommentsSheet() {
+  useTheme();
   const id = useOpenComments();
   return (
     <Modal visible={!!id} transparent animationType="slide" onRequestClose={() => openComments(null)}>
@@ -30,6 +34,7 @@ function Sheet({ id }: { id: string }) {
   const { profile, myPosts, addComment, deleteComment } = useStore();
   const all = useComments(id);
   const [text, setText] = useState('');
+  const [gifs, setGifs] = useState(false);
 
   const feedIdx = FEED.findIndex((p) => p.id === id);
   const sample = feedIdx >= 0 ? FEED[feedIdx] : undefined;
@@ -107,7 +112,8 @@ function Sheet({ id }: { id: string }) {
                 <Avatar name={name} color={person?.color} uri={isMe ? profile?.photoUri : undefined} size={32} />
                 <View style={{ flex: 1 }}>
                   <Text style={styles.who}>{name}</Text>
-                  <Text style={styles.text}>{c.text}</Text>
+                  {c.text ? <MentionText text={c.text} style={styles.text} me={profile} onOpen={close} /> : null}
+                  {c.gif ? <Image source={gifSource(c.gif)} style={styles.gif} contentFit="cover" autoplay /> : null}
                   <Text style={styles.time}>{agoLabel(c.at)}{isMe ? ' · hold to delete' : ''}</Text>
                 </View>
               </Pressable>
@@ -115,8 +121,20 @@ function Sheet({ id }: { id: string }) {
           })}
         </ScrollView>
 
+        {gifs ? (
+          <GifPicker
+            onPick={(g) => {
+              addComment(id, '', g);
+              setGifs(false);
+            }}
+          />
+        ) : null}
+        <MentionSuggestions value={text} onChange={setText} me={profile} style={{ marginHorizontal: 12, marginBottom: 6 }} />
         <View style={styles.bar}>
           <Avatar name={profile?.firstName ?? 'You'} uri={profile?.photoUri} size={30} />
+          <Pressable onPress={() => setGifs(!gifs)} style={[styles.gifBtn, gifs && styles.gifBtnOn]} accessibilityLabel="Send a GIF">
+            <Text style={[styles.gifBtnText, gifs && { color: colors.onBrand }]}>GIF</Text>
+          </Pressable>
           <TextInput
             style={styles.input}
             placeholder="Add a comment…"
@@ -160,5 +178,9 @@ const styles = themed(() => StyleSheet.create({
   bar: { flexDirection: 'row', alignItems: 'center', gap: space.sm, paddingHorizontal: space.lg, paddingTop: space.sm, borderTopWidth: 1, borderTopColor: colors.line },
   input: { flex: 1, borderRadius: radius.pill, backgroundColor: colors.sand, paddingHorizontal: space.lg, paddingVertical: 10, fontFamily: fonts.sans, fontSize: 15, color: colors.ink },
   send: { width: 38, height: 38, borderRadius: 19, backgroundColor: colors.olive, alignItems: 'center', justifyContent: 'center' },
+  gif: { width: 180, height: 135, borderRadius: 14, marginTop: 4, backgroundColor: colors.sand },
+  gifBtn: { height: 32, paddingHorizontal: 9, borderRadius: 9, borderWidth: 1.5, borderColor: colors.edge, alignItems: 'center', justifyContent: 'center' },
+  gifBtnOn: { backgroundColor: colors.olive, borderColor: colors.olive },
+  gifBtnText: { fontFamily: fonts.sansBold, fontSize: 12, color: colors.ink, letterSpacing: 0.5 },
   sendText: { color: colors.onBrand, fontSize: 18, fontFamily: fonts.sansBold },
 }));

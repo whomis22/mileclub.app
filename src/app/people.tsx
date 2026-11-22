@@ -39,7 +39,7 @@ export default function Discover() {
             </View>
             <View style={styles.score}>
               <Text style={styles.scoreNum}>{score}%</Text>
-              <Text style={styles.scoreLabel}>match</Text>
+              <Text style={styles.scoreLabel}>in common</Text>
             </View>
           </View>
           <Text style={styles.detail}>
