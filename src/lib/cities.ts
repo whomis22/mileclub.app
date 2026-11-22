@@ -14,11 +14,11 @@ import { CITIES, type City } from '@/data/options';
 export const WAITLIST_GOAL = 1000;
 
 // Cities that are Live unless an admin switches them off (Oslo opened by Yana, 2026-11-21).
-const LIVE_BY_DEFAULT: City[] = ['Amsterdam', 'Oslo'];
+const LIVE_BY_DEFAULT: City[] = ['Manchester', 'Amsterdam', 'Oslo']; // Manchester opened 2026-11-22
 
 // Sample numbers so the waitlist bars and leaderboard have life before real sign-ups.
 const SAMPLE: Record<City, { users: number; waitlist: number; referrers: { name: string; count: number }[] }> = {
-  Manchester: { users: 38, waitlist: 581, referrers: [{ name: 'Jade', count: 44 }, { name: 'Callum', count: 29 }, { name: 'Aisha', count: 17 }] },
+  Manchester: { users: 214, waitlist: 0, referrers: [{ name: 'Jade', count: 44 }, { name: 'Callum', count: 29 }, { name: 'Aisha', count: 17 }] },
   Amsterdam: { users: 1840, waitlist: 0, referrers: [{ name: 'Sanne', count: 41 }, { name: 'Daan', count: 27 }, { name: 'Amira', count: 19 }] },
   London: { users: 96, waitlist: 742, referrers: [{ name: 'Priya', count: 58 }, { name: 'Jack', count: 33 }, { name: 'Ellie', count: 21 }] },
   'New York': { users: 61, waitlist: 618, referrers: [{ name: 'Maya', count: 49 }, { name: 'Chris', count: 30 }, { name: 'Dani', count: 12 }] },
