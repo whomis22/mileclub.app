@@ -9,6 +9,9 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { launchEndsIn } from '@/components/launch-screen';
 import { BrandMark } from '@/components/ui';
+import type { Profile } from '@/data/types';
+import { homeFor } from '@/lib/home';
+import { useStore } from '@/state/store';
 import { fonts, radius, space, themed, useTheme } from '@/theme';
 
 // Welcome, copied from Yana's design board (2026-11-21): splash with the mc logo,
@@ -16,6 +19,13 @@ import { fonts, radius, space, themed, useTheme } from '@/theme';
 // Splash: black-and-white night run in dark mode, white poster in light mode.
 const LIME = '#B9E769';
 const H = Dimensions.get('window').height;
+
+const DEMO_PROFILE: Profile = {
+  firstName: 'Yana', age: 27, city: 'Amsterdam', neighborhood: 'De Pijp',
+  activities: ['running', 'pilates', 'yoga', 'tennis'], level: 'Intermediate',
+  goals: ['Meet new people', 'Stay consistent', 'Try new things'],
+  availability: ['Weekday evenings', 'Weekend mornings'], groupSize: 'Small group (3–6)', social: 'A bit of both',
+};
 
 const SLIDES = [
   { photo: require('../../assets/images/photos/board-ob1.jpg'), title: 'Meet\nworkout\npartners.', sub: 'Find people into\nyour sport, goals and vibe.' },
@@ -42,8 +52,15 @@ export default function Welcome() {
   // One full spin of the logo while the welcome screen fades in (Yana, 2026-11-22).
   const spin = { transform: [{ rotate: rise.interpolate({ inputRange: [0, 1], outputRange: ['0deg', '360deg'] }) }] };
   const showRest = { opacity: rise.interpolate({ inputRange: [0, 0.6, 1], outputRange: [0, 0.7, 1], extrapolate: 'clamp' }) };
-  const logIn = () => router.push('/auth?tab=login' as Href);
-  const signUp = () => router.push('/auth' as Href);
+  const { saveProfile } = useStore();
+  // Sign up / sign in are set aside for now (Yana, 2026-11-22): the code in auth.tsx stays,
+  // but Get Started goes straight to profile setup and Log In opens the app with a demo profile.
+  // To bring real accounts back: route these to '/auth' and '/auth?tab=login' again.
+  const signUp = () => router.push('/onboarding' as Href);
+  const logIn = () => {
+    saveProfile(DEMO_PROFILE);
+    router.replace(homeFor(DEMO_PROFILE));
+  };
 
   function go(next: number) {
     if (busy.current) return;
