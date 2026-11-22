@@ -30,7 +30,7 @@ export default function ProfileTab() {
   const hosting = activities.filter((a) => a.hostId === 'me').length;
   const clubs = new Set(activities.filter((a) => a.participants.includes('me') || a.hostId === 'me').map((a) => a.type)).size;
   const city = profile.city ?? cityOf(profile.neighborhood) ?? profile.neighborhood;
-  const bio = `${profile.activities.slice(0, 3).map((a) => activityInfo(a).label).join('. ')}. Repeat.`;
+  const bio = profile.bio || `${profile.activities.slice(0, 3).map((a) => activityInfo(a).label).join('. ')}. Repeat.`;
   const tile = Math.floor((Math.min(width, 500) - 32 - 6) / 3);
   const ticks = firstSet({ profile, myPosts, comments, activities, planJoins: planJoins ?? [] });
   const done = ticks.filter((t) => t.done).length;
@@ -47,14 +47,14 @@ export default function ProfileTab() {
       </View>
 
       <View style={styles.head}>
-        <View style={styles.ring}>
+        <Pressable style={styles.ring} onPress={() => router.push('/edit-profile' as Href)} accessibilityLabel="Edit profile">
           <Avatar name={profile.firstName} uri={profile.photoUri} size={92} />
-        </View>
+        </Pressable>
         <View style={styles.nameRow}>
-          <Text style={styles.name}>{profile.firstName}</Text>
+          <Text style={styles.name}>{[profile.firstName, profile.lastName].filter(Boolean).join(' ')}</Text>
           {verified ? <Ionicons name="checkmark-circle" size={18} color="#3B82F6" /> : null}
         </View>
-        <Text style={styles.city}>{city}</Text>
+        <Text style={styles.city}>{profile.username ? `@${profile.username} · ` : ''}{city}</Text>
       </View>
 
       <View style={styles.stats}>
@@ -69,7 +69,7 @@ export default function ProfileTab() {
 
       <Pressable
         style={({ pressed }) => [styles.edit, pressed && { opacity: 0.8 }]}
-        onPress={() => router.push({ pathname: '/onboarding', params: { edit: '1' } })}>
+        onPress={() => router.push('/edit-profile' as Href)}>
         <Text style={styles.editText}>Edit Profile</Text>
       </Pressable>
 

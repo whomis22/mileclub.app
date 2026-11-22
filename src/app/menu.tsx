@@ -1,9 +1,11 @@
 import Feather from '@expo/vector-icons/Feather';
 import { router, type Href } from 'expo-router';
 import type { ComponentProps } from 'react';
-import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { useState } from 'react';
+import { Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { openPerson, searchPeople } from '@/components/mentions';
 import { Avatar } from '@/components/ui';
 import { cityOf } from '@/data/options';
 import { hasPremium } from '@/lib/swipes';
@@ -22,6 +24,9 @@ export default function Menu() {
   const { isDark, setMode } = useTheme();
   const insets = useSafeAreaInsets();
   const { profile, admin, myPosts, comments, activities, planJoins, notices } = useStore();
+
+  const [q, setQ] = useState('');
+  const found = q.trim() ? searchPeople(q, profile).slice(0, 8) : [];
 
   const go = (href: Href) => {
     router.back();
@@ -80,7 +85,31 @@ export default function Menu() {
             </>
           ) : null}
 
-          {([['YOUR STUFF', yours], ['DISCOVER', discover]] as const).map(([title, items]) => (
+          <View style={styles.search}>
+            <Feather name="search" size={16} color={colors.muted} />
+            <TextInput value={q} onChangeText={setQ} placeholder="Search @username or name" placeholderTextColor={colors.muted} autoCapitalize="none" autoCorrect={false} style={styles.searchInput} accessibilityLabel="Search people" />
+            {q ? (
+              <Pressable onPress={() => setQ('')} hitSlop={8} accessibilityLabel="Clear search">
+                <Feather name="x" size={16} color={colors.muted} />
+              </Pressable>
+            ) : null}
+          </View>
+          {q.trim() ? (
+            <View style={{ marginTop: 6 }}>
+              {found.map((p) => (
+                <Pressable key={p.id} onPress={() => { router.back(); setTimeout(() => openPerson(p), 50); }} style={({ pressed }) => [styles.found, pressed && styles.itemOn]} accessibilityLabel={`Open ${p.name}'s profile`}>
+                  <Avatar name={p.name} uri={p.photo} color={p.color} size={36} />
+                  <View style={{ flex: 1 }}>
+                    <Text style={styles.itemText}>{p.name}{p.me ? ' (you)' : ''}</Text>
+                    <Text style={styles.meSub}>@{p.handle}</Text>
+                  </View>
+                </Pressable>
+              ))}
+              {!found.length ? <Text style={[styles.meSub, { marginLeft: 12, marginTop: 8 }]}>No one found</Text> : null}
+            </View>
+          ) : null}
+
+          {q.trim() ? null : ([['YOUR STUFF', yours], ['DISCOVER', discover]] as const).map(([title, items]) => (
             <View key={title}>
               <Text style={styles.section}>{title}</Text>
               {items.map((it, i) => (
@@ -124,6 +153,9 @@ export default function Menu() {
 const styles = themed(() => StyleSheet.create({
   root: { flex: 1, flexDirection: 'row', backgroundColor: colors.overlay },
   panel: { width: '84%', maxWidth: 340, backgroundColor: colors.bg, borderTopRightRadius: 32, borderBottomRightRadius: 32, paddingHorizontal: 18 },
+  search: { flexDirection: 'row', alignItems: 'center', gap: 8, height: 42, borderRadius: 21, backgroundColor: colors.card, paddingHorizontal: 14, marginTop: 14 },
+  searchInput: { flex: 1, fontFamily: fonts.sans, fontSize: 14, color: colors.ink, height: 42, outlineStyle: 'none' } as object,
+  found: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 7, paddingHorizontal: 8, borderRadius: 18 },
   me: { flexDirection: 'row', alignItems: 'center', gap: 12 },
   meName: { fontFamily: fonts.sansBold, fontSize: 19, color: colors.ink },
   meSub: { fontFamily: fonts.sans, fontSize: 12.5, color: colors.muted, marginTop: 2 },

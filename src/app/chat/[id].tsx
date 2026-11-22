@@ -18,6 +18,7 @@ import {
 } from "react-native-safe-area-context";
 
 import { LocationCard } from "@/components/location-card";
+import { MentionSuggestions, MentionText } from "@/components/mentions";
 import { Avatar, BrandTile } from "@/components/ui";
 import { faceFor } from "@/data/faces";
 import Feather from "@expo/vector-icons/Feather";
@@ -353,9 +354,7 @@ export default function Chat() {
                 </Text>
               </View>
             ) : null}
-            <Text style={[styles.text, mine && { color: colors.onMine }]}>
-              {m.text}
-            </Text>
+            <MentionText text={m.text} style={[styles.text, mine && { color: colors.onMine }]} me={profile} linkColor={mine ? colors.onMine : undefined} />
           </Pressable>
           </View>
         )}
@@ -501,6 +500,7 @@ export default function Chat() {
                 </Pressable>
               </View>
             ) : null}
+            <MentionSuggestions value={draft} onChange={setDraft} me={profile} style={{ marginHorizontal: 12, marginBottom: 6 }} />
             <View style={styles.composer}>
               <View style={styles.inputWrap}>
               <TextInput

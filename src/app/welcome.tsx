@@ -23,7 +23,7 @@ const H = Dimensions.get('window').height;
 
 const OSLO_HOOD = CITIES.find((c) => c.id === 'Oslo')!.hoods[0];
 const DEMO_PROFILE: Profile = {
-  firstName: 'Yana', age: 27, city: 'Oslo', neighborhood: OSLO_HOOD,
+  firstName: 'Yana', username: 'yana', age: 27, city: 'Oslo', neighborhood: OSLO_HOOD,
   activities: ['running', 'pilates', 'yoga', 'tennis'], level: 'Intermediate',
   goals: ['Meet new people', 'Stay consistent', 'Try new things'],
   availability: ['Weekday evenings', 'Weekend mornings'], groupSize: 'Small group (3–6)', social: 'A bit of both',

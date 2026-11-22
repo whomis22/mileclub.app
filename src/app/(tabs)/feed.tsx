@@ -17,6 +17,8 @@ import { cityOf } from '@/data/options';
 import { findPerson } from '@/data/people';
 import { openPostActions } from '@/lib/post-actions';
 import { hoursAgoLabel } from '@/lib/time';
+import { MentionText } from '@/components/mentions';
+import { PremiumNudge } from '@/components/premium-nudge';
 import { useStore } from '@/state/store';
 import { colors, fonts, space, themed, useTheme } from '@/theme';
 
@@ -35,6 +37,18 @@ const POSTS: Post[] = [
   { id: 't2', personId: 'noah', handle: 'noah.serves', hoursAgo: 4, text: 'Moved here 3 months ago and still don’t know many people. Today I said hi to my whole padel group. Small wins 🙌', likes: 112 },
   { id: 'b5', personId: 'femke', handle: 'femke.outdoors', hoursAgo: 8, text: 'Long walk then sauna this Sunday. Who’s in?', likes: 41 },
   { id: 'b6', personId: 'tom', handle: 'tom.sunrise', hoursAgo: 11, text: 'Sunrise run + coffee tomorrow 06:30. All paces welcome ☕', photo: require('../../../assets/images/photos/football.jpg'), likes: 158 },
+  { id: 'b7', personId: 'yasmin', handle: 'yasmin.tries', hoursAgo: 7, text: 'First reformer pilates class done and my legs are shaking 😅 Thanks @amira.flow for dragging me along!', photo: require('../../../assets/images/photos/explore-pilates.jpg'), likes: 203 },
+  { id: 'b8', personId: 'daan', handle: 'daan.rides', hoursAgo: 9, text: '60km before breakfast. Saturday group ride is open, all speeds welcome 🚴', photo: require('../../../assets/images/photos/explore-cycling.jpg'), likes: 174 },
+  { id: 't3', personId: 'lotte', handle: 'lotte.runs', hoursAgo: 10, text: 'Reminder that a slow run is still a run. Proud of everyone who showed up tonight 💚', likes: 96 },
+  { id: 'b9', personId: 'femke', handle: 'femke.outdoors', hoursAgo: 13, text: 'Gym, then 20 minutes in the sauna. This is self care 🧖‍♀️', photo: require('../../../assets/images/photos/explore-sauna.jpg'), likes: 121 },
+  { id: 'b10', personId: 'noah', handle: 'noah.serves', hoursAgo: 15, text: 'Doubles with @mateo.padel tonight. We lost every set and laughed the whole time 🎾', photo: require('../../../assets/images/photos/explore-padel.jpg'), likes: 88 },
+  { id: 't4', personId: 'tom', handle: 'tom.sunrise', hoursAgo: 17, text: 'Met 3 new people on this morning’s run. One of them is a chef too. Mile Club is a small world ☕', likes: 143 },
+  { id: 'b11', personId: 'lucas', handle: 'lucas.lifts', hoursAgo: 20, text: 'Pickup basketball Sunday at 11. Need 4 more, any level 🏀', photo: require('../../../assets/images/photos/explore-basketball.jpg'), likes: 57 },
+  { id: 'b12', personId: 'sanne', handle: 'sannefit', hoursAgo: 23, text: 'New 5k PB! 27:41 🥳 Couldn’t have done it without my Thursday crew', photo: require('../../../assets/images/photos/explore-running.jpg'), likes: 312 },
+  { id: 't5', personId: 'yasmin', handle: 'yasmin.tries', hoursAgo: 26, text: 'What should I try next week? Climbing, boxing or sauna? Vote in the comments 👇', likes: 74 },
+  { id: 'b13', personId: 'amira', handle: 'amira.flow', hoursAgo: 30, text: 'Park yoga with Mile Club this Saturday 9am. Bring a mat and a friend 🌿', photo: require('../../../assets/images/photos/explore-yoga.jpg'), likes: 189 },
+  { id: 'b14', personId: 'mateo', handle: 'mateo.padel', hoursAgo: 34, text: 'Push day with @lucas.lifts. Who’s joining us Thursday? 💪', photo: require('../../../assets/images/photos/explore-gym.jpg'), likes: 66 },
+  { id: 't6', personId: 'daan', handle: 'daan.rides', hoursAgo: 38, text: 'Looking for other engineers who like a lunchtime run. Networking but make it sweaty 😄', likes: 101 },
 ];
 
 function greeting(h = new Date().getHours()) {
@@ -80,7 +94,7 @@ function PostCard({
   photo?: string | number; likes: number; onOpenPerson?: () => void; onMore?: () => void;
 }) {
   useTheme();
-  const { kudos, toggleKudos } = useStore();
+  const { kudos, toggleKudos, profile } = useStore();
   const [saved, setSaved] = useState(false);
   const liked = kudos.includes(id);
   const comments = useComments(id).length;
@@ -98,7 +112,7 @@ function PostCard({
           <Ionicons name="ellipsis-horizontal" size={18} color={colors.muted} />
         </Pressable>
       </View>
-      <Text style={[styles.text, !photo && styles.thought]}>{text}</Text>
+      <MentionText text={text} style={[styles.text, !photo && styles.thought]} me={profile} />
       {photo ? (
         <View style={styles.photo}>
           <Image source={typeof photo === 'string' ? { uri: photo } : photo} style={StyleSheet.absoluteFill} contentFit="cover" transition={250} cachePolicy="memory-disk" recyclingKey={id} />
@@ -159,12 +173,14 @@ export default function Home() {
         <Feather name="image" size={18} color={colors.muted} style={{ marginRight: 8 }} />
       </Pressable>
 
+      <PremiumNudge profile={profile} />
+
       {myPosts.filter((p) => !p.archived).map((mp) => (
         <PostCard
           key={mp.id}
           id={mp.id}
           name={profile.firstName}
-          handle={profile.firstName.toLowerCase()}
+          handle={profile.username ?? profile.firstName.toLowerCase()}
           photoUri={profile.photoUri}
           when={`${agoLabel(mp.at)}${city ? ` · ${city}` : ''}`}
           text={mp.caption}

@@ -31,6 +31,11 @@ export type Profile = {
   social: Social;
   emergencyContact?: string;
   photoUri?: string;
+  username?: string; // @handle, without the @
+  usernameChangedAt?: number; // ms; a username can change once every 7 days (Yana)
+  lastName?: string;
+  phone?: string; // private: never shown to other people
+  bio?: string;
 };
 
 export type Person = Profile & {

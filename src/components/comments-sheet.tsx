@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { Alert, KeyboardAvoidingView, Modal, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { MentionSuggestions, MentionText } from '@/components/mentions';
 import { authorName, openComments, useComments, useOpenComments } from '@/components/comment-preview';
 import { GifPicker } from '@/components/gif-picker';
 import { Avatar } from '@/components/ui';
@@ -111,7 +112,7 @@ function Sheet({ id }: { id: string }) {
                 <Avatar name={name} color={person?.color} uri={isMe ? profile?.photoUri : undefined} size={32} />
                 <View style={{ flex: 1 }}>
                   <Text style={styles.who}>{name}</Text>
-                  {c.text ? <Text style={styles.text}>{c.text}</Text> : null}
+                  {c.text ? <MentionText text={c.text} style={styles.text} me={profile} onOpen={close} /> : null}
                   {c.gif ? <Image source={gifSource(c.gif)} style={styles.gif} contentFit="cover" autoplay /> : null}
                   <Text style={styles.time}>{agoLabel(c.at)}{isMe ? ' · hold to delete' : ''}</Text>
                 </View>
@@ -128,6 +129,7 @@ function Sheet({ id }: { id: string }) {
             }}
           />
         ) : null}
+        <MentionSuggestions value={text} onChange={setText} me={profile} style={{ marginHorizontal: 12, marginBottom: 6 }} />
         <View style={styles.bar}>
           <Avatar name={profile?.firstName ?? 'You'} uri={profile?.photoUri} size={30} />
           <Pressable onPress={() => setGifs(!gifs)} style={[styles.gifBtn, gifs && styles.gifBtnOn]} accessibilityLabel="Send a GIF">

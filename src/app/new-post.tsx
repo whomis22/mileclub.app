@@ -5,6 +5,7 @@ import { useState } from 'react';
 import { Alert, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 
 import Feather from '@expo/vector-icons/Feather';
+import { MentionSuggestions } from '@/components/mentions';
 
 import { Avatar, Button } from '@/components/ui';
 import { useStore } from '@/state/store';
@@ -57,6 +58,7 @@ export default function NewPost() {
           maxLength={500}
         />
       </View>
+      <MentionSuggestions value={caption} onChange={setCaption} me={profile} style={{ marginTop: 8 }} />
 
       {!uri && !caption ? (
         <View style={styles.prompts}>
