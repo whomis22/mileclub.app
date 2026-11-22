@@ -61,6 +61,12 @@ export function CityLock({ city, name }: { city: City; name?: string }) {
             </Pressable>
           )}
 
+          {/* Wrong city? Switch to a Live one (Yana, 2026-11-22). */}
+          <Pressable style={styles.change} onPress={() => router.push('/home-city' as Href)} accessibilityLabel="Change my city">
+            <Feather name="map-pin" size={16} color="#FFFFFF" />
+            <Text style={styles.changeText}>Change my city</Text>
+          </Pressable>
+
           <Pressable style={styles.board} onPress={() => router.push('/cities' as Href)} hitSlop={8}>
             <Feather name="bar-chart-2" size={15} color="#FFFFFF" />
             <Text style={styles.boardText}>City leaderboard</Text>
@@ -88,6 +94,8 @@ const styles = StyleSheet.create({
   joined: { flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 20 },
   joinedText: { fontFamily: fonts.sansSemi, fontSize: 14, color: '#FFFFFF' },
   link: { fontFamily: fonts.sans, fontSize: 12, color: 'rgba(255,255,255,0.55)', textAlign: 'center', marginTop: 8 },
+  change: { flexDirection: 'row', gap: 8, height: 48, borderRadius: 24, borderWidth: 1, borderColor: 'rgba(255,255,255,0.25)', alignItems: 'center', justifyContent: 'center', marginTop: 12 },
+  changeText: { fontFamily: fonts.sansSemi, fontSize: 15, color: '#FFFFFF' },
   board: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, marginTop: 18 },
   boardText: { fontFamily: fonts.sansSemi, fontSize: 14, color: '#FFFFFF' },
 });

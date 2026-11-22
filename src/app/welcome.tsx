@@ -9,6 +9,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { launchEndsIn } from '@/components/launch-screen';
 import { BrandMark } from '@/components/ui';
+import { CITIES } from '@/data/options';
 import type { Profile } from '@/data/types';
 import { homeFor } from '@/lib/home';
 import { useStore } from '@/state/store';
@@ -20,8 +21,9 @@ import { fonts, radius, space, themed, useTheme } from '@/theme';
 const LIME = '#B9E769';
 const H = Dimensions.get('window').height;
 
+const OSLO_HOOD = CITIES.find((c) => c.id === 'Oslo')!.hoods[0];
 const DEMO_PROFILE: Profile = {
-  firstName: 'Yana', age: 27, city: 'Amsterdam', neighborhood: 'De Pijp',
+  firstName: 'Yana', age: 27, city: 'Oslo', neighborhood: OSLO_HOOD,
   activities: ['running', 'pilates', 'yoga', 'tennis'], level: 'Intermediate',
   goals: ['Meet new people', 'Stay consistent', 'Try new things'],
   availability: ['Weekday evenings', 'Weekend mornings'], groupSize: 'Small group (3–6)', social: 'A bit of both',
